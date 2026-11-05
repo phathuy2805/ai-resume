@@ -1,0 +1,25 @@
+{
+  "name": "ai-resume",
+  "version": "1.0.0",
+  "description": "Tôi đang thực hiện tham gia vào 1 dự án code như sau: \r Tên dự án: Hệ thống Trợ lý Tự động hóa Tuyển dụng & Sơ tuyển Hồ sơ (AI Resume Screener & Candidate Evaluator)\r Quy mô nhân sự: 03 thành viên\r Thời gian thực hiện: 02-04 tuần\r Định hướng công nghệ: Full-stack JavaScript / TypeScript (Vite + React, NestJS, PostgreSQL, AI/LLM Integration)",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently -n \"API,WEB\" -c \"blue,green\" \"npm run start:dev --workspace=apps/api\" \"npm run dev --workspace=apps/web\"",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "eslint": "^10.14.0",
+    "prettier": "^3.9.10"
+  }
+}
