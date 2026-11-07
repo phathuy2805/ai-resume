@@ -1,3 +1,3 @@
 export function helloAI(): string {
-    return 'Hello from @hireflow/ai package!'
+  return 'Hello Thanh Tùng cấu hình AI';
 }
