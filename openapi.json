@@ -1,0 +1,1475 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Đăng ký thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Đăng ký tài khoản mới (HR hoặc CANDIDATE)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Đăng nhập thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Đăng nhập vào hệ thống",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "AuthController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Thông tin tài khoản cá nhân",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Lấy thông tin tài khoản đang đăng nhập",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refreshToken",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cấp token mới thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Làm mới Access Token bằng Refresh Token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Đăng xuất thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Đăng xuất thành công"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Đăng xuất khỏi hệ thống",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/jobs": {
+      "get": {
+        "operationId": "JobsController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Số thứ tự trang cần lấy (bắt đầu từ 1)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Số lượng bản ghi trên một trang (tối đa 100)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Từ khóa tìm kiếm theo tên/tiêu đề công việc hoặc kỹ năng yêu cầu",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Lọc theo trạng thái tin tuyển dụng (OPEN hoặc CLOSED)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "OPEN",
+                "CLOSED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách công việc kèm phân trang",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Lấy danh sách việc làm đang mở (Công khai)",
+        "tags": [
+          "Jobs"
+        ]
+      },
+      "post": {
+        "operationId": "JobsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJobDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tạo việc làm thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Tạo tin tuyển dụng mới (Yêu cầu tài khoản HR)",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/jobs/mine": {
+      "get": {
+        "operationId": "JobsController_findMyJobs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Danh sách việc làm của HR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JobDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Lấy danh sách việc làm do HR đang đăng nhập tạo",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/jobs/{id}": {
+      "get": {
+        "operationId": "JobsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Job UUID",
+            "schema": {
+              "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chi tiết tin tuyển dụng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Xem chi tiết một tin tuyển dụng theo ID",
+        "tags": [
+          "Jobs"
+        ]
+      },
+      "patch": {
+        "operationId": "JobsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Job UUID",
+            "schema": {
+              "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateJobDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật việc làm thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Cập nhật tin tuyển dụng theo ID",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/jobs/{id}/close": {
+      "patch": {
+        "operationId": "JobsController_close",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Job UUID",
+            "schema": {
+              "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Đóng tin tuyển dụng thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Đóng tin tuyển dụng (chuyển status sang CLOSED)",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/jobs/{id}/applications": {
+      "post": {
+        "operationId": "ApplicationsController_apply",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh công việc (Job UUID)",
+            "schema": {
+              "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Tệp CV định dạng PDF (dung lượng tối đa 5MB)",
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Tệp CV PDF tải lên (dung lượng tối đa 5MB)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Nộp hồ sơ thành công, đưa vào hàng đợi AI Screening",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Nộp CV ứng tuyển công việc (Multipart form-data, field: file)",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
+    "/api/me/applications": {
+      "get": {
+        "operationId": "ApplicationsController_getMyApplications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Danh sách hồ sơ ứng tuyển của ứng viên (không trả cvText, cvKey)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApplicationDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Lấy danh sách các đơn ứng tuyển của chính ứng viên đăng nhập",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
+    "/api/screening/trigger/{applicationId}": {
+      "post": {
+        "operationId": "ScreeningDraftController_triggerScreening",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "[Phác thảo Tuần 2] Kích hoạt phân tích và chấm điểm CV ứng viên bằng AI",
+        "tags": [
+          "Draft - Screening (Week 2)"
+        ]
+      }
+    },
+    "/api/screening/result/{applicationId}": {
+      "get": {
+        "operationId": "ScreeningDraftController_getScreeningResult",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "[Phác thảo Tuần 2] Lấy kết quả chấm điểm sàng lọc, điểm mạnh và lỗ hổng kỹ năng",
+        "tags": [
+          "Draft - Screening (Week 2)"
+        ]
+      }
+    },
+    "/api/interviews/session/{applicationId}": {
+      "post": {
+        "operationId": "InterviewDraftController_createSession",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "[Phác thảo Tuần 3] Khởi tạo phiên phỏng vấn giọng nói hai chiều với AI",
+        "tags": [
+          "Draft - Interview (Week 3)"
+        ]
+      }
+    },
+    "/api/interviews/session/{interviewId}/turn": {
+      "get": {
+        "operationId": "InterviewDraftController_getNextTurn",
+        "parameters": [
+          {
+            "name": "interviewId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "[Phác thảo Tuần 3] Nhận câu hỏi phỏng vấn tiếp theo từ AI thích ứng",
+        "tags": [
+          "Draft - Interview (Week 3)"
+        ]
+      }
+    },
+    "/api/interviews/complete/{interviewId}": {
+      "post": {
+        "operationId": "InterviewDraftController_completeInterview",
+        "parameters": [
+          {
+            "name": "interviewId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "[Phác thảo Tuần 3] Kết thúc phỏng vấn và kích hoạt đánh giá transcript",
+        "tags": [
+          "Draft - Interview (Week 3)"
+        ]
+      }
+    },
+    "/api/interviews/report/{interviewId}": {
+      "get": {
+        "operationId": "InterviewDraftController_getInterviewReport",
+        "parameters": [
+          {
+            "name": "interviewId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "[Phác thảo Tuần 3] Xem báo cáo 4 cột điểm phỏng vấn cho HR và ứng viên",
+        "tags": [
+          "Draft - Interview (Week 3)"
+        ]
+      }
+    },
+    "/api/dashboard/overview": {
+      "get": {
+        "operationId": "DashboardDraftController_getOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "[Phác thảo] Lấy thống kê số lượng hồ sơ, tỉ lệ đạt sơ tuyển cho HR",
+        "tags": [
+          "Draft - Dashboard (Week 2 & 3)"
+        ]
+      }
+    },
+    "/api/dashboard/candidates-ranking/{jobId}": {
+      "get": {
+        "operationId": "DashboardDraftController_getCandidatesRanking",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "[Phác thảo] Bảng xếp hạng ứng viên theo độ phù hợp ngữ nghĩa vector và điểm AI",
+        "tags": [
+          "Draft - Dashboard (Week 2 & 3)"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "AI-Resume API SPEC",
+    "description": "Tài liệu API hệ thống tuyển dụng AI-Resume (Specs v1.0)",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "Nhập access Token"
+      }
+    },
+    "schemas": {
+      "AuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Access Token JWT"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh Token JWT"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "description": "ID người dùng (UUID)"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                "description": "Email người dùng"
+              },
+              "fullName": {
+                "type": "string",
+                "description": "Họ và tên"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "HR",
+                  "CANDIDATE",
+                  "ADMIN"
+                ],
+                "description": "Vai trò người dùng"
+              },
+              "createdAt": {
+                "type": "string",
+                "description": "Thời điểm tạo tài khoản (ISO 8601)"
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "fullName",
+              "role",
+              "createdAt"
+            ]
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "user"
+        ]
+      },
+      "UserProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "ID người dùng (UUID)"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "Email người dùng"
+          },
+          "fullName": {
+            "type": "string",
+            "description": "Họ và tên"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "HR",
+              "CANDIDATE",
+              "ADMIN"
+            ],
+            "description": "Vai trò người dùng"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm tạo tài khoản (ISO 8601)"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "role",
+          "createdAt"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "Email người dùng"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Mật khẩu người dùng"
+          },
+          "fullName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Họ và tên đầy đủ"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "HR",
+              "CANDIDATE",
+              "ADMIN"
+            ],
+            "description": "Vai trò trong hệ thống (HR hoặc CANDIDATE)"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "fullName",
+          "role"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "Email đăng nhập"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Mật khẩu"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Refresh Token JWT"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "JobDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh công việc (UUID)"
+          },
+          "title": {
+            "type": "string",
+            "description": "Tiêu đề tuyển dụng"
+          },
+          "description": {
+            "type": "string",
+            "description": "Nội dung chi tiết của JD"
+          },
+          "requiredSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Kỹ năng bắt buộc"
+          },
+          "preferredSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Kỹ năng ưu tiên"
+          },
+          "minYearsExperience": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Số năm kinh nghiệm tối thiểu"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLOSED"
+            ],
+            "description": "Trạng thái tin tuyển dụng (OPEN hoặc CLOSED)"
+          },
+          "cvPassThreshold": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Điểm sàn qua vòng CV (0-100)"
+          },
+          "interviewQuestionCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
+          },
+          "rubricWeights": {
+            "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn",
+            "type": "object",
+            "properties": {
+              "technical": {
+                "default": 40,
+                "description": "Trọng số chuyên môn (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "communication": {
+                "default": 20,
+                "description": "Trọng số giao tiếp (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "relevance": {
+                "default": 20,
+                "description": "Trọng số độ phù hợp (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "evidence": {
+                "default": 20,
+                "description": "Trọng số minh chứng (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "ID người tạo (HR)"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm đăng tin (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "requiredSkills",
+          "preferredSkills",
+          "minYearsExperience",
+          "status",
+          "cvPassThreshold",
+          "interviewQuestionCount",
+          "createdById",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "JobListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "description": "Mã định danh công việc (UUID)"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Tiêu đề tuyển dụng"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Nội dung chi tiết của JD"
+                },
+                "requiredSkills": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Kỹ năng bắt buộc"
+                },
+                "preferredSkills": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Kỹ năng ưu tiên"
+                },
+                "minYearsExperience": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "description": "Số năm kinh nghiệm tối thiểu"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "OPEN",
+                    "CLOSED"
+                  ],
+                  "description": "Trạng thái tin tuyển dụng (OPEN hoặc CLOSED)"
+                },
+                "cvPassThreshold": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "description": "Điểm sàn qua vòng CV (0-100)"
+                },
+                "interviewQuestionCount": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
+                },
+                "rubricWeights": {
+                  "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn",
+                  "type": "object",
+                  "properties": {
+                    "technical": {
+                      "default": 40,
+                      "description": "Trọng số chuyên môn (%)",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "communication": {
+                      "default": 20,
+                      "description": "Trọng số giao tiếp (%)",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "relevance": {
+                      "default": 20,
+                      "description": "Trọng số độ phù hợp (%)",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "evidence": {
+                      "default": 20,
+                      "description": "Trọng số minh chứng (%)",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100
+                    }
+                  }
+                },
+                "createdById": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "description": "ID người tạo (HR)"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "description": "Thời điểm đăng tin (ISO 8601)"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "description",
+                "requiredSkills",
+                "preferredSkills",
+                "minYearsExperience",
+                "status",
+                "cvPassThreshold",
+                "interviewQuestionCount",
+                "createdById",
+                "createdAt",
+                "updatedAt"
+              ]
+            },
+            "description": "Danh sách công việc"
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "description": "Trang hiện tại"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "description": "Số lượng mục trên mỗi trang"
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "description": "Tổng số bản ghi thỏa điều kiện tìm kiếm"
+              },
+              "totalPages": {
+                "description": "Tổng số trang",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "page",
+              "limit",
+              "total"
+            ],
+            "description": "Thông tin phân trang"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "CreateJobDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Tiêu đề vị trí tuyển dụng"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nội dung chi tiết JD"
+          },
+          "requiredSkills": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng bắt buộc"
+          },
+          "preferredSkills": {
+            "default": [],
+            "description": "Danh sách kỹ năng ưu tiên",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "minYearsExperience": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Số năm kinh nghiệm tối thiểu"
+          },
+          "cvPassThreshold": {
+            "default": 70,
+            "description": "Điểm sàn AI Screening (0-100)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "interviewQuestionCount": {
+            "default": 3,
+            "description": "Số câu hỏi phỏng vấn Voice AI (3-5 câu)",
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 5
+          },
+          "rubricWeights": {
+            "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn",
+            "type": "object",
+            "properties": {
+              "technical": {
+                "default": 40,
+                "description": "Trọng số chuyên môn (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "communication": {
+                "default": 20,
+                "description": "Trọng số giao tiếp (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "relevance": {
+                "default": 20,
+                "description": "Trọng số độ phù hợp (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "evidence": {
+                "default": 20,
+                "description": "Trọng số minh chứng (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "requiredSkills",
+          "minYearsExperience"
+        ]
+      },
+      "UpdateJobDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Tiêu đề vị trí tuyển dụng"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nội dung chi tiết JD"
+          },
+          "requiredSkills": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng bắt buộc"
+          },
+          "preferredSkills": {
+            "default": [],
+            "description": "Danh sách kỹ năng ưu tiên",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "minYearsExperience": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Số năm kinh nghiệm tối thiểu"
+          },
+          "cvPassThreshold": {
+            "default": 70,
+            "description": "Điểm sàn AI Screening (0-100)",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "interviewQuestionCount": {
+            "default": 3,
+            "description": "Số câu hỏi phỏng vấn Voice AI (3-5 câu)",
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 5
+          },
+          "rubricWeights": {
+            "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn",
+            "type": "object",
+            "properties": {
+              "technical": {
+                "default": 40,
+                "description": "Trọng số chuyên môn (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "communication": {
+                "default": 20,
+                "description": "Trọng số giao tiếp (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "relevance": {
+                "default": 20,
+                "description": "Trọng số độ phù hợp (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "evidence": {
+                "default": 20,
+                "description": "Trọng số minh chứng (%)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          }
+        }
+      },
+      "ApplicationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh đơn ứng tuyển (UUID)"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUBMITTED",
+              "SCREENING",
+              "QUALIFIED",
+              "REJECTED",
+              "INTERVIEWING",
+              "INTERVIEW_COMPLETED",
+              "UNDER_REVIEW",
+              "OFFERED",
+              "REJECTED_BY_HR",
+              "FEEDBACK_SENT"
+            ],
+            "description": "Trạng thái đơn ứng tuyển"
+          },
+          "job": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "description": "Mã định danh công việc (UUID)"
+              },
+              "title": {
+                "type": "string",
+                "description": "Tiêu đề vị trí tuyển dụng"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "description": "Thông tin công việc ứng tuyển"
+          },
+          "cvUrl": {
+            "description": "Đường dẫn tải/xem file CV",
+            "type": "string",
+            "format": "uri"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm nộp đơn (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật trạng thái gần nhất (ISO 8601)"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "job",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "JobSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh công việc (UUID)"
+          },
+          "title": {
+            "type": "string",
+            "description": "Tiêu đề vị trí tuyển dụng"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ]
+      }
+    }
+  }
+}
