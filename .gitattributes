@@ -1,0 +1,3 @@
+# openapi.json do API tự sinh khi chạy dev (luôn ghi LF): giữ LF trên mọi máy
+# để Git không báo "đã sửa" chỉ vì khác ký tự xuống dòng (core.autocrlf=true).
+openapi.json text eol=lf

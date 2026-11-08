@@ -29,10 +29,15 @@ async function bootstrap() {
   const document = cleanupOpenApiDoc(rawDocument);
   SwaggerModule.setup('api/docs', app, document);
 
-  fs.writeFileSync(
-    path.join(process.cwd(), 'openapi.json'),
-    JSON.stringify(document, null, 2),
-  );
+  // Khi dev: xuất spec ra openapi.json ở thư mục gốc repo (file FE import vào Apidog).
+  // Không dùng process.cwd(): `npm run ... -w apps/api` chạy với cwd = apps/api.
+  // Đường dẫn tính từ file đã build (apps/api/dist/main.js) lên 3 cấp là thư mục gốc.
+  if (process.env.NODE_ENV !== 'production') {
+    fs.writeFileSync(
+      path.resolve(import.meta.dirname, '../../../openapi.json'),
+      JSON.stringify(document, null, 2),
+    );
+  }
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
