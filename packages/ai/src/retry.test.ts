@@ -137,4 +137,12 @@ describe('withRetry', () => {
     await withRetry(fn, options);
     expect(fn.mock.calls).toEqual([[1], [2]]);
   });
+
+  it('không truyền sleep/random: dùng setTimeout và Math.random thật', async () => {
+    const fn = vi.fn().mockRejectedValueOnce(httpError(503)).mockResolvedValueOnce('ok');
+
+    await expect(
+      withRetry(fn, { maxRetries: 1, shouldRetry, baseDelayMs: 1, maxDelayMs: 1 }),
+    ).resolves.toEqual({ value: 'ok', attempts: 2 });
+  });
 });
