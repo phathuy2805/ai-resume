@@ -13,7 +13,12 @@ export {
 export type { AiErrorCode, AiErrorOptions } from './errors.js';
 
 export { createAiClient } from './client.js';
-export type { AiClient, CallOptions, GenerateTextOptions } from './client.js';
+export type {
+  AiClient,
+  CallOptions,
+  GenerateTextOptions,
+  GenerateStructuredOptions,
+} from './client.js';
 
 export function helloAI(): string {
   return 'Hello from @hireflow/ai package!';

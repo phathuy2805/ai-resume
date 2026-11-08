@@ -18,6 +18,12 @@ import {
   toAiError,
 } from './gemini.js';
 import { withRetry, type RetryOptions } from './retry.js';
+import {
+  parseStructuredResponse,
+  STRUCTURED_MAX_ATTEMPTS,
+  toGeminiJsonSchema,
+} from './structured.js';
+import type { z } from 'zod';
 
 /** Ghi đè timeout / số lần retry cho riêng một lần gọi. */
 export interface CallOptions {
@@ -30,10 +36,21 @@ export interface GenerateTextOptions extends CallOptions {
   temperature?: number;
 }
 
+export type GenerateStructuredOptions = GenerateTextOptions;
+
 export interface AiClient {
   /** Tên model đang dùng (để BE lưu kèm kết quả chấm, phục vụ đối chiếu). */
   readonly models: Readonly<AiModels>;
   generateText(prompt: string, options?: GenerateTextOptions): Promise<string>;
+  /**
+   * Yêu cầu Gemini trả JSON theo `schema`, kiểm tra bằng Zod và trả về dữ liệu đúng kiểu.
+   * Sai schema thì gọi lại 1 lần; vẫn sai thì ném AiInvalidResponseError.
+   */
+  generateStructured<T extends z.ZodType>(
+    prompt: string,
+    schema: T,
+    options?: GenerateStructuredOptions,
+  ): Promise<z.output<T>>;
 }
 
 /** Phần nhỏ của SDK mà client cần. Tách ra để test truyền bản giả vào. */
@@ -120,6 +137,33 @@ export function buildAiClient(
         ]);
       }
       return text;
+    },
+
+    async generateStructured(prompt, schema, options = {}) {
+      const { systemInstruction, temperature, ...callOptions } = options;
+      const params: GenerateContentParameters = {
+        model: config.models.text,
+        contents: prompt,
+        config: {
+          systemInstruction,
+          temperature,
+          responseMimeType: 'application/json',
+          responseJsonSchema: toGeminiJsonSchema(schema),
+        },
+      };
+
+      let issues: string[] = [];
+      for (let attempt = 1; attempt <= STRUCTURED_MAX_ATTEMPTS; attempt++) {
+        const response = await generateContent('generateStructured', params, callOptions);
+        const result = parseStructuredResponse(response.text, schema);
+        if (result.success) return result.data;
+
+        issues = result.issues;
+        logger.warn(
+          `ai.generateStructured model=${params.model} invalid-response attempt=${attempt} issues=${issues.length}`,
+        );
+      }
+      throw new AiInvalidResponseError(issues, { attempts: STRUCTURED_MAX_ATTEMPTS });
     },
   };
 }
