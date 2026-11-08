@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode, type ComponentProps } from 'react';
+import { useContext, type ReactNode, type ComponentProps } from 'react';
 import {
   type FieldPath,
   type FieldValues,
@@ -7,10 +7,10 @@ import {
   Controller,
   type ControllerProps,
 } from 'react-hook-form';
+import { FormFieldContext } from '@/components/ui/form-context';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-const FormFieldContext = createContext<{ name: string } | null>(null);
 export function Form<T extends FieldValues>(props: ComponentProps<typeof FormProvider<T>>) {
   return <FormProvider {...props} />;
 }
@@ -37,9 +37,4 @@ export function FormMessage() {
   const { errors } = useFormState();
   const message = field?.name ? (errors[field.name]?.message as string | undefined) : undefined;
   return message ? <p className="text-sm font-medium text-destructive">{message}</p> : null;
-}
-export function useFormField() {
-  const field = useContext(FormFieldContext);
-  if (!field) throw new Error('useFormField must be used within FormField');
-  return field;
 }
