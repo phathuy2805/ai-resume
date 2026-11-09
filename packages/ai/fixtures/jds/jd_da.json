@@ -1,0 +1,38 @@
+{
+  "id": "e28f8296-2826-57b3-85c3-f2f880b2e234",
+  "code": "JD_DA",
+  "title": "Middle / Senior Data Analyst",
+  "department": "Data & Analytics",
+  "level": "Middle / Senior",
+  "description": "Vị trí Data Analyst chịu trách nhiệm phân tích sâu dữ liệu người dùng và kinh doanh, xây dựng các Dashboard trực quan hóa dữ liệu theo thời gian thực, thiết kế các mô hình chỉ số KPI và phối hợp với ban điều hành để đưa ra các đề xuất tối ưu hóa tăng trưởng dựa trên dữ liệu thực chứng.",
+  "responsibilities": [
+    "Viết và tối ưu hóa các truy vấn SQL phức tạp để trích xuất dữ liệu từ data warehouse.",
+    "Sử dụng Python (Pandas, NumPy) để làm sạch, biến đổi và thực hiện phân tích thống kê chuyên sâu.",
+    "Thiết kế, xây dựng và duy trì các bảng điều khiển trực quan hóa Dashboard trên PowerBI / Tableau.",
+    "Theo dõi, đo lường các chỉ số kinh doanh chủ chốt (Conversion Rate, Retention Rate, Churn Rate).",
+    "Trình bày các phát hiện và đề xuất giải pháp cải thiện kinh doanh trước đội ngũ quản lý."
+  ],
+  "requiredSkills": [
+    "SQL",
+    "Python",
+    "PowerBI",
+    "Data Analysis",
+    "Statistics"
+  ],
+  "preferredSkills": [
+    "Tableau",
+    "Pandas",
+    "ETL",
+    "BigQuery",
+    "Data Modeling"
+  ],
+  "minYearsExperience": 2,
+  "cvPassThreshold": 70,
+  "interviewQuestionCount": 3,
+  "rubricWeights": {
+    "technical": 35,
+    "communication": 25,
+    "relevance": 20,
+    "evidence": 20
+  }
+}
