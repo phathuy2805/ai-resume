@@ -1,0 +1,38 @@
+{
+  "id": "f39a9307-3937-68c4-96d4-a3a991c3f345",
+  "code": "JD_MKT",
+  "title": "Digital Marketing Specialist",
+  "department": "Growth & Marketing",
+  "level": "Middle",
+  "description": "Chúng tôi tìm kiếm Digital Marketing Specialist nhiệt huyết để dẫn dắt các chiến dịch tiếp thị số đa kênh. Bạn sẽ phụ trách tối ưu hóa công cụ tìm kiếm (SEO), vận hành quảng cáo trả phí (Google Ads, Meta Ads), sáng tạo nội dung chuyển đổi và đo lường hiệu quả chiến dịch bằng dữ liệu phân tích.",
+  "responsibilities": [
+    "Lập kế hoạch và trực tiếp triển khai các chiến dịch quảng cáo trả phí Performance (Google Ads, Meta Ads).",
+    "Thực hiện nghiên cứu từ khóa, tối ưu hóa on-page/off-page SEO và theo dõi thứ hạng từ khóa website.",
+    "Sáng tạo các định dạng nội dung tiếp thị (bài viết blog, landing page, kịch bản video, email marketing).",
+    "Đo lường, theo dõi và lập báo cáo định kỳ về chi phí CPA, ROI, ROAS bằng Google Analytics 4.",
+    "Thực hiện thử nghiệm A/B Testing về thông điệp, hình ảnh và trang đích để tối đa hóa tỷ lệ chuyển đổi."
+  ],
+  "requiredSkills": [
+    "SEO",
+    "Google Ads",
+    "Meta Ads",
+    "Content Marketing",
+    "Google Analytics"
+  ],
+  "preferredSkills": [
+    "TikTok Ads",
+    "Copywriting",
+    "Email Marketing",
+    "Canva",
+    "A/B Testing"
+  ],
+  "minYearsExperience": 2,
+  "cvPassThreshold": 70,
+  "interviewQuestionCount": 3,
+  "rubricWeights": {
+    "technical": 30,
+    "communication": 30,
+    "relevance": 25,
+    "evidence": 15
+  }
+}
