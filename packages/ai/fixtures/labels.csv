@@ -3,32 +3,32 @@ cv_be_01.pdf,JD_BE,phù hợp,"Đáp ứng vượt trội hơn 4 năm kinh nghi�
 cv_be_02.pdf,JD_BE,phù hợp,"Hơn 5 năm kinh nghiệm dẫn dắt backend, thành thạo NestJS, kiến trúc microservices và cơ sở dữ liệu PostgreSQL",,chắc,dev,95
 cv_be_03.pdf,JD_BE,phù hợp,"Có 3.5 năm kinh nghiệm vững vàng với NodeJS, NestJS, thiết kế cơ sở dữ liệu PostgreSQL và Docker",,chắc,test,88
 cv_be_04.pdf,JD_BE,phù hợp,"Tech Lead hơn 6 năm kinh nghiệm, làm chủ toàn bộ tech stack NodeJS, NestJS, tối ưu hóa PostgreSQL tải cao",,chắc,test,96
-cv_be_05.pdf,JD_BE,không phù hợp,"Có 4 năm kinh nghiệm NodeJS và PostgreSQL tốt nhưng chưa từng làm việc với framework NestJS bắt buộc",NestJS,chưa chắc,dev,66
-cv_be_06.pdf,JD_BE,không phù hợp,"Đầy đủ toàn bộ kỹ năng NestJS và PostgreSQL nhưng số năm kinh nghiệm mới đạt 2.3 năm, chưa chạm ngưỡng 3 năm",Kinh nghiệm tối thiểu 3 năm,chưa chắc,test,64
-cv_be_07.pdf,JD_BE,không phù hợp,"Nền tảng backend .NET vững chắc đang chuyển sang NodeJS nhưng kinh nghiệm thực tế với NestJS còn ít dưới 1 năm",Kinh nghiệm chuyên sâu NodeJS/NestJS,chưa chắc,test,60
-cv_be_08.pdf,JD_BE,không phù hợp,"Lập trình viên Frontend mới ra trường dưới 1 năm kinh nghiệm, hoàn toàn không có kỹ năng backend và cơ sở dữ liệu","NodeJS;NestJS;PostgreSQL;Docker;Kinh nghiệm",chắc,dev,20
-cv_be_09.pdf,JD_BE,không phù hợp,"Nhân viên hành chính nhân sự, hoàn toàn lệch ngành và không có bất kỳ kỹ năng lập trình công nghệ nào","Toàn bộ kỹ năng bắt buộc",chắc,test,5
-cv_be_10.pdf,JD_BE,không phù hợp,"Chuyên viên thiết kế đồ họa hình ảnh, không có kiến thức về khoa học máy tính và lập trình backend","Toàn bộ kỹ năng bắt buộc",chắc,test,5
+cv_be_05.pdf,JD_BE,không phù hợp,"Có 4 năm kinh nghiệm NodeJS và PostgreSQL tốt nhưng hoàn toàn không có kỹ năng với framework NestJS",NestJS,chưa chắc,dev,66
+cv_be_06.pdf,JD_BE,phù hợp,"Kinh nghiệm vừa chạm ngưỡng 3 năm (3 năm 2 tháng), đáp ứng đầy đủ toàn bộ kỹ năng kỹ thuật NodeJS, NestJS, TypeScript và PostgreSQL",,chưa chắc,test,74
+cv_be_07.pdf,JD_BE,không phù hợp,"Kỹ sư phần mềm .NET backend 4 năm chuyển sang, mới tiếp cận NodeJS/TypeScript ở mức cơ bản và chưa có NestJS",NestJS,chưa chắc,test,62
+cv_be_08.pdf,JD_BE,không phù hợp,"Lập trình viên Frontend mới ra trường dưới 1 năm kinh nghiệm, thiếu toàn bộ kỹ năng backend và cơ sở dữ liệu","NodeJS;NestJS;PostgreSQL;Docker",chắc,dev,20
+cv_be_09.pdf,JD_BE,không phù hợp,"Nhân viên hành chính nhân sự, hoàn toàn lệch ngành và thiếu toàn bộ kỹ năng lập trình bắt buộc","NodeJS;NestJS;TypeScript;PostgreSQL;RESTful API;Docker",chắc,test,5
+cv_be_10.pdf,JD_BE,không phù hợp,"Chuyên viên thiết kế đồ họa hình ảnh, không có kỹ năng về phát triển phần mềm và cơ sở dữ liệu","NodeJS;NestJS;TypeScript;PostgreSQL;RESTful API;Docker",chắc,test,5
 cv_da_01.pdf,JD_DA,phù hợp,"Có 3.5 năm kinh nghiệm phân tích dữ liệu, thành thạo truy vấn SQL nâng cao, lập trình Python và xây dựng PowerBI",,chắc,dev,90
 cv_da_02.pdf,JD_DA,phù hợp,"Hơn 4.5 năm kinh nghiệm Data Analyst ngành chứng khoán/ví điện tử, xuất sắc về SQL, Python thống kê và PowerBI",,chắc,test,94
 cv_da_03.pdf,JD_DA,phù hợp,"Có 3 năm kinh nghiệm phân tích dữ liệu E-commerce, thành thạo SQL, Python Pandas và thiết kế Dashboard PowerBI",,chắc,test,86
 cv_da_04.pdf,JD_DA,phù hợp,"Hơn 5 năm kinh nghiệm phân tích dữ liệu tài chính ngân hàng, làm chủ SQL tối ưu, mô hình thống kê Python và PowerBI",,chắc,test,95
-cv_da_05.pdf,JD_DA,không phù hợp,"Có 3 năm kinh nghiệm BI rất tốt về SQL và PowerBI nhưng hoàn toàn thiếu kỹ năng lập trình Python bắt buộc",Python,chưa chắc,dev,65
-cv_da_06.pdf,JD_DA,không phù hợp,"Có đầy đủ kỹ năng SQL, Python và PowerBI nhưng kinh nghiệm thực tế mới đạt 1.3 năm, chưa đủ 2 năm theo yêu cầu",Kinh nghiệm tối thiểu 2 năm,chưa chắc,test,62
-cv_da_07.pdf,JD_DA,không phù hợp,"Chuyên viên Business Analyst có hiểu biết nghiệp vụ và SQL cơ bản nhưng thiếu kỹ năng phân tích thống kê và lập trình Python","Python;Statistics chuyên sâu",chưa chắc,test,58
+cv_da_05.pdf,JD_DA,không phù hợp,"Có 3.5 năm kinh nghiệm BI rất tốt về SQL và PowerBI nhưng không có kỹ năng lập trình phân tích dữ liệu với Python",Python,chưa chắc,dev,65
+cv_da_06.pdf,JD_DA,phù hợp,"Kinh nghiệm vừa chạm ngưỡng 2 năm (2 năm 3 tháng), làm chủ đầy đủ các kỹ năng bắt buộc SQL, Python, PowerBI và Statistics",,chưa chắc,test,75
+cv_da_07.pdf,JD_DA,không phù hợp,"Chuyên viên IT Business Analyst có hiểu biết nghiệp vụ và SQL cơ bản nhưng thiếu kỹ năng lập trình Python và thống kê","Python;Statistics",chưa chắc,test,60
 cv_da_08.pdf,JD_DA,không phù hợp,"Chuyên viên kinh doanh B2B phần mềm, không có kỹ năng kỹ thuật về truy vấn SQL, Python hay phân tích dữ liệu","SQL;Python;PowerBI;Data Analysis;Statistics",chắc,dev,15
-cv_da_09.pdf,JD_DA,không phù hợp,"Nhân viên sáng tạo nội dung mạng xã hội, hoàn toàn không có kỹ năng truy vấn dữ liệu và lập trình thống kê","Toàn bộ kỹ năng bắt buộc",chắc,test,8
-cv_da_10.pdf,JD_DA,không phù hợp,"Trưởng nhóm chăm sóc khách hàng tổng đài, lệch ngành và không có kỹ năng phân tích định lượng dữ liệu","Toàn bộ kỹ năng bắt buộc",chắc,test,5
+cv_da_09.pdf,JD_DA,không phù hợp,"Nhân viên sáng tạo nội dung mạng xã hội, hoàn toàn không có kỹ năng truy vấn dữ liệu và lập trình thống kê","SQL;Python;PowerBI;Data Analysis;Statistics",chắc,test,8
+cv_da_10.pdf,JD_DA,không phù hợp,"Trưởng nhóm chăm sóc khách hàng tổng đài, lệch ngành và không có kỹ năng phân tích định lượng dữ liệu","SQL;Python;PowerBI;Data Analysis;Statistics",chắc,test,5
 cv_mkt_01.pdf,JD_MKT,phù hợp,"Có 3.5 năm kinh nghiệm Digital Marketing, thành thạo SEO kỹ thuật, Google Ads, Meta Ads và Google Analytics 4",,chắc,dev,91
 cv_mkt_02.pdf,JD_MKT,phù hợp,"Hơn 4.5 năm kinh nghiệm Performance Marketing, quản lý ngân sách lớn, tối ưu xuất sắc Google Ads, Meta Ads và SEO",,chắc,test,95
 cv_mkt_03.pdf,JD_MKT,phù hợp,"Có 3 năm kinh nghiệm thực chiến đa kênh, làm chủ kỹ thuật SEO website, chạy quảng cáo Ads và đo lường GA4",,chắc,test,88
 cv_mkt_04.pdf,JD_MKT,phù hợp,"Hơn 5 năm kinh nghiệm Growth Marketing, dẫn dắt toàn diện chiến lược SEO, Google Ads, Facebook Ads và tối ưu chuyển đổi",,chắc,test,96
-cv_mkt_05.pdf,JD_MKT,không phù hợp,"Có 3.5 năm kinh nghiệm Content và Meta Ads tốt nhưng thiếu kinh nghiệm thực tế về Google Ads và kỹ thuật SEO","Google Ads;SEO",chưa chắc,dev,63
-cv_mkt_06.pdf,JD_MKT,không phù hợp,"Nắm bắt tốt các kênh Google Ads, Meta Ads và SEO nhưng số năm kinh nghiệm mới có 1.2 năm, chưa đủ ngưỡng 2 năm",Kinh nghiệm tối thiểu 2 năm,chưa chắc,test,62
-cv_mkt_07.pdf,JD_MKT,không phù hợp,"Có 3 năm kinh nghiệm PR sự kiện chuyển sang, giỏi sáng tạo nội dung nhưng thiếu kỹ năng kỹ thuật Google Ads và SEO chuyên sâu","Google Ads;SEO kỹ thuật",chưa chắc,test,59
-cv_mkt_08.pdf,JD_MKT,không phù hợp,"Kỹ sư lập trình nhúng phần cứng vi điều khiển C/C++, hoàn toàn lệch ngành và không có kỹ năng tiếp thị số","Toàn bộ kỹ năng bắt buộc",chắc,dev,5
-cv_mkt_09.pdf,JD_MKT,không phù hợp,"Kế toán tổng hợp doanh nghiệp, không có kiến thức hoặc kỹ năng về Digital Marketing và quảng cáo trực tuyến","Toàn bộ kỹ năng bắt buộc",chắc,test,5
-cv_mkt_10.pdf,JD_MKT,không phù hợp,"Chuyên viên kiểm thử phần mềm QA Tester, không liên quan đến nghiệp vụ marketing và truyền thông số","Toàn bộ kỹ năng bắt buộc",chắc,test,8
+cv_mkt_05.pdf,JD_MKT,không phù hợp,"Có 3.5 năm kinh nghiệm Content Marketing, SEO và Meta Ads tốt nhưng chưa có kinh nghiệm thực tế với Google Ads",Google Ads,chưa chắc,dev,65
+cv_mkt_06.pdf,JD_MKT,phù hợp,"Kinh nghiệm vừa chạm ngưỡng 2 năm (2 năm 2 tháng), đáp ứng đầy đủ kỹ năng thực chiến SEO, Google Ads, Meta Ads và Google Analytics",,chưa chắc,test,74
+cv_mkt_07.pdf,JD_MKT,không phù hợp,"Có 3 năm kinh nghiệm PR sự kiện chuyển sang, giỏi sáng tạo nội dung nhưng thiếu kỹ năng chạy Google Ads và tối ưu SEO","SEO;Google Ads",chưa chắc,test,58
+cv_mkt_08.pdf,JD_MKT,không phù hợp,"Kỹ sư lập trình nhúng phần cứng vi điều khiển C/C++, hoàn toàn lệch ngành và thiếu toàn bộ kỹ năng tiếp thị số","SEO;Google Ads;Meta Ads;Content Marketing;Google Analytics",chắc,dev,5
+cv_mkt_09.pdf,JD_MKT,không phù hợp,"Kế toán tổng hợp doanh nghiệp, không có kiến thức hoặc kỹ năng về Digital Marketing và quảng cáo trực tuyến","SEO;Google Ads;Meta Ads;Content Marketing;Google Analytics",chắc,test,5
+cv_mkt_10.pdf,JD_MKT,không phù hợp,"Chuyên viên kiểm thử phần mềm QA Tester, không liên quan đến nghiệp vụ marketing và truyền thông số","SEO;Google Ads;Meta Ads;Content Marketing;Google Analytics",chắc,test,8
 cv_be_02.pdf,JD_DA,không phù hợp,"Chuyên sâu lập trình backend và hệ thống, không có kỹ năng phân tích dữ liệu, thống kê và PowerBI","Python;PowerBI;Data Analysis;Statistics",chắc,dev,15
 cv_da_02.pdf,JD_MKT,không phù hợp,"Chuyên viên phân tích dữ liệu, hoàn toàn không có kỹ năng chạy quảng cáo Google Ads, Meta Ads và SEO","SEO;Google Ads;Meta Ads;Content Marketing",chắc,dev,12
 cv_mkt_02.pdf,JD_BE,không phù hợp,"Ứng viên ngành tiếp thị số, không có kỹ năng lập trình phần mềm, NodeJS, NestJS và cơ sở dữ liệu","NodeJS;NestJS;TypeScript;PostgreSQL;RESTful API;Docker",chắc,dev,5
