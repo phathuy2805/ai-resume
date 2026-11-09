@@ -9,6 +9,7 @@ Hệ thống Trợ lý Tự động hóa Tuyển dụng & Sơ tuyển Hồ sơ �
 * **Node.js**: `v24.x` (khuyến nghị dùng `nvm use` để đọc file `.nvmrc`).
 * **Package Manager**: **`npm`** đi kèm theo Node v24.  
   > ⚠️ **Lưu ý quan trọng**: Cả nhóm thống nhất **chỉ sử dụng `npm`**, tuyệt đối **không** dùng `yarn` hoặc `pnpm` để tránh gây xung đột file lock. Chỉ commit file `package-lock.json` ở thư mục gốc.
+* **Docker Desktop**: Dùng để chạy cơ sở dữ liệu **PostgreSQL 16 + `pgvector`** dưới dạng container.
 
 ---
 
@@ -23,8 +24,9 @@ ai-resume/
 │   └── web/             # Frontend Client (React + Vite + TypeScript)
 ├── packages/
 │   └── ai/              # Thư viện core AI (@hireflow/ai)
+├── docker/              # Script khởi tạo cơ sở dữ liệu (init SQL)
 ├── specs/               # Tài liệu đặc tả kỹ thuật dự án (SDD)
-├── .env.example         # Biến môi trường mẫu
+├── docker-compose.yml   # Cấu hình chạy PostgreSQL 16 + pgvector
 ├── .nvmrc               # Phiên bản Node quy định (24)
 ├── .prettierrc          # Cấu hình format code dùng chung
 ├── tsconfig.base.json   # Cấu hình TypeScript base dùng chung
@@ -57,6 +59,25 @@ ai-resume/
      ```bash
      cp apps/web/.env.example apps/web/.env
      ```
+
+4. **Khởi động cơ sở dữ liệu (PostgreSQL 16 + pgvector):**
+   ```bash
+   # Bật container PostgreSQL chạy ngầm (tự tạo 2 DB: ai_resume và ai_resume_test)
+   docker compose up -d
+
+   # Kiểm tra trạng thái container (đợi tới khi hiện "healthy")
+   docker compose ps
+
+   # Tắt container khi không sử dụng (vẫn giữ nguyên dữ liệu)
+   docker compose down
+
+   # Xóa sạch dữ liệu DB để khởi tạo lại từ đầu (khi cần reset volume)
+   docker compose down -v
+   ```
+   * **Thông tin kết nối DB mặc định (DBeaver / Navicat):**
+     * **Host:** `localhost` | **Port:** `5432`
+     * **Database:** `ai_resume` (dev) / `ai_resume_test` (test)
+     * **Username:** `postgres` | **Password:** `postgres`
 
 ---
 
