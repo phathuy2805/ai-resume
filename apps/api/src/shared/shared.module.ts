@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
+import { PrismaService } from './services/prisma.service.js';
 
-const sharedServices: any[] = [];
+const sharedServices = [PrismaService];
 
+@Global()
 @Module({
   imports: [],
   providers: [...sharedServices],
-  exports: [],
+  exports: sharedServices,
 })
 export class SharedModule {}

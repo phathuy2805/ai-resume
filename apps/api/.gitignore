@@ -1,0 +1,15 @@
+node_modules
+.env
+.env.*
+!.env.example
+
+# AI Agents & IDE
+.agents
+.agent
+.claude
+.windsurf
+skills-lock.json
+
+# Prisma generated client
+/src/generated
+/generated
