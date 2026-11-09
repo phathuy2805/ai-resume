@@ -1398,14 +1398,15 @@
             "enum": [
               "SUBMITTED",
               "SCREENING",
-              "QUALIFIED",
+              "SCREENING_FAILED",
+              "SCREENED",
+              "SHORTLISTED",
               "REJECTED",
+              "INTERVIEW_INVITED",
               "INTERVIEWING",
-              "INTERVIEW_COMPLETED",
-              "UNDER_REVIEW",
-              "OFFERED",
-              "REJECTED_BY_HR",
-              "FEEDBACK_SENT"
+              "EVALUATED",
+              "PASSED",
+              "FAILED"
             ],
             "description": "Trạng thái đơn ứng tuyển"
           },
@@ -1429,10 +1430,35 @@
             ],
             "description": "Thông tin công việc ứng tuyển"
           },
+          "cvFileName": {
+            "type": "string",
+            "description": "Tên file CV đã nộp"
+          },
+          "cvSizeBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Dung lượng file CV (byte)"
+          },
+          "cvMimeType": {
+            "type": "string",
+            "description": "Định dạng file CV (application/pdf)"
+          },
           "cvUrl": {
-            "description": "Đường dẫn tải/xem file CV",
+            "description": "Link xem CV có chữ ký, hết hạn sau thời gian ngắn",
             "type": "string",
             "format": "uri"
+          },
+          "aiRecommendation": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "CONSIDER",
+              "REJECT",
+              null
+            ],
+            "description": "Kết luận của AI sau khi sàng lọc CV (null nếu chưa chấm)",
+            "nullable": true
           },
           "createdAt": {
             "type": "string",
@@ -1447,6 +1473,9 @@
           "id",
           "status",
           "job",
+          "cvFileName",
+          "cvSizeBytes",
+          "cvMimeType",
           "createdAt",
           "updatedAt"
         ]
