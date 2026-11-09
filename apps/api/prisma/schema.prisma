@@ -1,0 +1,248 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// 1. ENUMS
+// ==========================================
+
+enum Role {
+  HR
+  CANDIDATE
+  ADMIN
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  SCREENING
+  SCREENING_FAILED
+  SCREENED
+  SHORTLISTED
+  REJECTED
+  INTERVIEW_INVITED
+  INTERVIEWING
+  EVALUATED
+  PASSED
+  FAILED
+}
+
+enum AiRecommendation {
+  PASS
+  CONSIDER
+  REJECT
+}
+
+enum AnswerSource {
+  VOICE
+  TEXT
+}
+
+// ==========================================
+// 2. CORE MODELS (User, RefreshToken, Job)
+// ==========================================
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  role         Role     @default(CANDIDATE)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  refreshTokens      RefreshToken[]
+  jobs               Job[]                      @relation("CreatedJobs")
+  applications       Application[]              @relation("CandidateApplications")
+  hrDecisions        Application[]              @relation("HrDecisionApplications")
+  statusChanges      ApplicationStatusHistory[] @relation("StatusChangedByUser")
+  interviewDecisions InterviewResult[]          @relation("InterviewDecisionByUser")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  userAgent String?   @map("user_agent")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Job {
+  id                     String                      @id @default(uuid())
+  title                  String
+  description            String                      @db.Text
+  requiredSkills         String[]                    @map("required_skills")
+  preferredSkills        String[]                    @default([]) @map("preferred_skills")
+  minYearsExperience     Int                         @default(0) @map("min_years_experience")
+  status                 JobStatus                   @default(OPEN)
+  cvPassThreshold        Int                         @default(70) @map("cv_pass_threshold")
+  interviewQuestionCount Int                         @default(3) @map("interview_question_count")
+  rubricWeights          Json?                       @map("rubric_weights")
+  parsedJd               Json?                       @map("parsed_jd")
+  embedding              Unsupported("vector(768)")?
+  createdById            String                      @map("created_by_id")
+  createdAt              DateTime                    @default(now()) @map("created_at")
+  updatedAt              DateTime                    @updatedAt @map("updated_at")
+
+  recruiter    User          @relation("CreatedJobs", fields: [createdById], references: [id], onDelete: Restrict)
+  applications Application[]
+
+  @@index([status])
+  @@index([createdById])
+  @@map("jobs")
+}
+
+// ==========================================
+// 3. APPLICATION & SCREENING MODELS
+// ==========================================
+
+model Application {
+  id               String                      @id @default(uuid())
+  jobId            String                      @map("job_id")
+  candidateId      String                      @map("candidate_id")
+  cvS3Key          String                      @map("cv_s3_key")
+  cvFileName       String                      @map("cv_file_name")
+  cvSizeBytes      Int                         @map("cv_size_bytes")
+  cvMimeType       String                      @default("application/pdf") @map("cv_mime_type")
+  cvText           String?                     @map("cv_text") @db.Text
+  parsedCv         Json?                       @map("parsed_cv")
+  status           ApplicationStatus           @default(SUBMITTED)
+  screeningError   String?                     @map("screening_error") @db.Text
+  aiRecommendation AiRecommendation?           @map("ai_recommendation")
+  hrDecisionById   String?                     @map("hr_decision_by_id")
+  hrDecisionAt     DateTime?                   @map("hr_decision_at")
+  hrNote           String?                     @map("hr_note") @db.Text
+  embedding        Unsupported("vector(768)")?
+  createdAt        DateTime                    @default(now()) @map("created_at")
+  updatedAt        DateTime                    @updatedAt @map("updated_at")
+
+  job             Job                        @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  candidate       User                       @relation("CandidateApplications", fields: [candidateId], references: [id], onDelete: Restrict)
+  hrDecisionBy    User?                      @relation("HrDecisionApplications", fields: [hrDecisionById], references: [id], onDelete: SetNull)
+  screeningResult ScreeningResult?
+  statusHistories ApplicationStatusHistory[]
+  interview       Interview?
+
+  @@unique([jobId, candidateId], name: "unique_application_per_job")
+  @@index([status])
+  @@index([jobId])
+  @@index([candidateId])
+  @@map("applications")
+}
+
+model ScreeningResult {
+  id                   String   @id @default(uuid())
+  applicationId        String   @unique @map("application_id")
+  totalScore           Float    @map("total_score")
+  codeScore            Float    @map("code_score")
+  geminiScore          Float    @map("gemini_score")
+  similarityScore      Float    @map("similarity_score")
+  strengths            Json
+  missingSkills        Json     @map("missing_skills")
+  verifiedQuotes       Json     @map("verified_quotes")
+  processingDurationMs Int      @map("processing_duration_ms")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("screening_results")
+}
+
+model ApplicationStatusHistory {
+  id            String             @id @default(uuid())
+  applicationId String             @map("application_id")
+  fromStatus    ApplicationStatus? @map("from_status")
+  toStatus      ApplicationStatus  @map("to_status")
+  changedById   String?            @map("changed_by_id")
+  reason        String?            @db.Text
+  changedAt     DateTime           @default(now()) @map("changed_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  changedBy   User?       @relation("StatusChangedByUser", fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([applicationId, changedAt])
+  @@map("application_status_history")
+}
+
+// ==========================================
+// 4. INTERVIEW MODELS
+// ==========================================
+
+model Interview {
+  id                 String    @id @default(uuid())
+  applicationId      String    @unique @map("application_id")
+  recordingConsentAt DateTime? @map("recording_consent_at")
+  startedAt          DateTime? @map("started_at")
+  completedAt        DateTime? @map("completed_at")
+  transcriptS3Key    String?   @map("transcript_s3_key")
+  evaluationError    String?   @map("evaluation_error") @db.Text
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  application Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  turns       InterviewTurn[]
+  result      InterviewResult?
+
+  @@map("interviews")
+}
+
+model InterviewTurn {
+  id               String       @id @default(uuid())
+  interviewId      String       @map("interview_id")
+  orderIndex       Int          @map("order_index")
+  question         String       @db.Text
+  questionType     String?      @map("question_type")
+  targetSkill      String?      @map("target_skill")
+  answerText       String?      @map("answer_text") @db.Text
+  source           AnswerSource @default(VOICE)
+  transcriptEdited Boolean      @default(false) @map("transcript_edited")
+  audioS3Key       String?      @map("audio_s3_key")
+  answeredAt       DateTime?    @map("answered_at")
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, orderIndex])
+  @@index([interviewId, orderIndex])
+  @@map("interview_turns")
+}
+
+model InterviewResult {
+  id                 String           @id @default(uuid())
+  interviewId        String           @unique @map("interview_id")
+  technicalScore     Float            @map("technical_score")
+  communicationScore Float            @map("communication_score")
+  relevanceScore     Float            @map("relevance_score")
+  evidenceScore      Float            @map("evidence_score")
+  totalScore         Float            @map("total_score")
+  feedbackSummary    String           @map("feedback_summary") @db.Text
+  evidenceQuotes     Json             @map("evidence_quotes")
+  aiRecommendation   AiRecommendation @map("ai_recommendation")
+  candidateFeedback  String           @map("candidate_feedback") @db.Text
+  decisionById       String?          @map("decision_by_id")
+  decisionAt         DateTime?        @map("decision_at")
+  decisionNote       String?          @map("decision_note") @db.Text
+  createdAt          DateTime         @default(now()) @map("created_at")
+
+  interview  Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  decisionBy User?     @relation("InterviewDecisionByUser", fields: [decisionById], references: [id], onDelete: SetNull)
+
+  @@map("interview_results")
+}

@@ -1,97 +1,109 @@
 # Product Constitution: Mission & Scope
 
-**Project Name**: Hệ thống Trợ lý Tự động hóa Tuyển dụng & Sơ tuyển Hồ sơ  
-*(AI Resume Screener & Candidate Evaluator)*  
-**Document Version**: 1.0.0  
-**Status**: APPROVED BASELINE  
-**Authoring Team**: 4 engineers (1 BE Lead, 1 BE + AI, 2 FE)  
-**Execution Window**: 02 - 04 weeks  
+**Tên dự án**: Hệ thống Trợ lý Tự động hóa Tuyển dụng & Sơ tuyển Hồ sơ  
+*(AI Resume Screener & Candidate Evaluator - Codename: HireFlow)*  
+**Phiên bản tài liệu**: 2.2.0 (Đã thẩm định kiến trúc & rà soát toàn diện)  
+**Trạng thái**: APPROVED CONSTITUTION  
+**Đội ngũ thực hiện**: 4 thành viên (Huy - Leader/Monorepo, TV1 - Frontend, TV2 - Backend, TV3 - AI & Pipeline)  
+**Thời gian thực hiện**: 03 tuần (Week 1 - Week 3)  
 
 ---
 
-## 1. Product Mission & Problem Statement
+## 1. Sứ mệnh sản phẩm & Vấn đề thực tế (Product Mission)
 
-### 1.1 Vấn đề thực tế (The Problem)
-Trong quy trình tuyển dụng truyền thống:
-- HR mất quá nhiều thời gian (trung bình 3–5 phút/CV) để đọc lướt hồ sơ không phù hợp.
-- Ứng viên nộp hồ sơ thường rơi vào "hố đen tuyển dụng" (ghosting) — bị loại mà không rõ lý do hoặc điểm yếu kỹ năng cần cải thiện.
-- Vòng sơ tuyển (Phone Screen) thường tốn kém thời gian của cả HR lẫn ứng viên cho những câu hỏi cơ bản lặp đi lặp lại.
+### 1.1 Vấn đề thực tế
+- **HR tốn nhiều thời gian**: Trung bình 3–5 phút cho mỗi CV, phần lớn bị lãng phí vào các hồ sơ lệch ngành, thiếu kỹ năng cốt lõi.
+- **Ứng viên bị ghosting**: Bị loại không rõ lý do, không nhận được phản hồi mang tính xây dựng về năng lực và khoảng trống kỹ năng (Skill Gap).
+- **Vòng sơ tuyển (Phone Screen) thiếu nhất quán**: Phỏng vấn sơ tuyển lặp đi lặp lại những câu hỏi cơ bản, khó đo lường khách quan và phụ thuộc vào cảm tính của người phỏng vấn.
 
-### 1.2 Sứ mệnh sản phẩm (Product Mission)
-Xây dựng một hệ thống tự động hóa khép kín quy trình sơ tuyển ứng viên bằng AI:
-1. **Tiết kiệm 80% thời gian sơ loại** của HR thông qua việc trích xuất, đối soát ngữ nghĩa giữa CV và JD bằng Vector Search kết hợp LLM Reasoning.
-2. **Tự động hóa vòng phỏng vấn sơ loại (Phone Screen)** bằng AI tương tác giọng nói thời gian thực.
-3. **Minh bạch và tôn trọng ứng viên**: Cung cấp báo cáo phân tích kỹ năng và điểm cần khắc phục cho ứng viên bị từ chối.
+### 1.2 Sứ mệnh giải pháp
+Xây dựng nền tảng hỗ trợ tuyển dụng thông minh khép kín:
+1. **Sàng lọc tự động & Khách quan**: Trích xuất text từ CV PDF (`unpdf`), tính điểm 0–100 kết hợp 3 thành phần (Code so khớp quy tắc + Gemini Semantic Reasoning + Gemini Vector Embedding Cosine Similarity).
+2. **Minh bạch & Tránh Hallucination**: Mọi nhận xét, điểm mạnh, điểm yếu của AI đều phải kèm theo **trích dẫn cụ thể đã kiểm chứng (verified quotes) từ CV**.
+3. **Phỏng vấn giọng nói AI đa phương thức**: AI sinh câu hỏi phỏng vấn thích ứng dựa trên lỗ hổng CV so với JD. Hệ thống phát câu hỏi (TTS), ứng viên trả lời bằng giọng nói (MediaRecorder), chuyển đổi WAV qua `ffmpeg`, lưu AWS S3 và **Gemini Multimodal Audio STT** chép lời thoại; chấm điểm theo Rubric 4 tiêu chí.
+4. **Phản hồi kịp thời & Đa kênh**: Cập nhật trạng thái trực quan trên trang "Hồ sơ của tôi" (Kênh chính) và tự động gửi thông báo qua **AWS SNS / SES** (Kênh mở rộng).
+
+### 1.3 Tiêu chí Đo lường Thành công (Quantifiable KPIs)
+1. **Độ chính xác sàng lọc (Screening Accuracy)**: Đạt độ tương đồng $\ge 80\%$ (hoặc Cohen's Kappa $\ge 0.70$) so với nhãn đánh giá độc lập của con người trên tập Test 20 CV (`[W2-AI-04]`).
+2. **Độ trễ xử lý (Processing Latency)**:
+   - Thời gian trích xuất và chấm điểm CV: P95 $< 30$ giây/CV qua hàng đợi BullMQ.
+   - Thời gian xử lý audio câu trả lời phỏng vấn: P95 $< 8$ giây (tính từ lúc upload đến khi có transcript).
+3. **Độ ổn định phỏng vấn (Interview Reliability)**: Tỷ lệ hoàn thành trọn vẹn phiên phỏng vấn voice (không bị gián đoạn WebSocket đột ngột) đạt $\ge 95\%$.
 
 ---
 
 ## 2. Đối tượng người dùng mục tiêu (Target Personas)
 
-| Persona                  | Vai trò & Mục tiêu                                                                                                                                                                         | Điểm chạm (Touchpoints)                                  |
-|:-------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------|
-| **HR / Nhà tuyển dụng**  | - Đăng tin tuyển dụng (JD) kèm tiêu chí trọng số.<br>- Cấu hình điểm sàn sơ loại.<br>- Xem bảng xếp hạng ứng viên và báo cáo đánh giá AI.<br>- Đưa ra quyết định Offer / Reject cuối cùng. | Web Dashboard quản trị (Yêu cầu đăng nhập tài khoản HR). |
-| **Ứng viên (Candidate)** | - Xem chi tiết JD.<br>- Tạo tài khoản và nộp hồ sơ CV (PDF).<br>- Tham gia phỏng vấn giọng nói với AI nếu đạt điểm sàn.<br>- Nhận phản hồi chi tiết về kỹ năng nếu không đạt.              | Candidate Portal (Yêu cầu đăng nhập tài khoản Ứng viên). |
+| Persona | Vai trò | Trải nghiệm & Điểm chạm | Cơ chế khởi tạo |
+| :--- | :--- | :--- | :--- |
+| **HR / Nhà tuyển dụng** | - Quản lý đăng tin tuyển dụng (JD), cấu hình trọng số & điểm sàn sơ loại.<br>- Theo dõi dashboard, bảng xếp hạng ứng viên theo điểm.<br>- Xem chi tiết CV, trích dẫn bằng chứng, nghe audio/đọc transcript phỏng vấn.<br>- Ra quyết định Duyệt / Loại / Gửi Offer. | **HR Portal** (`apps/web` - Layout Sidebar + Header, phân quyền role `HR`). | Tài khoản HR đầu tiên được khởi tạo tự động qua script `prisma/seed.ts`. |
+| **Ứng viên (Candidate)** | - Xem danh sách việc làm và chi tiết JD.<br>- Nộp hồ sơ CV định dạng PDF.<br>- Theo dõi trạng thái hồ sơ tại trang "Hồ sơ của tôi".<br>- Tham gia phòng phỏng vấn giọng nói với AI.<br>- Xem kết quả và nhận báo cáo phản hồi kỹ năng. | **Candidate Portal** (`apps/web` - Header + Footer, phân quyền role `CANDIDATE`). | Đăng ký trực tiếp qua màn hình Register trên giao diện Web. |
 
 ---
 
 ## 3. Phạm vi tính năng (In-Scope vs. Out-of-Scope)
 
-### 3.1 Trong phạm vi (In-Scope for MVP 2–4 tuần)
-- [x] **Xác thực & Phân quyền (RBAC)**: Đăng ký/Đăng nhập bằng JWT cho cả `HR` và `CANDIDATE`.
-- [x] **Quản lý Job/JD**: HR tạo, sửa, đóng tin tuyển dụng; cấu hình ngưỡng điểm phỏng vấn (`passScoreThreshold`, mặc định ví dụ $\ge 70$).
-- [x] **Ứng tuyển & Lưu trữ CV**: Ứng viên nộp CV định dạng PDF; file được lưu trữ an toàn trên **AWS S3**.
-- [x] **AI Screening & Ranking Pipeline**:
-  - Trích xuất nội dung text từ PDF bằng `unpdf`.
-  - Sinh vector embedding (Gemini Embedding) và đánh giá độ phù hợp (Gemini Flash) theo Zod Schema chuẩn hóa.
-  - Xếp hạng ứng viên và hiển thị phân tích điểm mạnh / điểm yếu.
-- [x] **AI Voice Interview sơ loại**:
-  - Tự động mở khóa phòng phỏng vấn khi điểm sàng lọc đạt ngưỡng.
-  - Phỏng vấn 3–5 câu hỏi thích ứng (adaptive) dựa trên lỗ hổng trong CV của ứng viên so với JD.
-  - Giao tiếp giọng nói hai chiều qua **Web Speech API** (STT & TTS trên trình duyệt) kết nối thời gian thực qua **Socket.IO**.
-- [x] **Báo cáo & Phản hồi**:
-  - Báo cáo tổng hợp buổi phỏng vấn cho HR ra quyết định.
-  - Tự động gửi email thông báo kết quả và phản hồi kỹ năng (Skill Gap Analysis) qua **AWS SES/SNS Sandbox**.
-- [x] **Triển khai**: Đóng gói hoàn chỉnh bằng **Docker Compose** chạy trên VPS.
+### 3.1 Trong phạm vi (In-Scope - Bắt buộc & Nên có)
+- [x] **Monorepo & Kiến trúc**: Quản lý bằng `npm workspaces` (`apps/web`, `apps/api`, `packages/ai`).
+- [x] **Xác thực & Phân quyền**: Đăng ký, đăng nhập JWT, tự động refresh token, bảo vệ Route trên FE & Guard trên BE (`HR`, `CANDIDATE`).
+- [x] **Quản lý JD**: CRUD tin tuyển dụng, cấu hình tiêu chí (kỹ năng bắt buộc, kỹ năng ưu tiên, số năm kinh nghiệm, ngưỡng điểm sàng lọc).
+- [x] **Nộp CV & Lưu trữ**: Upload CV PDF qua Multer, kiểm tra bảo mật, bóc tách text ngay bằng `unpdf`, lưu trữ an toàn trên **AWS S3 Bucket (Private)**.
+- [x] **Pipeline Sàng lọc CV**:
+  - Hàng đợi chạy nền (BullMQ + Redis) tự động chấm khi có CV mới, có cơ chế retry và phục hồi sau sự cố.
+  - Chấm điểm 0–100 kết hợp 3 lớp: Code Rule-based (40%) + Gemini Semantic (40%) + Embedding 768 chiều (20%).
+  - Trích xuất điểm mạnh, kỹ năng còn thiếu kèm trích dẫn văn bản gốc từ CV.
+- [x] **Phòng phỏng vấn AI Voice (Realtime)**:
+  - Sinh bộ 3–5 câu hỏi thích ứng (dựa trên JD + CV + kỹ năng còn thiếu) một lần khi bắt đầu phiên.
+  - Giao tiếp realtime qua WebSocket (**Socket.IO** có WsJwtGuard bảo vệ).
+  - Web phát âm câu hỏi qua SpeechSynthesis (TTS); ứng viên thu âm câu trả lời bằng MediaRecorder $\rightarrow$ gửi API chuyển sang WAV 16kHz (`ffmpeg`) $\rightarrow$ lưu AWS S3 $\rightarrow$ **Gemini Multimodal Audio STT** chép lời thoại.
+  - Chấm điểm phỏng vấn theo Rubric 4 tiêu chí (Chuyên môn, Giao tiếp, Mức độ phù hợp, Bằng chứng thực tế).
+- [x] **Thông báo & Phản hồi**:
+  - Kênh chính (Bắt buộc): Màn hình "Hồ sơ của tôi" hiển thị trực tiếp trạng thái, điểm số và nhận xét.
+  - Kênh mở rộng (Nên có): Gửi thông báo/email qua **AWS SNS / SES** (mời phỏng vấn, email phân tích khoảng trống kỹ năng khi trượt).
+- [x] **Benchmark & Đánh giá**: Bộ dữ liệu chuẩn gồm 30 CV giả + 3 JD, 2 người gán nhãn độc lập, đo lường độ chính xác trên tập Dev / Test.
+- [x] **Đóng gói & Triển khai**: Docker Compose (NestJS có cài đặt binary `ffmpeg`, PostgreSQL + pgvector, Redis), Caddy reverse proxy, deploy lên AWS EC2.
 
-### 3.2 Ngoài phạm vi (Out-of-Scope - Hoãn lại sau MVP)
-- [ ] Ghi hình video hoặc phân tích khuôn mặt / cảm xúc (Face / Emotion Detection).
-- [ ] Tích hợp lịch phỏng vấn bên thứ ba (Google Calendar, Outlook Calendar).
-- [ ] Cổng thanh toán (Billing / Subscription) và kiến trúc đa doanh nghiệp (Multi-tenant SaaS).
-- [ ] Hỗ trợ đa ngôn ngữ phức tạp (tập trung tối ưu trước mắt cho Tiếng Việt / Tiếng Anh chuẩn).
+### 3.2 Ngoài phạm vi (Out-of-Scope - Không làm trong đồ án)
+- [ ] Ghi hình video hoặc phân tích khuôn mặt/cảm xúc (Face/Emotion AI).
+- [ ] Tích hợp lịch bên thứ 3 (Google Calendar / Outlook Calendar).
+- [ ] Cổng thanh toán, gói cước và mô hình Multi-tenant SaaS cho nhiều công ty khác nhau.
+- [ ] Màn hình Quản trị viên Super Admin phức tạp (quản lý qua DB/Seed script).
 
 ---
 
-## 4. Vòng đời dữ liệu đơn ứng tuyển (Application State Machine)
+## 4. Vòng đời dữ liệu đơn ứng tuyển (State Machine Chuẩn hóa)
+
+State Machine được quản lý tập trung trên Backend (`[W2-BE-03]`), đồng bộ 100% với Enum `ApplicationStatus` trong Database Prisma:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> SUBMITTED: Ứng viên nộp CV lên S3
-    SUBMITTED --> SCREENING: BullMQ đẩy vào hàng đợi phân tích
-    SCREENING --> QUALIFIED: Điểm AI Screening >= Ngưỡng
-    SCREENING --> REJECTED: Điểm AI Screening < Ngưỡng
+    [*] --> SUBMITTED: Ứng viên nộp CV thành công
+    SUBMITTED --> SCREENING: BullMQ đưa vào hàng đợi chấm điểm
+    SCREENING --> SCREENING_FAILED: Lỗi kỹ thuật (OCR / File hỏng / Quota)
+    SCREENING --> SCREENED: AI tính toán xong điểm 0-100
     
-    REJECTED --> FEEDBACK_SENT: AWS SES gửi email phân tích kỹ năng
-    FEEDBACK_SENT --> [*]
+    SCREENED --> SHORTLISTED: Điểm >= cvPassThreshold của JD
+    SCREENED --> REJECTED: Điểm < cvPassThreshold của JD (Hoặc HR loại)
     
-    QUALIFIED --> INTERVIEWING: Ứng viên bắt đầu Voice Interview với AI
-    INTERVIEWING --> INTERVIEW_COMPLETED: Hoàn thành 3-5 câu hỏi
-    INTERVIEW_COMPLETED --> UNDER_REVIEW: AI tổng hợp transcript & điểm phỏng vấn
+    SHORTLISTED --> INTERVIEW_INVITED: Mở phòng phỏng vấn & gửi thông báo
+    INTERVIEW_INVITED --> INTERVIEWING: Ứng viên tham gia phòng phỏng vấn Socket.IO
+    INTERVIEWING --> EVALUATED: Hoàn thành trả lời & AI chấm xong theo Rubric
     
-    UNDER_REVIEW --> OFFERED: HR quyết định tuyển
-    UNDER_REVIEW --> REJECTED_BY_HR: HR từ chối sau phỏng vấn
-    OFFERED --> [*]
-    REJECTED_BY_HR --> FEEDBACK_SENT
+    EVALUATED --> PASSED: HR phê duyệt tuyển dụng (Gửi Offer)
+    EVALUATED --> FAILED: HR đánh giá không đạt sau phỏng vấn
+    
+    PASSED --> [*]
+    FAILED --> [*]
+    REJECTED --> [*]
 ```
 
 ---
 
-## 5. Bảng kiểm chứng (Facts vs. Non-Negotiable Decisions)
+## 5. Phân công vai trò & Trách nhiệm (RACI Matrix)
 
-- **Đã kiểm chứng (Verified Fact)**: Team gồm 4 thành viên (1 BE, 1 BE+AI, 2 FE), thời hạn 2–4 tuần.
-- **Quyết định bất biến (Non-Negotiable Decisions)**:
-  - Cả HR và Ứng viên đều phải đăng nhập qua JWT.
-  - Lưu file CV trực tiếp lên AWS S3.
-  - Phỏng vấn Voice dùng Web Speech API ở Client để tối ưu thời gian phát triển và chi phí hạ tầng.
-  - Sử dụng BullMQ + Redis để xử lý bất đồng bộ các tác vụ nặng (Parse PDF, Call Gemini).
-  - Triển khai toàn bộ hệ thống bằng Docker Compose trên VPS.
-
+| Thành viên | Ký hiệu | Trách nhiệm chính theo Trello |
+| :--- | :--- | :--- |
+| **Huy (Leader)** | **LEAD** | Khởi tạo Monorepo (`W1-00`), chuẩn hóa quy chuẩn code, điều phối tiến độ & review PR. |
+| **Thành viên 1** | **TV1 (Frontend)** | Toàn bộ giao diện React/Vite/Tailwind: Auth, HR Portal, Candidate Portal, Phòng phỏng vấn voice, Caddy server. |
+| **Thành viên 2** | **TV2 (Backend)** | Toàn bộ NestJS API, Prisma schema, PostgreSQL + pgvector, BullMQ/Queue, Socket.IO Gateway, AWS S3, AWS SNS/SES, Docker EC2. |
+| **Thành viên 3** | **TV3 (AI & Data)** | Package `@hireflow/ai`, Prompt Engineering Zod, unpdf, Gemini STT/Embedding, thuật toán chấm điểm, bộ test 30 CV/3 JD. |

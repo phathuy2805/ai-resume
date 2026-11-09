@@ -1,104 +1,120 @@
-# Product Constitution: Milestones & Roadmap
+# Product Constitution: Milestones & Detailed Roadmap
 
-**Project Name**: Hệ thống Trợ lý Tự động hóa Tuyển dụng & Sơ tuyển Hồ sơ  
-**Timeline**: 02 - 04 tuần (28 ngày làm việc)  
-**Team Allocation**:
-- **BE Lead**: Kiến trúc, Auth, Prisma, Queue, S3 Presigned URL, AWS SES.
-- **BE + AI**: Gemini integration, Vector search (pgvector), Prompting, Socket.IO Gateway.
-- **FE 1**: Candidate Portal (Xem JD, Nộp CV, Giao diện Voice Interview).
-- **FE 2**: HR Portal (Dashboard, Quản lý JD, Bảng xếp hạng ứng viên, Báo cáo phỏng vấn).
+**Tên dự án**: Hệ thống Trợ lý Tự động hóa Tuyển dụng & Sơ tuyển Hồ sơ (HireFlow)  
+**Phiên bản tài liệu**: 2.2.0 (Đã thẩm định kiến trúc & phân rã các tính năng lớn)  
+**Thời gian thực hiện**: 03 tuần (Week 1 – Week 3)  
+**Phân công nhân sự**:
+- **Huy (Lead)**: Quản trị Monorepo, review quy chuẩn code & điều phối tổng thể.
+- **TV1 (Frontend)**: Toàn bộ giao diện React, Vite, shadcn/ui, TanStack Query, Web Speech & Caddy server.
+- **TV2 (Backend)**: NestJS API, Prisma, PostgreSQL + pgvector, Queue, Socket.IO, AWS S3, AWS SNS/SES, Docker EC2.
+- **TV3 (AI & Pipeline)**: Package `@hireflow/ai`, Prompting Zod, unpdf, Gemini STT/Embedding, thuật toán chấm điểm, bộ test 30 CV.
 
 ---
 
-## 1. Bản đồ lộ trình tổng quan (Gantt Overview)
+## 1. Sơ đồ Tiến độ 3 Tuần
 
 ```mermaid
 flowchart TD
-    M0["Milestone 0: Monorepo Setup & Contracts (Ngày 1-3)"]
-    M1["Milestone 1: Auth & Job Management (Ngày 4-7)"]
-    M2["Milestone 2: CV Upload & AI Screening Pipeline (Ngày 8-14)"]
-    M3["Milestone 3: AI Voice Interview qua Socket.IO (Ngày 15-19)"]
-    M4["Milestone 4: HR Review & Email Feedback (Ngày 20-23)"]
-    M5["Milestone 5: Docker VPS & Production Release (Ngày 24-28)"]
+    subgraph W1["TUẦN 1: Nền tảng & Phân tích CV/JD"]
+        W1_00["[W1-00] Monorepo Setup (Huy)"] --> W1_BE["[W1-BE-01..05] NestJS, Prisma, Auth, Jobs, Apps (TV2)"]
+        W1_00 --> W1_FE["[W1-FE-01..06] Vite, Layout, Auth, Jobs, Axios Mock (TV1)"]
+        W1_00 --> W1_AI["[W1-AI-01..06] @hireflow/ai, unpdf, Zod, Test Dataset (TV3)"]
+    end
 
-    M0 --> M1
-    M1 --> M2
-    M2 --> M3
-    M3 --> M4
-    M4 --> M5
+    subgraph W2["TUẦN 2: Sàng lọc & Xếp hạng Ứng viên"]
+        W1_BE & W1_FE & W1_AI --> W2_BE["[W2-BE-01..04] Screening Queue, AiModule, State Machine, Dashboard API (TV2)"]
+        W1_BE & W1_FE & W1_AI --> W2_AI["[W2-AI-01..04] Gemini Embedding, Scoring 0-100, Verified Quotes, Accuracy Eval (TV3)"]
+        W1_BE & W1_FE & W1_AI --> W2_FE["[W2-FE-01..04] HR Dashboard, Chi tiết ứng viên, Hồ sơ của tôi, Thống kê (TV1)"]
+    end
+
+    subgraph W3["TUẦN 3: Phỏng vấn Voice AI & Triển khai Production"]
+        W2_BE & W2_AI & W2_FE --> W3_AI["[W3-AI-01..04] Sinh câu hỏi, Gemini Audio STT, Chấm Rubric, Feedback (TV3)"]
+        W2_BE & W2_AI & W2_FE --> W3_BE["[W3-BE-01..07] Socket.IO, ffmpeg WAV, Throttler, Docker EC2, AWS SNS/SES (TV2)"]
+        W2_BE & W2_AI & W2_FE --> W3_FE["[W3-FE-01..05] Phòng phỏng vấn voice, Xem kết quả, Caddy Image (TV1)"]
+    end
 ```
 
 ---
 
-## 2. Chi tiết các cột mốc (Milestones & Deliverables)
+## 2. Chi tiết phân rã Task theo từng tuần (Đã tối ưu để Review an toàn)
 
-### Milestone 0: Nền tảng Monorepo & Đặc tả Hợp đồng (Ngày 1 – 3)
-*Mục tiêu: Cả team có khung làm việc chung, FE có thể mock API ngay lập tức.*
-- [ ] Khởi tạo Monorepo với `pnpm` + `turborepo`.
-- [ ] Cấu hình package `shared`: định nghĩa toàn bộ Types, Enums, Zod Schemas và Socket Events.
-- [ ] Tạo file `schema.prisma` đầy đủ các quan hệ thực thể.
-- [ ] Cấu hình Swagger/OpenAPI tự động sinh trên NestJS API.
-- **Tiêu chí nghiệm thu (DoD)**: Chạy `pnpm build` và `pnpm lint` thành công trên toàn bộ repo; FE import được types từ `@ai-resume/shared`.
+### TUẦN 1: Nền tảng & Phân tích CV/JD (17 Tasks)
 
----
+#### Nền tảng chung
+- [x] **`[W1-00]` Khởi tạo monorepo npm**: `apps/web`, `apps/api`, `packages/ai` *(Huy - Bắt buộc)*.
+- [ ] **Quy ước mức độ ưu tiên**: Phổ biến nguyên tắc Bắt buộc > Nên có > Có thể có *(Cả team)*.
 
-### Milestone 1: Xác thực & Quản lý Tin Tuyển Dụng (Ngày 4 – 7)
-*Mục tiêu: Đăng nhập được hệ thống và HR tạo được JD với tiêu chí điểm sàn.*
-- **Backend (BE Lead)**:
-  - Auth module: JWT sign/verify, Refresh token, Roles Guard (`HR`, `CANDIDATE`).
-  - Job module: CRUD Job, cấu hình `passScoreThreshold` và mảng tiêu chí kỹ năng.
-- **Frontend (FE 1 & FE 2)**:
-  - Màn hình Đăng nhập / Đăng ký (chung giao diện hoặc tab cho HR/Candidate).
-  - HR Dashboard: Form tạo/sửa JD, danh sách các JD đang mở.
-  - Candidate Portal: Trang danh sách việc làm và xem chi tiết JD.
-- **Tiêu chí nghiệm thu (DoD)**: HR tạo được JD mới; Ứng viên đăng ký tài khoản và xem được chi tiết JD.
+#### Backend (TV2)
+- [ ] **`[W1-BE-01]` Cấu hình apps/api: Prisma & PostgreSQL + pgvector** *(Bắt buộc)*:
+  - *PR 1.1 (Core Models)*: Docker Postgres + pgvector, Prisma init, Model User, RefreshToken, Job, Seed admin ban đầu.
+  - *PR 1.2 (Recruitment Models)*: Model Application, ScreeningResult, ApplicationStatusHistory, Interview, InterviewTurn, InterviewResult, cột vector(768).
+- [ ] **`[W1-BE-02]` API contract**: Format response chuẩn, DTO + class-validator, cấu hình Swagger cho Auth, Jobs, Applications *(Bắt buộc)*.
+- [ ] **`[W1-BE-03]` Module Auth**: Đăng ký, đăng nhập JWT, Guard toàn cục, `@Public()`, `@Roles()`, `@CurrentUser()` *(Bắt buộc)*.
+- [ ] **`[W1-BE-04]` Module Jobs**: CRUD tin tuyển dụng, cấu hình tiêu chí sàng lọc và ngưỡng điểm phỏng vấn, kiểm tra quyền sở hữu HR *(Bắt buộc)*.
+- [ ] **`[W1-BE-05]` Module Applications**: Nộp CV bằng Multer, kiểm tra tệp PDF, trích text ngay khi nộp bằng `unpdf`, lưu trữ tệp lên **AWS S3 Bucket Private** *(Bắt buộc)*.
 
----
+#### Frontend (TV1)
+- [ ] **`[W1-FE-01]` Cấu hình apps/web**: Cài đặt Tailwind CSS, shadcn/ui, React Router, path alias, biến môi trường `.env` *(Bắt buộc)*.
+- [ ] **`[W1-FE-02]` Layout chung**: Bố cục HR (Sidebar + Header), bố cục Ứng viên (Header + Footer), phân luồng route theo role *(Bắt buộc)*.
+- [ ] **`[W1-FE-03]` Màn hình Auth**: Đăng ký, đăng nhập, lưu trữ token, khôi phục phiên và `ProtectedRoute` *(Bắt buộc)*.
+- [ ] **`[W1-FE-04]` Màn hình HR - Jobs**: Danh sách tin tuyển dụng, form tạo/sửa tin kèm cấu hình tiêu chí sàng lọc *(Bắt buộc)*.
+- [ ] **`[W1-FE-05]` Màn hình Ứng viên - Jobs**: Danh sách việc làm, trang xem chi tiết JD, form nộp CV PDF có progress bar và báo lỗi *(Bắt buộc)*.
+- [ ] **`[W1-FE-06]` Tầng gọi API**: Cấu hình Axios client, tự động refresh token, TanStack Query, proxy Vite mock API qua Apidog *(Bắt buộc)*.
 
-### Milestone 2: Nộp CV & Pipeline AI Sàng lọc (Ngày 8 – 14)
-*Mục tiêu: Ứng viên nộp CV PDF lên S3; BullMQ xử lý trích xuất văn bản, chấm điểm và xếp hạng.*
-- **Backend (BE Lead + BE AI)**:
-  - API xin AWS S3 Presigned URL cho upload file PDF.
-  - BullMQ Queue & Worker: Đọc PDF bằng `unpdf`, gọi Gemini Embedding & Gemini Flash để chấm điểm theo Zod Schema.
-  - Lưu kết quả `ScreeningResult` vào database (`matchScore`, `strengths`, `weaknesses`).
-- **Frontend (FE 1 & FE 2)**:
-  - Candidate: Component upload CV kéo-thả, hiển thị trạng thái xử lý hồ sơ (Processing/Done).
-  - HR: Bảng xếp hạng ứng viên (Leaderboard) theo `matchScore`, bộ lọc theo trạng thái.
-- **Tiêu chí nghiệm thu (DoD)**: Nộp 1 file CV thật $\rightarrow$ Hệ thống tự động phân tích và hiển thị điểm cùng điểm mạnh/yếu trên màn hình HR.
+#### AI & Pipeline (TV3)
+- [ ] **`[W1-AI-01]` Cấu hình packages/ai**: Build bằng `tsdown` để NestJS import `@hireflow/ai`, Gemini client, retry, timeout, logging, hàm sinh JSON có cấu trúc *(Bắt buộc)*.
+- [ ] **`[W1-AI-02]` Trích xuất văn bản CV PDF bằng unpdf**: Chuẩn hóa tiếng Việt, phát hiện file ảnh scan, bọc thẻ XML `<candidate_cv>` phòng ngừa Prompt Injection *(Bắt buộc)*.
+- [ ] **`[W1-AI-03]` Parse CV ra JSON có cấu trúc**: Sử dụng Zod + `generateStructured`, trích xuất thông tin, chuẩn hóa kỹ năng, tính số năm kinh nghiệm *(Bắt buộc)*.
+- [ ] **`[W1-AI-04]` Trích yêu cầu từ JD ra JSON**: Gộp kỹ năng HR nhập và kỹ năng trong mô tả, chuẩn hóa từ vựng đồng nhất với CV *(Bắt buộc)*.
+- [ ] **`[W1-AI-06]` Xây dựng bộ dữ liệu benchmark**: 30 CV giả lập + 3 JD, 2 người gán nhãn độc lập (double-blind), tách tập Dev (1/3) và Test (2/3) lưu tại `packages/fixtures` *(Bắt buộc)*.
 
 ---
 
-### Milestone 3: Phỏng vấn Giọng nói AI thời gian thực (Ngày 15 – 19)
-*Mục tiêu: Ứng viên vượt qua điểm sàn được mở khóa phòng Voice Interview với AI.*
-- **Backend (BE AI)**:
-  - Socket.IO Gateway quản lý session phỏng vấn (`join_interview`, `candidate_speak`, `ai_response`, `end_interview`).
-  - AI Engine sinh 3–5 câu hỏi thích ứng (dựa vào lỗ hổng CV phát hiện ở Milestone 2).
-  - Lưu lại toàn bộ transcript và tổng hợp điểm phỏng vấn sau khi kết thúc.
-- **Frontend (FE 1)**:
-  - Giao diện phòng phỏng vấn voice (hiển thị sóng âm/avatar tương tác, nút bật/tắt mic).
-  - Tích hợp Web Speech API (nhận diện giọng nói STT và đọc câu hỏi TTS).
-- **Tiêu chí nghiệm thu (DoD)**: Ứng viên hoàn thành một buổi phỏng vấn 3 câu hỏi qua giọng nói; server lưu lại trọn vẹn transcript.
+### TUẦN 2: Sàng lọc & Xếp hạng Ứng viên (12 Tasks)
+
+#### Backend (TV2)
+- [ ] **`[W2-BE-01]` Pipeline chấm CV chạy nền**: BullMQ xử lý tự động sau khi nộp CV, cơ chế thử lại (retry), hỗ trợ chấm lại, khôi phục job khi restart server *(Bắt buộc)*.
+- [ ] **`[W2-BE-02]` Tích hợp @hireflow/ai vào NestJS**: Xây dựng `AiModule`, hàng đợi AI dùng chung, phân tích JD khi tạo và lưu kết quả chấm CV vào DB *(Bắt buộc)*.
+- [ ] **`[W2-BE-03]` State Machine trạng thái hồ sơ**: Quản lý chuyển trạng thái tập trung (`SUBMITTED` $\rightarrow$ `SCREENING` $\rightarrow$ `SCREENED` $\rightarrow$ `SHORTLISTED` / `REJECTED`), lưu lịch sử biến động, phát sự kiện *(Bắt buộc)*.
+- [ ] **`[W2-BE-04]` API Dashboard HR**: Lấy danh sách ứng viên theo Job, xem chi tiết đánh giá, API duyệt/loại, Pre-signed URL xem CV AWS S3, số liệu thống kê *(Bắt buộc)*.
+
+#### AI & Pipeline (TV3)
+- [ ] **`[W2-AI-01]` Embedding CV và JD**: Sử dụng Gemini Embedding (768 chiều), tạo văn bản tóm tắt có cấu trúc, tính cosine similarity *(Bắt buộc)*.
+- [ ] **`[W2-AI-02]` & `[W2-AI-03]` Thuật toán chấm điểm CV 0–100 & Trích dẫn bằng chứng** *(Bắt buộc)*:
+  - *Sub-task 1*: Module tính điểm Rule-based (kỹ năng, kinh nghiệm) + Cosine similarity (20%).
+  - *Sub-task 2*: Prompt Gemini chấm ngữ nghĩa sâu + trích xuất Verified Quotes nguyên văn từ CV; đóng gói hàm tổng `screenCv()` cho BE gọi.
+- [ ] **`[W2-AI-04]` Đánh giá độ chính xác sàng lọc**: Tối ưu ngưỡng điểm trên tập Dev, đánh giá và báo cáo độ chính xác (mục tiêu $\ge 80\%$) trên tập Test; thêm script `npm run test:ai-eval` *(Bắt buộc)*.
+
+#### Frontend (TV1)
+- [ ] **`[W2-FE-01]` Dashboard HR**: Danh sách ứng viên theo từng Job, hiển thị điểm số, đề xuất AI, bộ lọc theo trạng thái, sắp xếp và nút chấm lại *(Bắt buộc)*.
+- [ ] **`[W2-FE-02]` Màn hình Chi tiết Ứng viên (HR)**: Hiển thị bảng điểm chi tiết, điểm mạnh, kỹ năng còn thiếu, trích dẫn đối soát CV, đề xuất AI, nút bấm Duyệt / Loại *(Bắt buộc)*.
+- [ ] **`[W2-FE-03]` Màn hình "Hồ sơ của tôi" (Ứng viên)**: Hiển thị trạng thái hồ sơ thân thiện, mở khóa nút "Vào phỏng vấn AI" khi đơn chuyển sang `SHORTLISTED` *(Bắt buộc)*.
+- [ ] **`[W2-FE-04]` Thống kê Dashboard HR**: Biểu đồ hồ sơ theo trạng thái, biểu đồ phân bố điểm số, tỷ lệ AI đề xuất đạt *(Nên có)*.
 
 ---
 
-### Milestone 4: Đánh giá HR & Gửi Feedback Tự động (Ngày 20 – 23)
-*Mục tiêu: HR xem báo cáo tổng hợp và chốt kết quả; ứng viên bị loại nhận email phân tích kỹ năng.*
-- **Backend (BE Lead)**:
-  - Tích hợp AWS SES / SNS Sandbox để gửi email.
-  - Module gửi email template chứa chi tiết `Skill Gap Analysis` cho ứng viên có trạng thái `REJECTED`.
-  - API cho HR cập nhật quyết định (`OFFERED` / `REJECTED_BY_HR`).
-- **Frontend (FE 2)**:
-  - Màn hình chi tiết ứng viên: Xem toàn bộ điểm screening, transcript phỏng vấn voice và đánh giá tổng quan của AI.
-  - Nút bấm duyệt Offer / Từ chối.
-- **Tiêu chí nghiệm thu (DoD)**: HR bấm Reject ứng viên $\rightarrow$ AWS SES gửi email feedback kỹ năng thực tế đến hộp thư ứng viên trong sandbox.
+### TUẦN 3: Phỏng vấn Giọng nói AI & Triển khai Production (17 Tasks)
 
----
+#### AI & Phỏng vấn Đa phương thức (TV3)
+- [ ] **`[W3-AI-01]` Sinh bộ câu hỏi phỏng vấn**: Tạo 3–5 câu hỏi thích ứng dựa trên JD + CV + khoảng trống kỹ năng một lần khi bắt đầu phiên *(Bắt buộc)*.
+- [ ] **`[W3-AI-04]` Chuyển giọng nói thành văn bản (STT) bằng Gemini**: Đọc file audio WAV từ backend/S3, chép nguyên văn lời nói, phát hiện trường hợp im lặng *(Bắt buộc)*.
+- [ ] **`[W3-AI-02]` Chấm điểm phỏng vấn theo Rubric**: Đánh giá 4 tiêu chí (Chuyên môn, Giao tiếp, Mức độ phù hợp, Bằng chứng thực tế) *(Bắt buộc)*.
+- [ ] **`[W3-AI-03]` Báo cáo & Phản hồi kỹ năng**: Sinh nhận xét chi tiết cho ứng viên, đóng gói hàm tổng `evaluateInterview()` cho BE *(Bắt buộc)*.
 
-### Milestone 5: Đóng gói Docker & Triển khai VPS (Ngày 24 – 28)
-*Mục tiêu: Đưa toàn bộ hệ thống lên môi trường production VPS cá nhân.*
-- [ ] Viết `Dockerfile` tối ưu multi-stage build cho `api` và `web`.
-- [ ] Thiết lập file `docker-compose.yml` gồm các services: `web-app`, `api-app`, `postgres`, `redis`, `nginx-proxy`.
-- [ ] Cấu hình Nginx reverse proxy + SSL tự động qua Certbot trên VPS.
-- [ ] Chạy kiểm thử toàn bộ luồng nghiệp vụ trên môi trường VPS thực tế.
-- **Tiêu chí nghiệm thu (DoD)**: Toàn bộ hệ thống chạy ổn định qua domain/IP của VPS, phục vụ đồng thời cả HR và Ứng viên.
+#### Backend & Triển khai (TV2)
+- [ ] **`[W3-BE-01]` InterviewGateway (Socket.IO)**: Quản lý vòng đời phòng phỏng vấn (`join`, `start`, `submit_answer`, `reconnect`, `end`), tích hợp `WsJwtGuard` xác thực token và quyền sở hữu đơn ứng tuyển *(Bắt buộc)*.
+- [ ] **`[W3-BE-02]` Xử lý Audio câu trả lời** *(Bắt buộc)*:
+  - *Sub-task 1*: Nhận audio blob từ client, dùng `fluent-ffmpeg` chuyển sang WAV 16kHz Mono, upload lên AWS S3.
+  - *Sub-task 2*: Gọi `W3-AI-04` (Gemini STT) lấy transcript và trả về cho client.
+- [ ] **`[W3-BE-03]` Xử lý đánh giá phỏng vấn ngầm**: Lưu transcript, tính điểm rubric, API xem kết quả phỏng vấn, cập nhật quyết định Đạt (`PASSED`) / Không đạt (`FAILED`) *(Bắt buộc)*.
+- [ ] **`[W3-BE-04]` Throttling & Rate-limiting**: Tích hợp `@nestjs/throttler` bảo vệ quota của Gemini API *(Bắt buộc)*.
+- [ ] **`[W3-BE-05]` Đóng gói Docker & Triển khai EC2**: Viết Dockerfile cài đặt binary `ffmpeg`, docker-compose (API + DB + Redis), cấu hình CI/CD GitHub Actions *(Bắt buộc)*.
+- [ ] **`[W3-BE-07]` Gửi Thông báo bằng AWS SNS / SES**: Gửi email mời phỏng vấn, email thông báo kết quả kèm bảng phân tích kỹ năng *(Nên có - Fallback: hiển thị trên web)*.
+- [ ] **`[W3-BE-06]` Tài liệu & Dữ liệu Demo**: Hoàn thiện README, sơ đồ kiến trúc, dữ liệu seed demo, kịch bản chạy thử toàn bộ luồng *(Bắt buộc)*.
 
+#### Frontend (TV1)
+- [ ] **`[W3-FE-01]` Phòng phỏng vấn - Chế độ chữ**: Giới thiệu, đồng ý ghi âm, kiểm tra microphone, tương tác hỏi đáp theo lượt, xử lý tự động kết nối lại *(Bắt buộc)*.
+- [ ] **`[W3-FE-02]` Phòng phỏng vấn - Chế độ giọng nói**: Đọc câu hỏi (TTS), thu âm câu trả lời (MediaRecorder), xem lại và sửa transcript trước khi xác nhận gửi *(Bắt buộc)*.
+- [ ] **`[W3-FE-03]` HR xem kết quả phỏng vấn**: Xem toàn bộ đoạn hội thoại transcript, điểm theo từng tiêu chí rubric, bằng chứng trích dẫn, nút Đạt / Không đạt *(Bắt buộc)*.
+- [ ] **`[W3-FE-04]` Ứng viên xem kết quả & Phản hồi**: Trang hiển thị kết quả phỏng vấn và báo cáo chi tiết kỹ năng cần cải thiện *(Bắt buộc)*.
+- [ ] **`[W3-FE-05]` Đóng gói Image Web với Caddy**: Build tĩnh SPA, cấu hình Caddy tự động cấp SSL/HTTPS, reverse proxy `/api` và `/socket.io`, tối ưu responsive *(Bắt buộc)*.

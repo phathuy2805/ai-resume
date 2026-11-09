@@ -4,6 +4,7 @@ import fs from 'fs';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
 import path from 'path';
 import { AppModule } from './app.module.js';
+import envConfig from './shared/config/env.config.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -39,7 +40,7 @@ async function bootstrap() {
     );
   }
 
-  const port = process.env.PORT ?? 3000;
+  const port = envConfig.PORT;
   await app.listen(port);
   console.log(`🚀 Swagger UI sẵn sàng tại: http://localhost:${port}/api/docs`);
   console.log(

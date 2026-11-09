@@ -1,0 +1,462 @@
+[
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-BE-03] State machine trạng thái hồ sơ: chuyển trạng thái tập trung, ghi lịch sử, phát sự kiện",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR — **làm đầu tuần**, các thẻ BE khác dùng lại",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-AI-01] Embedding CV và JD bằng Gemini Embedding (768 chiều), văn bản tóm tắt có cấu trúc, cosine similarity",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-FE-03] Trang \"Hồ sơ của tôi\": trạng thái dễ hiểu cho ứng viên, nút vào phỏng vấn",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR — làm đầu tuần (chỉ cần API của tuần 1)",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-BE-04] API dashboard HR: danh sách ứng viên theo job, chi tiết, duyệt/loại, link xem CV, thống kê",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR — **cập nhật Swagger trước** để TV1 mock",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-AI-02] Chấm điểm CV 0–100: phần tính bằng code (kỹ năng, số năm) + Gemini chấm mức độ liên quan + độ tương đồng embedding",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-FE-01] Dashboard HR: danh sách ứng viên theo job, điểm, đề xuất AI, lọc, sắp xếp, chấm lại",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-AI-03] Giải thích điểm kèm trích dẫn CV đã kiểm chứng + hàm tổng screenCv() cho BE gọi",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-BE-02] Tích hợp @hireflow/ai vào NestJS: AiModule, hàng đợi AI dùng chung, phân tích JD, lưu kết quả chấm CV",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-FE-02] Trang chi tiết ứng viên (HR): điểm, điểm mạnh, kỹ năng thiếu, trích dẫn CV, đề xuất AI, nút Duyệt/Loại",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-BE-01] Pipeline chấm CV chạy nền: tự chấm sau khi nộp, thử lại, chấm lại, khôi phục sau khi khởi động lại",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-AI-04] Đánh giá độ chính xác: chọn ngưỡng trên tập dev, báo cáo trên tập test, đo độ ổn định",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "2 - Sàng lọc CV & Dashboard HR",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 2",
+    "name": "[W2-FE-04] Thống kê dashboard HR: hồ sơ theo trạng thái, phân bố điểm, tỷ lệ AI đề xuất đạt",
+    "person": "TV1 - Frontend",
+    "prio": "Nên có",
+    "week": "2 - Sàng lọc CV & Dashboard HR — làm sau khi xong hết thẻ Bắt buộc của tuần",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-AI-01] Sinh bộ câu hỏi phỏng vấn từ JD + CV + kỹ năng còn thiếu (một lần khi bắt đầu phiên)",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy — **làm đầu tuần**, W3-BE-01 cần hàm này",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-BE-01] InterviewGateway (Socket.IO): vào phiên, bắt đầu, nhận câu trả lời, kết nối lại, kết thúc phiên",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy — **chốt danh sách event với TV1 ngay đầu tuần**",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-FE-01] Phòng phỏng vấn: giới thiệu, đồng ý ghi âm, kiểm tra mic, hỏi đáp theo lượt (chế độ chữ), kết nối lại",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy — làm chế độ trả lời bằng chữ trước, giọng nói thêm ở W3-FE-02",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-AI-04] Chuyển giọng nói thành văn bản (STT) bằng Gemini: chép nguyên văn, phát hiện không có lời nói",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc (cần cho phỏng vấn voice; thay cho thẻ \"Chuyển audio thành text\" đã lưu trữ)",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-BE-02] API nhận audio câu trả lời: kiểm tra, chuyển sang WAV bằng ffmpeg, lưu Cloudinary, nhận dạng giọng nói",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc (phỏng vấn voice là tính năng chính)",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-FE-02] Chế độ giọng nói: đọc câu hỏi, ghi âm câu trả lời, xem và sửa transcript trước khi gửi",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc (phỏng vấn voice là tính năng chính)",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-BE-05] Đóng gói Docker (api + db) và deploy lên EC2: docker compose, GitHub Actions, domain, backup",
+    "person": "TV2 - Backend (TV1 làm image web ở W3-FE-05)",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy — **deploy lần đầu giữa tuần** với code đang có, deploy lại cuối tuần",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-FE-05] Image web (Caddy: HTTPS + FE tĩnh + reverse proxy /api, /socket.io) + rà soát responsive, loading, lỗi",
+    "person": "TV1 - Frontend (phối hợp TV2 ở W3-BE-05)",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy — **deploy lần đầu giữa tuần** cùng W3-BE-05, deploy lại cuối tuần",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-AI-02] Chấm phiên phỏng vấn theo rubric: chuyên môn, giao tiếp, mức độ phù hợp, có bằng chứng",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-AI-03] Sinh phản hồi kỹ năng cho ứng viên + hàm tổng evaluateInterview() cho BE gọi",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-BE-03] Đánh giá phỏng vấn chạy nền, lưu kết quả + transcript, API xem kết quả, HR quyết định Đạt/Không đạt",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-FE-03] HR xem kết quả phỏng vấn: hội thoại, điểm từng tiêu chí, bằng chứng, đề xuất AI, nút Đạt/Không đạt",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-FE-04] Trang ứng viên xem kết quả và phản hồi kỹ năng sau phỏng vấn",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-BE-04] Giới hạn lượt dùng bằng @nestjs/throttler để bảo vệ quota Gemini",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-BE-07] Gửi email bằng Resend: mời phỏng vấn, không đạt vòng CV, kết quả phỏng vấn",
+    "person": "TV2 - Backend",
+    "prio": "Nên có (thiếu thì ứng viên vẫn thấy lời mời và kết quả ở trang \"Hồ sơ của tôi\")",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 3",
+    "name": "[W3-BE-06] README, sơ đồ kiến trúc, dữ liệu demo, kịch bản demo + chạy thử toàn bộ trên bản deploy",
+    "person": "TV2 - Backend (TV3 cung cấp số liệu AI, TV1 chụp màn hình)",
+    "prio": "Bắt buộc",
+    "week": "3 - Phỏng vấn AI, phản hồi & deploy — **thẻ cuối cùng**",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "Quy ước mức độ ưu tiên (đọc trước)",
+    "person": "",
+    "prio": "",
+    "week": "",
+    "labels": []
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-AI-06] Bộ dữ liệu test: 30 CV giả + 3 JD, nhãn độc lập 2 người, tách tập dev/test",
+    "person": "TV3 - AI (TV1 (FE) hoặc TV2 (BE) gán nhãn thứ hai)",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-BE-01] Cấu hình apps/api: Prisma, PostgreSQL + pgvector (Docker), thiết kế schema toàn hệ thống",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-FE-01] Cấu hình apps/web: Tailwind CSS, shadcn/ui, React Router, alias, biến môi trường",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-BE-02] API contract: format response chung, DTO + validation, Swagger cho Auth, Jobs, Applications",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD — **làm ngay đầu tuần**, chặn W1-FE-06",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-FE-02] Layout chung: HR (sidebar + header), Ứng viên (header + footer), phân luồng route theo vai trò",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-AI-01] Cấu hình packages/ai: build bằng tsdown cho NestJS import, client Gemini, retry, timeout, logging, hàm sinh JSON dùng chung",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-BE-03] Module Auth: đăng ký, đăng nhập, JWT, guard toàn cục, @Public(), @Roles(), @CurrentUser()",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-FE-06] Tầng gọi API: axios client, refresh token tự động, TanStack Query, mock Apidog qua Vite proxy",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-AI-02] Trích text từ CV PDF bằng unpdf: chuẩn hóa tiếng Việt, phát hiện ảnh scan, mã lỗi rõ ràng",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-FE-03] Đăng ký, đăng nhập, khôi phục phiên, ProtectedRoute theo vai trò",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-AI-03] Parse CV ra JSON có cấu trúc (Zod + generateStructured), chuẩn hóa kỹ năng, tính số năm kinh nghiệm",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-BE-04] Module Jobs: CRUD tin tuyển dụng, cấu hình sàng lọc/phỏng vấn, quyền sở hữu của HR",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-FE-04] Trang HR: danh sách, tạo, sửa, đóng tin tuyển dụng + cấu hình sàng lọc/phỏng vấn",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-AI-04] Trích yêu cầu từ JD ra JSON: gộp kỹ năng HR nhập + kỹ năng trong mô tả, chuẩn hóa chung với CV",
+    "person": "TV3 - AI",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "AI/Pipeline"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-BE-05] Module Applications: nộp CV (Multer), kiểm tra PDF, trích text ngay khi nộp, lưu Cloudinary",
+    "person": "TV2 - Backend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Backend"
+    ]
+  },
+  {
+    "list": "Backlog Week 1",
+    "name": "[W1-FE-05] Trang ứng viên: danh sách job, chi tiết job, nộp CV PDF có tiến trình và thông báo lỗi rõ ràng",
+    "person": "TV1 - Frontend",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Frontend"
+    ]
+  },
+  {
+    "list": "Code Review / Testing",
+    "name": "[W1-00] Khởi tạo monorepo npm: apps/web, apps/api, packages/ai",
+    "person": "Huy",
+    "prio": "Bắt buộc",
+    "week": "1 - Nền tảng & phân tích CV/JD",
+    "labels": [
+      "Backend",
+      "Frontend",
+      "AI/Pipeline"
+    ]
+  }
+]

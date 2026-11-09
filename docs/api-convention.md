@@ -161,6 +161,7 @@ FE có thể copy nguyên mẫu các enum này vào code Frontend để đảm b
 export enum Role {
   HR = 'HR',
   CANDIDATE = 'CANDIDATE',
+  ADMIN = 'ADMIN',
 }
 ```
 
@@ -175,16 +176,23 @@ export enum JobStatus {
 ### Trạng thái hồ sơ ứng tuyển (`ApplicationStatus`)
 ```typescript
 export enum ApplicationStatus {
-  SUBMITTED = 'SUBMITTED',                     // Vừa nộp CV
-  SCREENING = 'SCREENING',                     // Đang trong hàng đợi AI chấm
-  QUALIFIED = 'QUALIFIED',                     // Điểm CV >= điểm sàn, đủ điều kiện phỏng vấn
-  REJECTED = 'REJECTED',                       // Không qua vòng lọc CV
-  INTERVIEWING = 'INTERVIEWING',               // Đang trong phiên phỏng vấn Voice AI
-  INTERVIEW_COMPLETED = 'INTERVIEW_COMPLETED', // Hoàn thành phỏng vấn
-  UNDER_REVIEW = 'UNDER_REVIEW',               // Chờ HR xem báo cáo
-  OFFERED = 'OFFERED',                         // HR quyết định tuyển
-  REJECTED_BY_HR = 'REJECTED_BY_HR',           // HR từ chối sau phỏng vấn
-  FEEDBACK_SENT = 'FEEDBACK_SENT',             // Đã gửi email phản hồi kỹ năng
+  SUBMITTED = 'SUBMITTED',               // Vừa nộp CV
+  SCREENING = 'SCREENING',               // Đang trong hàng đợi AI chấm
+  SCREENING_FAILED = 'SCREENING_FAILED', // Lỗi kỹ thuật khi chấm (OCR / file hỏng / quota), có thể chấm lại
+  SCREENED = 'SCREENED',                 // AI đã chấm xong, chờ xét điểm sàn
+  SHORTLISTED = 'SHORTLISTED',           // Điểm >= cvPassThreshold của JD, đủ điều kiện phỏng vấn
+  REJECTED = 'REJECTED',                 // Không qua vòng lọc CV
+  INTERVIEW_INVITED = 'INTERVIEW_INVITED', // Đã mở phòng phỏng vấn và gửi thông báo
+  INTERVIEWING = 'INTERVIEWING',         // Đang trong phiên phỏng vấn Voice AI
+  EVALUATED = 'EVALUATED',               // AI đã chấm xong phỏng vấn, chờ HR xem báo cáo
+  PASSED = 'PASSED',                     // HR quyết định tuyển
+  FAILED = 'FAILED',                     // HR từ chối sau phỏng vấn
+}
+
+export enum AiRecommendation {
+  PASS = 'PASS',
+  CONSIDER = 'CONSIDER',
+  REJECT = 'REJECT',
 }
 ```
 
@@ -200,7 +208,7 @@ Quản lý luồng chấm điểm hồ sơ tự động qua hàng đợi BullMQ 
 | Method | Endpoint                                | Quyền             | Mô tả                                       | Payload / Query / Response                                                                                                                              |
 |:-------|:----------------------------------------|:------------------|:--------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `POST` | `/api/screening/trigger/:applicationId` | `HR`              | Kích hoạt hoặc yêu cầu chấm lại CV thủ công | Trả về `{ message, status: 'QUEUED' }`                                                                                                                  |
-| `GET`  | `/api/screening/result/:applicationId`  | `HR`, `CANDIDATE` | Lấy kết quả AI đánh giá chi tiết            | **Data:** `{ score: 85, passed: true, matchRate: 90, matchingSkills: [...], missingSkills: [...], verifiedQuotes: [...], recommendation: 'QUALIFIED' }` |
+| `GET`  | `/api/screening/result/:applicationId`  | `HR`, `CANDIDATE` | Lấy kết quả AI đánh giá chi tiết            | **Data:** `{ score: 85, passed: true, matchRate: 90, matchingSkills: [...], missingSkills: [...], verifiedQuotes: [...], recommendation: 'PASS' }` |
 
 ### 9.2. Phân Hệ Bảng Điều Khiển & Xếp Hạng (Dashboard - Tuần 2 & 3)
 Cung cấp số liệu thống kê và xếp hạng ứng viên theo độ tương đồng ngữ nghĩa vector:
@@ -209,14 +217,14 @@ Cung cấp số liệu thống kê và xếp hạng ứng viên theo độ tươ
 |:--------|:-------------------------------------------|:------|:------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `GET`   | `/api/dashboard/overview`                  | `HR`  | Thống kê tổng quan tuyển dụng       | **Data:** `{ totalJobs: 12, totalApplications: 145, passedScreeningRate: 68.5, completedInterviews: 28 }`                                                        |
 | `GET`   | `/api/dashboard/candidates-ranking/:jobId` | `HR`  | Bảng xếp hạng ứng viên theo Job     | **Query:** `page, limit, minScore, sortBy=cosineSimilarity|score`<br>**Data:** Danh sách ứng viên kèm điểm vector tương đồng (0-100), điểm tổng và xếp hạng rank |
-| `PATCH` | `/api/applications/:id/decision`           | `HR`  | HR ra quyết định tuyển dụng/từ chối | **Body:** `{ decision: 'OFFERED' \| 'REJECTED_BY_HR', hrNote: string }`                                                                                          |
+| `PATCH` | `/api/applications/:id/decision`           | `HR`  | HR ra quyết định tuyển dụng/từ chối | **Body:** `{ decision: 'PASSED' \| 'FAILED', hrNote: string }`                                                                                          |
 
 ### 9.3. Phân Hệ Phỏng Vấn Giọng Nói Voice AI (Interview - Tuần 3)
 Hỗ trợ cả REST API quản trị phiên và WebSocket (Socket.IO) tương tác giọng nói thời gian thực:
 
 | Method / Protocol | Endpoint / Event                            | Quyền             | Mô tả                                                     | Payload / Response                                                                                                                                                         |
 |:------------------|:--------------------------------------------|:------------------|:----------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `POST` (REST)     | `/api/interviews/session/:applicationId`    | `CANDIDATE`       | Khởi tạo phiên phỏng vấn Voice AI (khi hồ sơ `QUALIFIED`) | **Data:** `{ interviewId, questionCount: 3, timeLimitMinutes: 15 }`                                                                                                        |
+| `POST` (REST)     | `/api/interviews/session/:applicationId`    | `CANDIDATE`       | Khởi tạo phiên phỏng vấn Voice AI (khi hồ sơ `INTERVIEW_INVITED`) | **Data:** `{ interviewId, questionCount: 3, timeLimitMinutes: 15 }`                                                                                                        |
 | `GET` (REST)      | `/api/interviews/session/:interviewId/turn` | `CANDIDATE`       | Nhận nội dung câu hỏi hiện tại                            | **Data:** `{ turnIndex: 1, questionText: "...", audioUrl?: "..." }`                                                                                                        |
 | `POST` (REST)     | `/api/interviews/complete/:interviewId`     | `CANDIDATE`       | Hoàn tất phỏng vấn, đẩy vào hàng đợi chấm transcript      | Trả về `{ message: "Đang chấm điểm...", status: 'EVALUATING' }`                                                                                                            |
 | `GET` (REST)      | `/api/interviews/report/:interviewId`       | `HR`, `CANDIDATE` | Báo cáo 4 cột điểm phỏng vấn theo Rubric                  | **Data:** `{ overallScore: 82, rubric: { technical: 85, communication: 80, relevance: 85, evidence: 78 }, strengths: [...], weaknesses: [...], fullTranscriptUrl: "..." }` |
@@ -233,52 +241,3 @@ Hỗ trợ cả REST API quản trị phiên và WebSocket (Socket.IO) tương t
    - Mọi mảng trả về từ server đều nằm trong thuộc tính `data`, thông tin phân trang nằm trong `meta`.
 3. **Cập nhật thay đổi:**
    - Mỗi khi Backend có cập nhật spec DTO mới, chạy lại server dev sẽ tự động xuất mới file `openapi.json`.
-
-
----
-
-## 9. Danh Sách Endpoint Dự Kiến (Tuần 2 & Tuần 3)
-
-Dưới đây là kế hoạch chi tiết các endpoint phác thảo để Minh và Tài (FE) nắm trước kiến trúc luồng dữ liệu và thiết kế màn hình/mocking.
-
-### 9.1. Phân Hệ Sàng Lọc CV Tự Động (Screening - Tuần 2)
-Quản lý luồng chấm điểm hồ sơ tự động qua hàng đợi BullMQ và AI Gemini:
-
-| Method | Endpoint | Quyền | Mô tả | Payload / Query / Response |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/screening/trigger/:applicationId` | `HR` | Kích hoạt hoặc yêu cầu chấm lại CV thủ công | Trả về `{ message, status: 'QUEUED' }` |
-| `GET` | `/api/screening/result/:applicationId` | `HR`, `CANDIDATE` | Lấy kết quả AI đánh giá chi tiết | **Data:** `{ score: 85, passed: true, matchRate: 90, matchingSkills: [...], missingSkills: [...], verifiedQuotes: [...], recommendation: 'QUALIFIED' }` |
-
-### 9.2. Phân Hệ Bảng Điều Khiển & Xếp Hạng (Dashboard - Tuần 2 & 3)
-Cung cấp số liệu thống kê và xếp hạng ứng viên theo độ tương đồng ngữ nghĩa vector:
-
-| Method | Endpoint | Quyền | Mô tả | Payload / Query / Response |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/dashboard/overview` | `HR` | Thống kê tổng quan tuyển dụng | **Data:** `{ totalJobs: 12, totalApplications: 145, passedScreeningRate: 68.5, completedInterviews: 28 }` |
-| `GET` | `/api/dashboard/candidates-ranking/:jobId` | `HR` | Bảng xếp hạng ứng viên theo Job | **Query:** `page, limit, minScore, sortBy=cosineSimilarity|score`<br>**Data:** Danh sách ứng viên kèm điểm vector tương đồng (0-100), điểm tổng và xếp hạng rank |
-| `PATCH` | `/api/applications/:id/decision` | `HR` | HR ra quyết định tuyển dụng/từ chối | **Body:** `{ decision: 'OFFERED' \| 'REJECTED_BY_HR', hrNote: string }` |
-
-### 9.3. Phân Hệ Phỏng Vấn Giọng Nói Voice AI (Interview - Tuần 3)
-Hỗ trợ cả REST API quản trị phiên và WebSocket (Socket.IO) tương tác giọng nói thời gian thực:
-
-| Method / Protocol | Endpoint / Event | Quyền | Mô tả | Payload / Response |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` (REST) | `/api/interviews/session/:applicationId` | `CANDIDATE` | Khởi tạo phiên phỏng vấn Voice AI (khi hồ sơ `QUALIFIED`) | **Data:** `{ interviewId, questionCount: 3, timeLimitMinutes: 15 }` |
-| `GET` (REST) | `/api/interviews/session/:interviewId/turn` | `CANDIDATE` | Nhận nội dung câu hỏi hiện tại | **Data:** `{ turnIndex: 1, questionText: "...", audioUrl?: "..." }` |
-| `POST` (REST) | `/api/interviews/complete/:interviewId` | `CANDIDATE` | Hoàn tất phỏng vấn, đẩy vào hàng đợi chấm transcript | Trả về `{ message: "Đang chấm điểm...", status: 'EVALUATING' }` |
-| `GET` (REST) | `/api/interviews/report/:interviewId` | `HR`, `CANDIDATE` | Báo cáo 4 cột điểm phỏng vấn theo Rubric | **Data:** `{ overallScore: 82, rubric: { technical: 85, communication: 80, relevance: 85, evidence: 78 }, strengths: [...], weaknesses: [...], fullTranscriptUrl: "..." }` |
-| `WS` (Socket.IO) | `ws://localhost:3000/interview` | `JWT` | Kênh đàm thoại âm thanh hai chiều | Events: `join_room`, `submit_audio_turn`, `ai_speaking`, `session_ended` |
-
----
-
-## 10. Checklist Bàn Giao Cho Frontend (Tài & Minh)
-1. **Import OpenAPI vào Apidog/Postman:**
-   - Dùng file: `openapi.json` ở root thư mục dự án hoặc URL: `http://localhost:3000/api/docs-json`.
-   - Bật **Cloud Mock** hoặc **Local Mock Server** của Apidog để nhận ngay base URL mock phục vụ dev giao diện.
-2. **Kiểm tra và Thống nhất tên Field (Field Naming):**
-   - Đảm bảo tuân thủ `camelCase` cho toàn bộ key (ví dụ: `cvPassThreshold`, `interviewQuestionCount`, `rubricWeights`, `cvUrl`).
-   - Mọi mảng trả về từ server đều nằm trong thuộc tính `data`, thông tin phân trang nằm trong `meta`.
-3. **Cập nhật thay đổi:**
-   - Mỗi khi Backend có cập nhật spec DTO mới, chạy lại server dev sẽ tự động xuất mới file `openapi.json`.
-
-
