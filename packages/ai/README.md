@@ -69,17 +69,73 @@ ai.generateText model=<model> failed durationMs=1146 retries=2 code=AI_TIMEOUT s
 
 Log không bao giờ chứa prompt, nội dung CV/transcript, kết quả trả về hay API key (có test kiểm tra).
 
+## Chuẩn hóa kỹ năng (dùng chung JD và CV)
+
+```ts
+import { normalizeSkill, normalizeSkills, normalizeLevel } from '@hireflow/ai';
+
+normalizeSkill('Node.js'); // 'NodeJS'
+normalizeSkill('Power BI'); // 'PowerBI'
+normalizeSkill('SQL cơ bản'); // 'SQL'  (bỏ từ chỉ mức độ)
+normalizeSkill('Rust'); // 'Rust'  (không có trong bảng thì giữ nguyên, không bỏ)
+normalizeSkills(['Node.js', 'NodeJS', 'Facebook Ads']); // ['NodeJS', 'Meta Ads']  (bỏ trùng)
+normalizeLevel('Middle / Senior'); // 'middle'  (nhiều cấp thì lấy cấp thấp nhất)
+```
+
+- **Tên chuẩn** là tên trong `requiredSkills` / `preferredSkills` của 3 JD ở `fixtures/jds`
+  (`labels.csv` cũng dùng đúng các tên này). So khớp không phân biệt hoa thường, dấu tiếng Việt,
+  dấu chấm, gạch, khoảng trắng.
+- **Thêm cách viết mới**: thêm vào mảng alias của kỹ năng trong `src/skills.ts` (`SKILL_ALIASES`).
+  Thêm kỹ năng mới: thêm một dòng. Nếu một alias bị gán cho 2 kỹ năng, package báo lỗi ngay khi import.
+- Test kiểm tra mọi kỹ năng trong 3 JD và mọi giá trị `missing_skills` của `labels.csv` đều là tên chuẩn:
+  sửa JD hoặc bảng alias làm lệch nhau thì `npm run test -w packages/ai` báo ngay.
+
+## Phân tích JD (`parseJd`)
+
+```ts
+import { parseJd, ParsedJdSchema, type ParsedJd } from '@hireflow/ai';
+
+const parsed: ParsedJd = await parseJd(ai, {
+  title: dto.title,
+  description: dto.description,
+  requirements: dto.requirements, // tùy chọn
+  requiredSkills: dto.requiredSkills,
+  preferredSkills: dto.preferredSkills,
+  minYearsExperience: dto.minYearsExperience,
+  level: dto.level, // tùy chọn, chữ tự do, vd. "Middle / Senior"
+});
+await prisma.job.update({ where: { id }, data: { parsedJd: parsed } });
+
+// Đọc lại từ DB: kiểm tra trước khi dùng (dữ liệu cũ có thể khác schemaVersion)
+const stored = ParsedJdSchema.safeParse(job.parsedJd);
+```
+
+Kết quả (`ParsedJd`, `schemaVersion: 1`): `requiredSkills`, `preferredSkills` (đã chuẩn hóa),
+`minYearsExperience`, `level` (`intern | junior | middle | senior | null`), `educationRequirement`,
+`responsibilities` (tối đa 8 ý), `domain`.
+
+Quy tắc gộp dữ liệu HR với kết quả AI (viết bằng code, không phụ thuộc AI):
+
+| Trường              | Quy tắc                                                                            |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| Kỹ năng             | Kỹ năng HR nhập **luôn được giữ**, đứng đầu, đúng nhóm HR chọn. AI chỉ **bổ sung** |
+| Kỹ năng AI thêm     | Chỉ giữ nếu tên hoặc alias **thật sự xuất hiện** trong tiêu đề / mô tả / yêu cầu   |
+| Bắt buộc và ưu tiên | Một kỹ năng chỉ nằm ở một nhóm; ở cả hai thì giữ ở nhóm bắt buộc                   |
+| Số năm, cấp độ      | HR đã nhập (kể cả số 0) thì dùng của HR; AI chỉ điền khi HR để trống               |
+
+Gọi Gemini với `temperature: 0`. Lỗi từ AI (`AiError`) được ném nguyên vẹn để BE xử lý như các hàm khác.
+
 ## Scripts
 
 Chạy từ thư mục gốc repo:
 
-| Lệnh                                               | Việc                                                     |
-| -------------------------------------------------- | -------------------------------------------------------- |
-| `npm run build -w packages/ai`                     | Build ra `dist/` (ESM + CJS + `.d.ts`)                   |
-| `npm run dev -w packages/ai`                       | Build lại khi sửa code (đã có trong `npm run dev` ở gốc) |
-| `npm run test -w packages/ai`                      | Unit test (không gọi Gemini thật)                        |
-| `npm run test:cov -w packages/ai`                  | Test + độ phủ (báo cáo HTML ở `coverage/`)               |
-| `npm run typecheck -w packages/ai`                 | Kiểm tra kiểu, kể cả kiểu trong test                     |
-| `npm run try -w packages/ai [-- text\|structured]` | Chạy thử với Gemini thật                                 |
+| Lệnh                                                   | Việc                                                                              |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| `npm run build -w packages/ai`                         | Build ra `dist/` (ESM + CJS + `.d.ts`)                                            |
+| `npm run dev -w packages/ai`                           | Build lại khi sửa code (đã có trong `npm run dev` ở gốc)                          |
+| `npm run test -w packages/ai`                          | Unit test (không gọi Gemini thật)                                                 |
+| `npm run test:cov -w packages/ai`                      | Test + độ phủ (báo cáo HTML ở `coverage/`)                                        |
+| `npm run typecheck -w packages/ai`                     | Kiểm tra kiểu, kể cả kiểu trong test                                              |
+| `npm run try -w packages/ai [-- text\|structured\|jd]` | Chạy thử với Gemini thật (`jd`: `parseJd` trên 3 JD fixtures, có tự đánh dấu ✓/✗) |
 
 `npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT`.
