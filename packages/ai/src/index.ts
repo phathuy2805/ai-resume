@@ -23,6 +23,15 @@ export {
 } from './errors.js';
 export type { AiErrorCode } from './errors.js';
 
+// Chuẩn hóa kỹ năng và cấp độ (dùng chung cho JD W1-AI-05 và CV W1-AI-04)
+export { normalizeSkill, normalizeSkills } from './skills.js';
+export { normalizeLevel } from './level.js';
+export type { JobLevel } from './level.js';
+
+// Phân tích JD
+export { parseJd, ParsedJdSchema } from './jd.js';
+export type { ParsedJd, ParseJdInput, ParseJdOptions } from './jd.js';
+
 /**
  * @deprecated Chỉ còn để apps/api (AppService) không bị lỗi.
  * Sẽ xóa khi BE tích hợp createAiClient (W2-BE-02).

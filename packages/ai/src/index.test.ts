@@ -10,9 +10,14 @@ describe('public API (src/index.ts)', () => {
       'AiInvalidResponseError',
       'AiRateLimitError',
       'AiTimeoutError',
+      'ParsedJdSchema',
       'createAiClient',
       'helloAI',
       'isAiError',
+      'normalizeLevel',
+      'normalizeSkill',
+      'normalizeSkills',
+      'parseJd',
     ]);
   });
 });

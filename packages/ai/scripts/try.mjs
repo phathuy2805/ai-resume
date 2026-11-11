@@ -3,12 +3,21 @@
 //   npm run try -w packages/ai                 # chạy tất cả demo
 //   npm run try -w packages/ai -- text         # chỉ generateText
 //   npm run try -w packages/ai -- structured   # chỉ generateStructured
+//   npm run try -w packages/ai -- jd           # parseJd trên 3 JD của fixtures (W1-AI-05)
 //
 // Biến môi trường đọc từ packages/ai/.env (copy từ .env.example) hoặc từ terminal ($env:...).
 // Biến đặt trong terminal được ưu tiên hơn file .env.
 // Package không tự đọc process.env: chỉ script này đọc rồi truyền vào createAiClient.
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { z } from 'zod';
-import { createAiClient, isAiError } from '../dist/index.mjs';
+import {
+  createAiClient,
+  isAiError,
+  normalizeSkills,
+  parseJd,
+  ParsedJdSchema,
+} from '../dist/index.mjs';
 
 const REQUIRED_ENV = ['GEMINI_API_KEY', 'GEMINI_MODEL_TEXT'];
 const missing = REQUIRED_ENV.filter((name) => !process.env[name]?.trim());
@@ -40,6 +49,83 @@ const SAMPLE_JD = `Công ty ABC tuyển Backend Developer (NestJS).
 Yêu cầu: tối thiểu 2 năm kinh nghiệm Node.js/NestJS, thành thạo PostgreSQL, có kinh nghiệm Docker.
 Ưu tiên: biết AWS, Redis, đã từng viết unit test.`;
 
+// ── Demo jd: parseJd trên 3 JD của W1-AI-01 ─────────────────────────────
+const JD_DIR = path.resolve(import.meta.dirname, '../fixtures/jds');
+const EXPECTED_LEVEL = { be: 'senior', da: 'middle', mkt: 'middle' };
+
+function readFixtureJd(name) {
+  return JSON.parse(readFileSync(path.join(JD_DIR, `jd_${name}.json`), 'utf8'));
+}
+
+/** Mô tả như HR dán vào form: phần mô tả + các ý trách nhiệm. */
+function descriptionOf(jd) {
+  return `${jd.description}\nTrách nhiệm:\n${jd.responsibilities.map((r) => `- ${r}`).join('\n')}`;
+}
+
+let failedChecks = 0;
+function check(ok, label, detail = '') {
+  if (!ok) failedChecks++;
+  console.log(`   ${ok ? '✓' : '✗'} ${label}${detail ? `: ${detail}` : ''}`);
+}
+const includesAll = (list, items) => items.every((item) => list.includes(item));
+
+async function jdDemo() {
+  for (const name of ['be', 'da', 'mkt']) {
+    const jd = readFixtureJd(name);
+    console.log(`\n── ${jd.code}: ${jd.title}`);
+
+    // (A) Như form thật: HR nhập đủ kỹ năng, số năm, cấp độ → kiểm tra quy tắc gộp.
+    const parsed = await parseJd(ai, {
+      title: jd.title,
+      description: descriptionOf(jd),
+      requiredSkills: jd.requiredSkills,
+      preferredSkills: jd.preferredSkills,
+      minYearsExperience: jd.minYearsExperience,
+      level: jd.level,
+    });
+    console.dir(parsed, { depth: null });
+    check(ParsedJdSchema.safeParse(parsed).success, 'hợp lệ theo ParsedJdSchema');
+    check(
+      includesAll(parsed.requiredSkills, jd.requiredSkills) &&
+        jd.requiredSkills.every((s, i) => parsed.requiredSkills[i] === s),
+      'giữ đủ kỹ năng bắt buộc của HR, đứng đầu',
+    );
+    check(includesAll(parsed.preferredSkills, jd.preferredSkills), 'giữ đủ kỹ năng ưu tiên của HR');
+    check(
+      parsed.minYearsExperience === jd.minYearsExperience,
+      'số năm = giá trị HR',
+      String(parsed.minYearsExperience),
+    );
+    check(
+      parsed.level === EXPECTED_LEVEL[name],
+      `cấp độ "${jd.level}" → ${EXPECTED_LEVEL[name]}`,
+      String(parsed.level),
+    );
+    check(
+      parsed.responsibilities.length <= 8,
+      'trách nhiệm ≤ 8 ý',
+      String(parsed.responsibilities.length),
+    );
+
+    // (B) Chỉ có văn bản (HR không nhập gì): đo AI tự trích được bao nhiêu. Chỉ để tham khảo.
+    const textOnly = await parseJd(ai, { title: jd.title, description: descriptionOf(jd) });
+    const found = normalizeSkills(jd.requiredSkills).filter((s) =>
+      textOnly.requiredSkills.includes(s),
+    );
+    const missed = jd.requiredSkills.filter((s) => !found.includes(s));
+    console.log(
+      `   ℹ chỉ từ văn bản: AI tìm được ${found.length}/${jd.requiredSkills.length} kỹ năng bắt buộc` +
+        (missed.length ? ` (thiếu: ${missed.join(', ')})` : '') +
+        ` | cấp độ: ${textOnly.level} | số năm: ${textOnly.minYearsExperience}` +
+        ` | domain: ${textOnly.domain}`,
+    );
+  }
+  console.log(
+    `\n${failedChecks === 0 ? '✓ Tất cả kiểm tra đạt' : `✗ ${failedChecks} kiểm tra không đạt`}`,
+  );
+  if (failedChecks > 0) process.exitCode = 1;
+}
+
 const demos = {
   text: () => ai.generateText('Trả lời trong 1 câu: thủ đô của Việt Nam là gì?'),
   structured: () =>
@@ -48,6 +134,7 @@ const demos = {
       JdRequirementsSchema,
       { temperature: 0 },
     ),
+  jd: jdDemo,
 };
 
 /** Gợi ý cách xử lý cho các lỗi hay gặp khi chạy thử. */
@@ -75,7 +162,8 @@ if (!names.every((name) => name in demos)) {
 for (const name of names) {
   console.log(`\n=== ${name} (model: ${ai.models.text})`);
   try {
-    console.dir(await demos[name](), { depth: null });
+    const result = await demos[name]();
+    if (result !== undefined) console.dir(result, { depth: null });
   } catch (error) {
     if (!isAiError(error)) throw error;
     console.error(
