@@ -12,9 +12,9 @@ export interface LoginRequest {
 }
 export interface RegisterRequest extends LoginRequest {
   fullName: string;
-  role: Role;
+  role: 'HR' | 'CANDIDATE';
 }
-/** Public FE result: deliberately excludes the mock BE refresh token. */
+/** Public FE result: excludes the refresh token; the browser uses the HttpOnly cookie. */
 export interface AuthResult {
   accessToken: string;
   user: UserProfile;

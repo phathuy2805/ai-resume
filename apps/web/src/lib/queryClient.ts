@@ -16,6 +16,7 @@ export function shouldRetryQuery(failureCount: number, error: unknown): boolean 
   return (
     failureCount < 1 &&
     error instanceof ApiError &&
+    error.retryable &&
     (error.kind === 'network' ||
       (error.kind === 'http' && (error.status ?? 0) >= 500 && (error.status ?? 0) < 600))
   );

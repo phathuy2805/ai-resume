@@ -1,6 +1,6 @@
 # W1-FE-03 — Tầng API dùng chung
 
-Phần nền cho W1-FE-04/05/06: transport, types, Query, helpers và hook mẫu. Không xây UI nghiệp vụ hay backend. Luồng refresh **đang hoãn**, không coi task đã hoàn tất phần refresh.
+Phần nền cho W1-FE-04/05/06: transport, types, Query, helpers và hook mẫu. Không xây UI nghiệp vụ hay backend. Đã tích hợp refresh cookie với contract W1-BE-03; AuthProvider và UI đăng nhập nghiệp vụ thuộc W1-FE-04.
 
 ## Chạy và chuyển BE/mock
 
@@ -47,19 +47,36 @@ Swagger mô tả auth register/login/me, job detail/create/update/close và uplo
 
 Error filter trả `{ statusCode, message, errors?: string[], timestamp? }`, validation thường là `field: message`; Swagger chưa mô tả đầy đủ response lỗi. Cần schema lỗi và ví dụ field lồng nhau.
 
-Enum Role và RegisterSchema hiện cho phép cả `ADMIN`, dù mô tả đăng ký nói HR/CANDIDATE. FE types phản ánh DTO này; Huy cần chốt và giới hạn role tự đăng ký ở BE. Khi làm UI đăng ký, chỉ hiển thị HR/CANDIDATE, không coi việc ẩn lựa chọn ADMIN ở FE là kiểm soát quyền backend.
+RegisterSchema và RegisterRequest chỉ cho đăng ký HR/CANDIDATE. Role của UserProfile vẫn có ADMIN để đọc tài khoản quản trị đã được cấp.
 
-Auth BE vẫn trả token mock và refreshToken trong JSON; chưa xác nhận cookie HttpOnly hoặc enforcement 401/403 thật. FE chỉ giữ accessToken trong bộ nhớ và chỉ trả `{ accessToken, user }` từ login/register. RefreshToken không được lưu hoặc đưa vào cache. Tests 401/403 dùng adapter kiểm thử, không chứng minh auth BE thật đã hoạt động.
+W1-BE-03 dùng JWT và cookie HttpOnly `refresh_token`, path `/api/auth`, SameSite=Lax. BE vẫn trả refreshToken trong JSON; FE bỏ trường này và chỉ trả `{ accessToken, user }`. Cookie được trình duyệt gửi qua `withCredentials: true`, không đọc bằng JavaScript hoặc lưu vào storage/cache.
 
 ## Token và phiên
 
-`tokenStore` có get/set/clearAccessToken, không localStorage/sessionStorage/persisted cache. Bearer tính lại cho từng request; xóa header cũ khi token rỗng. Reload mất accessToken, chưa khôi phục phiên.
+`tokenStore` giữ accessToken trong bộ nhớ; không localStorage/sessionStorage/persisted cache. Bearer tính lại cho từng request. Login/logout đổi phiên và làm vô hiệu request cũ; rotation chỉ thay accessToken trong cùng phiên.
 
-Login/register thành công: hủy query đang chạy, xóa cache tài khoản cũ, đặt accessToken mới và trả user. AuthProvider do Minh bổ sung bên trong QueryClientProvider hiện có.
+`main.tsx` cài lifecycle handler rồi khôi phục phiên một lần trước khi render App (ngoài StrictMode). `refreshSession()`/`refresh()` từ `@/api/auth` gửi POST `/auth/refresh` với body `{}` qua transport riêng không có interceptor refresh. Promise dùng chung cho các lời gọi đồng thời. Kết quả chỉ chứa accessToken và user.
 
-Logout gửi POST logout rồi **luôn** xóa token, hủy queries và xóa query/mutation cache bằng singleton `queryClient.clear()`, kể cả khi server lỗi. Lỗi vẫn trả về caller để thông báo logout phía server chưa xác nhận. UI dọn AuthProvider state và tự quyết định điều hướng. Không chạy login/register/logout đồng thời hoặc đổi tài khoản khi mutation riêng tư còn đang gửi; khóa thao tác phiên khi tích hợp AuthProvider. Factory QueryClient dùng cho test isolation, app sử dụng singleton.
+```ts
+import { refreshSession } from '@/api/auth';
+// W1-FE-04: dùng kết quả để cập nhật AuthProvider.
+const { user } = await refreshSession();
+```
 
-401 hiện reject về caller, không retry ở Query, không xóa token, không chuyển trang và không gọi endpoint khác.
+Khi tích hợp AuthProvider, chuyển quyền khôi phục phiên từ bootstrap hiện tại sang provider; không giữ cả hai lần gọi tuần tự vì mỗi lần sẽ rotate cookie. Subscribe `onSessionExpired()` để xóa user trong provider; nhớ unsubscribe. UI đăng nhập hiện còn là placeholder, chưa kết nối API.
+
+- Request có Bearer nhận 401: đợi một refresh chung rồi gửi lại tối đa một lần, giữ body/params/FormData/signal.
+- Request mới đợi refresh đang chạy. 401 trả về trễ của token cũ dùng token mới, không rotate thêm.
+- Request đã hủy không replay; hủy một request không hủy refresh của các request khác.
+- Không tự refresh login/register/refresh/logout, 403 hoặc request không mang accessToken. Guest startup khôi phục bằng lời gọi refresh tường minh.
+- Refresh 401 hoặc replay vẫn 401: xóa token, hủy query và dọn cache; lifecycle thông báo và điều hướng `/login` một lần. Thiếu cookie lúc mở trang công khai là trạng thái guest bình thường, không toast/redirect.
+- Refresh gặp mạng/timeout/5xx hoặc response sai contract: giữ trạng thái phiên, trả lỗi không được Query tự retry. Các 401 đến sau dùng cùng lỗi cho tới khi đổi phiên hoặc gọi `refreshSession()` tường minh để thử lại. Không tự lặp một thao tác rotation có thể đã hoàn tất trên server.
+- Login/register/logout được tuần tự hóa với refresh. Logout dọn token/cache ngay, chờ refresh đã gửi kết thúc rồi mới gửi logout để cookie mới được thu hồi/xóa. Login chờ các thao tác cookie trước đó; response của tài khoản cũ không được đưa vào cache tài khoản mới. UI nên khóa submit auth trong khi đang gửi.
+- Logout lỗi vẫn reject về caller; local đã đăng xuất nhưng cookie phía server chưa được xác nhận xóa. Không coi logout khi mất mạng là đã thu hồi phiên trên server.
+
+Phạm vi đồng bộ là **một tab**. Nhiều tab dùng chung cookie vẫn có thể refresh đồng thời. BE hiện đọc revokedAt trước transaction; cần phối hợp BE để xử lý rotation đồng thời một cách nguyên tử. FE chưa có khóa liên tab. Access token không được ghi log.
+
+Local HTTP dùng `COOKIE_SECURE=false`; production HTTPS dùng `true`. Proxy giữ `/api` để cookie path `/api/auth` khớp refresh/logout; không cần sửa cookie path. `.env.example` BE còn API_PREFIX nhưng bootstrap thực tế đặt prefix `api`.
 
 ## API và hooks
 
@@ -76,7 +93,7 @@ try {
 }
 ```
 
-API exports: auth có register/login/logout/getMe; jobs có getJobs/getJob/getMyJobs/createJob/updateJob/closeJob; applications có applyJob/getMyApplications. Không có refresh API.
+API exports: auth có register/login/logout/getMe/refresh/refreshSession; jobs có getJobs/getJob/getMyJobs/createJob/updateJob/closeJob; applications có applyJob/getMyApplications. Có refresh/refreshSession dùng chung luồng rotation.
 
 Trong component: `const jobs = useJobs({ page, search, status });` dùng `jobs.data?.data` và `jobs.data?.meta`. `const create = useCreateJob(); create.mutate(body);` sẽ invalidate namespace jobs, gồm public lists, mine và detail. Truyền options onSuccess/onError/meta vẫn giữ invalidation. Khi update/close trực tiếp, caller invalidate `queryKeys.jobs.all` sau thành công.
 
@@ -105,8 +122,8 @@ import { handleFormError } from '@/lib/errorUtils';
 type JobForm = { title: string; rubricWeights: { technical: number } };
 const form = useForm<JobForm>();
 const create = useCreateJob({
-  onError: error => handleFormError<JobForm>(error, form.setError,
-    ['title', 'rubricWeights.technical']),
+  onError: (error) =>
+    handleFormError<JobForm>(error, form.setError, ['title', 'rubricWeights.technical']),
 });
 // Render errors.title?.message và errors.root?.server?.message.
 // Trước submit: form.clearErrors(); tạo đủ CreateJobRequest rồi create.mutate(body).
@@ -131,7 +148,9 @@ try {
     },
   });
   console.log(application.id); // Chỉ tới đây server mới trả thành công.
-} catch (error) { notifyError(error); }
+} catch (error) {
+  notifyError(error);
+}
 // Hủy bằng controller.abort(): không toast.
 ```
 
@@ -141,22 +160,25 @@ FormData dùng field `file`, không tự đặt Content-Type/boundary. Upload 10
 
 `npm test -w apps/web`: Vitest + Testing Library, Axios adapter kiểm thử modules/hooks/form; proxy test dùng Vite thật và HTTP upstream cục bộ. Adapter không dùng trong app. Smoke script chỉ GET qua Vite tới BE local: jobs phân trang, detail, validation 400.
 
-Đã kiểm tra tại thời điểm bàn giao: build, lint, tests, smoke BE local. Chưa kiểm chứng Apidog thật, Caddy production, upload tới dịch vụ lưu CV thật, JWT/cookie thật hoặc Socket.IO backend (mới cấu hình proxy).
+Đã kiểm tra tại thời điểm bàn giao: build, lint, tests, smoke BE local. Chưa kiểm chứng Apidog thật, Caddy production, upload tới dịch vụ lưu CV thật hoặc Socket.IO backend (mới cấu hình proxy).
 
-### Refresh hoãn — tất cả chưa triển khai
+### Kiểm thử refresh
 
-- [ ] Tự gọi POST /auth/refresh khi 401.
+`src/lib/session.test.ts` kiểm tra đồng thời 401, late 401, replay tối đa một lần, loại trừ auth/403, cancellation, timeout/network/5xx/contract, logout/login khi rotation đang chạy, response tài khoản cũ và bootstrap guest. `api.test.tsx` giữ kiểm thử transport/Query/form/upload hiện có.
 
-- [ ] Shared refresh promise/hàng đợi request 401.
+Kiểm tra thủ công với BE local và trình duyệt:
 
-- [ ] Gửi lại request sau refresh.
+1. Chạy PostgreSQL và BE W1-BE-03; chạy `npm run dev -w apps/web`.
+2. Trong console của Vite dev, dùng `const auth = await import('/src/api/auth.ts')`, rồi `await auth.login({ email: 'tài-khoản-test', password: 'mật-khẩu-test' })`. Không dùng form placeholder để kết luận API đã gọi.
+3. DevTools Application/Cookies: `refresh_token` là HttpOnly, path `/api/auth`; FE storage không chứa token.
+4. Với tài khoản test, cấu hình BE access token TTL ngắn, restart và login lại. Sau khi token hết hạn, gọi đồng thời `Promise.all([auth.getMe(), auth.getMe(), auth.getMe()])`. Network phải có một refresh và các request replay thành công.
+5. Reload: bootstrap refresh thành công; gọi getMe nhận được user. Không in token lên log hoặc đưa token vào ảnh chụp.
+6. Xóa cookie refresh, làm access token hết hạn: request protected đưa về login, cache được dọn, không refresh lặp.
+7. Login lại rồi logout: cookie biến mất; reload trở thành guest. Thử ngắt mạng khi refresh để xác nhận không bị ép logout do lỗi kết nối.
 
-- [ ] auth.refresh() / refreshSession().
+Kết quả ngày 12/11/2026:
 
-- [ ] Khôi phục phiên sau reload.
-
-- [ ] Xóa token và chuyển /login theo kết quả refresh.
-
-- [ ] Kiểm thử tích hợp refresh cookie thật.
-
-Chờ Huy hoàn thành W1-BE-03 và chốt cookie/contract. Không có refresh giả hoặc placeholder trả thành công.
+- Build FE, lint và 49 tests tự động đều đạt.
+- 8 kịch bản trên Edge headless với Vite + NestJS W1-BE-03 + PostgreSQL thật đã đạt: guest startup im lặng; register đặt cookie HttpOnly và FE bỏ refreshToken; 5 request JWT hết hạn chỉ rotate một lần; reload khôi phục user; refresh 500 giữ phiên và explicit retry khôi phục; xóa cookie + JWT hết hạn dọn cache/chuyển login; logout trong lúc rotation xóa cookie mới; reload sau logout vẫn guest.
+- Backend kiểm thử dùng access TTL 2 giây bằng biến môi trường của process. Database tạm được migrate và xóa sau kiểm tra; không sửa .env hoặc database ứng dụng. Kịch bản 500 dùng network interception có chủ đích; các luồng JWT/cookie còn lại gọi BE thật.
+- Khóa liên tab và cookie Secure trên production HTTPS chưa được kiểm chứng. Không coi unit tests hoặc bài kiểm tra một browser context là bằng chứng cho các trường hợp đó.

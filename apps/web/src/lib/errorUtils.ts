@@ -1,8 +1,11 @@
 import type { FieldPath, FieldValues, UseFormSetError } from 'react-hook-form';
 import { toast } from 'sonner';
-import { toApiError } from './axios';
+import { toApiError } from './apiError';
 
 const handled = new WeakSet<object>();
+export function markErrorHandled(error: object): void {
+  handled.add(error);
+}
 export function getErrorMessage(error: unknown): string {
   return toApiError(error).message;
 }
@@ -40,7 +43,8 @@ export function applyFieldErrors<T extends FieldValues>(
   }
   for (const [field, messages] of mapped)
     setError(field, { type: 'server', message: messages.join('\n') });
-  if (general.length) setError('root.server' as FieldPath<T>, { type: 'server', message: general.join('\n') });
+  if (general.length)
+    setError('root.server' as FieldPath<T>, { type: 'server', message: general.join('\n') });
 }
 
 export function handleFormError<T extends FieldValues>(

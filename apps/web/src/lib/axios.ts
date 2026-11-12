@@ -1,58 +1,91 @@
-import axios from 'axios';
-import { ApiError } from '@/types/api';
-import { getAccessToken } from './tokenStore';
+import axios, { CanceledError, type AxiosRequestConfig } from 'axios';
+import { toApiError } from './apiError';
+import { getAccessToken, getSessionVersion } from './tokenStore';
+import {
+  expireSession,
+  getPendingRefresh,
+  isSessionChanging,
+  recoverSession,
+  staleSessionError,
+} from './session';
 
-export function toApiError(error: unknown): ApiError {
-  if (error instanceof ApiError) return error;
-  if (axios.isCancel(error)) return new ApiError('Yêu cầu đã bị hủy.', { kind: 'cancelled' });
-  if (axios.isAxiosError<unknown>(error)) {
-    const status = error.response?.status;
-    const raw = error.response?.data;
-    const body = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
-    const network =
-      !error.response &&
-      [
-        'ERR_NETWORK',
-        'ECONNABORTED',
-        'ETIMEDOUT',
-        'ECONNREFUSED',
-        'ENOTFOUND',
-        'ECONNRESET',
-      ].includes(error.code ?? '');
-    const fallback =
-      status === 403
-        ? 'Bạn không có quyền thực hiện thao tác này.'
-        : status === 401
-          ? 'Vui lòng đăng nhập để tiếp tục.'
-          : status && status >= 500
-            ? 'Máy chủ gặp lỗi. Vui lòng thử lại sau.'
-            : network
-              ? 'Không thể kết nối máy chủ hoặc yêu cầu đã hết thời gian chờ.'
-              : 'Không thể hoàn thành yêu cầu. Vui lòng thử lại.';
-    return new ApiError(
-      typeof body.message === 'string' && body.message.trim() ? body.message : fallback,
-      {
-        status,
-        kind: status ? 'http' : network ? 'network' : 'unknown',
-        errors: Array.isArray(body.errors)
-          ? body.errors.filter((e): e is string => typeof e === 'string')
-          : [],
-        timestamp: typeof body.timestamp === 'string' ? body.timestamp : undefined,
+export { toApiError } from './apiError';
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    _sessionVersion?: number;
+    _sentToken?: string | null;
+    _authRetried?: boolean;
+  }
+}
+const cookieEndpoint = (url = '') =>
+  /^\/(?:api\/)?auth\/(login|register|refresh|logout)\/?(?:[?#]|$)/.test(url);
+
+async function waitForRefresh(task: Promise<unknown>, signal: AxiosRequestConfig['signal']) {
+  if (signal?.aborted) throw new CanceledError();
+  if (!signal) return task;
+  await new Promise<void>((resolve, reject) => {
+    const abort = () => {
+      cleanup();
+      reject(new CanceledError());
+    };
+    const cleanup = () => signal.removeEventListener?.('abort', abort);
+    signal.addEventListener?.('abort', abort);
+    void task.then(
+      () => {
+        cleanup();
+        resolve();
+      },
+      (error) => {
+        cleanup();
+        reject(error);
       },
     );
-  }
-  return new ApiError('Đã xảy ra lỗi không mong muốn.', { kind: 'unknown' });
+    if (signal.aborted) abort();
+  });
 }
 
 export const apiClient = axios.create({ baseURL: '/api', timeout: 15_000, withCredentials: true });
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use(async (config) => {
+  if (!cookieEndpoint(config.url)) {
+    if (isSessionChanging()) throw new CanceledError('Session is changing');
+    const version = config._sessionVersion ?? getSessionVersion();
+    const pending = getPendingRefresh();
+    if (pending) await waitForRefresh(pending, config.signal);
+    if (version !== getSessionVersion()) throw staleSessionError(version);
+    config._sessionVersion = version;
+  }
   const token = getAccessToken();
+  config._sentToken = token;
   if (token) config.headers.set('Authorization', `Bearer ${token}`);
   else config.headers.delete('Authorization');
   return config;
 });
-// Keep AxiosResponse. Notification ownership belongs to Query or the direct caller.
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error: unknown) => Promise.reject(toApiError(error)),
+  (response) => {
+    const version = response.config._sessionVersion;
+    if (version !== undefined && version !== getSessionVersion()) throw staleSessionError(version);
+    return response;
+  },
+  async (cause: unknown) => {
+    const error = toApiError(cause);
+    const config = axios.isAxiosError(cause) ? cause.config : undefined;
+    if (!config || cookieEndpoint(config.url)) throw error;
+    const version = config._sessionVersion;
+    if (version !== undefined && version !== getSessionVersion()) throw staleSessionError(version);
+    if (error.status !== 401 || !config._sentToken || version === undefined) throw error;
+    if (config.signal?.aborted) throw toApiError(new CanceledError());
+    if (config._authRetried) throw expireSession(version);
+    config._authRetried = true;
+    // A late 401 from the previous token must not rotate again.
+    if (config._sentToken === getAccessToken()) {
+      try {
+        await waitForRefresh(recoverSession(), config.signal);
+      } catch (failure) {
+        throw toApiError(failure);
+      }
+    }
+    if (version !== getSessionVersion()) throw staleSessionError(version);
+    if (config.signal?.aborted) throw toApiError(new CanceledError());
+    return apiClient.request(config);
+  },
 );

@@ -27,6 +27,7 @@ export class ApiError extends Error {
   readonly kind: ApiErrorKind;
   readonly errors: string[];
   readonly timestamp?: string;
+  readonly retryable: boolean;
 
   constructor(
     message: string,
@@ -35,6 +36,7 @@ export class ApiError extends Error {
       kind: ApiErrorKind;
       errors?: string[];
       timestamp?: string;
+      retryable?: boolean;
     },
   ) {
     super(message);
@@ -43,5 +45,6 @@ export class ApiError extends Error {
     this.kind = options.kind;
     this.errors = options.errors ?? [];
     this.timestamp = options.timestamp;
+    this.retryable = options.retryable ?? true;
   }
 }

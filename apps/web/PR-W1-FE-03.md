@@ -1,19 +1,21 @@
-# [W1-FE-03] Tầng API dùng chung, proxy và Query cho frontend
+# [W1-FE-03] API dùng chung và refresh phiên với backend W1-BE-03
 
-FE cần gọi chung một contract khi BE còn mock. Bổ sung Axios client `/api`, token trong bộ nhớ, types auth/jobs/applications, API modules và hooks jobs để W1-FE-04/05/06 tích hợp.
+FE có tầng API dùng chung cho auth/jobs/applications và tự khôi phục phiên bằng cookie HttpOnly của backend. Khi access token hết hạn, các request 401 trong cùng tab dùng một lần refresh, rồi gửi lại tối đa một lần. Reload khôi phục access token trong bộ nhớ; refresh bị từ chối dọn cache và chuyển login.
 
-- Vite đọc API_PROXY_TARGET từ apps/web; giữ prefix /api, chuẩn bị /socket.io local.
-- API unwrap envelope một lần, giữ pagination meta. Validation map theo allow-list field RHF, lỗi chung không mất; toast thuộc một nơi xử lý.
-- Query retry một lần mạng/5xx, không retry 4xx/cancellation/lỗi JS. Mutation mặc định không retry; tạo job invalidate jobs.
-- Upload field file, progress có/không total và AbortSignal.
-- Login/register chỉ giữ accessToken; logout dọn token/cache. 401 không refresh, replay hay redirect.
-- README ghi ví dụ, chênh lệch Swagger/interceptor và checklist bàn giao.
+- Vite proxy `/api`, `/socket.io`, cấu hình API_PROXY_TARGET; types và API unwrap đúng envelope, giữ pagination meta.
+- Axios client 15 giây, Bearer từ memory tokenStore; transport cookie riêng không có vòng lặp refresh.
+- Query retry một lần mạng/5xx, không retry lỗi refresh; hooks jobs và invalidation, upload FormData/progress/cancellation; helpers validation RHF và toast một nơi.
+- Refresh dùng promise chung, xử lý 401 trả về trễ, giữ body/params/FormData khi replay. Không refresh endpoint login/register/refresh/logout hoặc lỗi 403.
+- Login/logout được tuần tự hóa với refresh; đổi phiên chặn request/response tài khoản cũ. Logout dọn local ngay và chờ rotation trước khi thu hồi cookie.
+- Refresh 401 kết thúc phiên; mạng/timeout/5xx không ép logout và không tự lặp rotation. Có refreshSession/refresh để bootstrap hoặc thử lại tường minh.
+- RegisterRequest chỉ cho HR/CANDIDATE theo BE mới. README có contract, checklist kiểm thử và hướng dẫn bàn giao AuthProvider.
 
-Kiểm tra ngày 10/11/2026:
+Kiểm tra ngày 12/11/2026:
 - `npm run build -w apps/web`: đạt.
 - `npm run lint -w apps/web`: đạt.
-- `npm test -w apps/web`: 29 tests đạt (2 files), gồm transport, hooks, form và proxy.
-- `npm run smoke:api -w apps/web`: đạt; GET qua Vite tới BE local xác nhận danh sách kèm meta, detail envelope và validation 400.
-- `git diff --check`: đạt.
+- `npm test -w apps/web`: 49 tests đạt, 3 files.
+- Build packages/ai và apps/api: đạt để chạy kiểm tra tích hợp.
+- Edge headless + Vite + NestJS + PostgreSQL thật: 8 kịch bản đạt (guest startup, cookie HttpOnly, 5 request hết hạn dùng 1 rotation, reload, refresh 500/recovery, expired cookie/redirect/cache, logout trong rotation, reload sau logout). 500 được giả lập qua network interception; các luồng cookie/JWT còn lại dùng BE thật.
+- Test dùng database tạm riêng đã được xóa, access token TTL 2 giây qua process env, không sửa .env hoặc dữ liệu ứng dụng.
 
-Chưa kiểm chứng Apidog (chưa có URL/quyền), Caddy production và auth/upload backend thật. Toàn bộ refresh hoãn, chờ W1-BE-03; không đánh dấu phần đó hoàn thành. Không sửa backend hay xây UI nghiệp vụ.
+Giới hạn: đồng bộ refresh trong một tab; chưa có khóa liên tab và BE cần xử lý rotation đồng thời nguyên tử. Apidog, Caddy/HTTPS production, upload lưu trữ thật chưa kiểm chứng. AuthProvider và UI đăng nhập nghiệp vụ thuộc W1-FE-04; form hiện tại vẫn là placeholder. Bootstrap hiện đã restore một lần; khi tích hợp provider cần chuyển quyền restore, tránh gọi thêm lần thứ hai. Logout lỗi mạng chỉ đảm bảo dọn local, chưa xác nhận cookie đã được server thu hồi.

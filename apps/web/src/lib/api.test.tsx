@@ -11,6 +11,7 @@ import type { PropsWithChildren } from 'react';
 import type { UseFormSetError } from 'react-hook-form';
 import { toast } from 'sonner';
 import { apiClient, toApiError } from './axios';
+import { authTransport } from './authTransport';
 import { clearAccessToken, getAccessToken, setAccessToken } from './tokenStore';
 import { applyFieldErrors, handleFormError, notifyError } from './errorUtils';
 import { createQueryClient, queryClient } from './queryClient';
@@ -24,6 +25,7 @@ import type { Job } from '@/types/jobs';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn() } }));
 const originalAdapter = apiClient.defaults.adapter;
+const originalAuthAdapter = authTransport.defaults.adapter;
 const job: Job = {
   id: 'job-1',
   title: 'Backend',
@@ -68,6 +70,7 @@ afterEach(() => {
   cleanup();
   queryClient.clear();
   apiClient.defaults.adapter = originalAdapter;
+  authTransport.defaults.adapter = originalAuthAdapter;
 });
 
 describe('transport and contracts', () => {
@@ -107,20 +110,19 @@ describe('transport and contracts', () => {
     apiClient.defaults.adapter = async (config) => response(config, { data: [job] });
     await expect(getJobs()).rejects.toMatchObject({ kind: 'contract' });
   });
-  it('propagates 401 once without refresh, replay, clearing the token or redirecting', async () => {
+  it('propagates a guest 401 without starting an automatic cookie refresh', async () => {
     const adapter = failingAdapter(401, { statusCode: 401, message: 'Hết phiên' });
     apiClient.defaults.adapter = adapter;
-    setAccessToken('existing');
     const href = window.location.href;
     await expect(getMe()).rejects.toMatchObject({ status: 401, message: 'Hết phiên' });
     expect(adapter).toHaveBeenCalledTimes(1);
     expect(adapter.mock.calls[0][0].url).toBe('/auth/me');
-    expect(getAccessToken()).toBe('existing');
+    expect(getAccessToken()).toBeNull();
     expect(window.location.href).toBe(href);
     expect(toast.error).not.toHaveBeenCalled();
   });
-  it('login/register keep only access token and drop mock refresh from the returned value', async () => {
-    apiClient.defaults.adapter = async (config) =>
+  it('login/register keep only access token and drop refresh from the returned value', async () => {
+    authTransport.defaults.adapter = async (config) =>
       response(config, {
         data: { accessToken: 'new', refreshToken: 'do-not-store', user: profile },
       });
@@ -141,7 +143,7 @@ describe('transport and contracts', () => {
     ).not.toHaveProperty('refreshToken');
   });
   it('logout clears token and cache even if server rejects, while preserving the error', async () => {
-    apiClient.defaults.adapter = failingAdapter(500);
+    authTransport.defaults.adapter = failingAdapter(500);
     setAccessToken('old');
     queryClient.setQueryData(['private'], profile);
     await expect(logout()).rejects.toMatchObject({ status: 500 });
