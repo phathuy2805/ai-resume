@@ -15,7 +15,7 @@ export const ApiRegisterDoc = () =>
     ZodResponse({
       status: HttpStatus.CREATED,
       description: 'Đăng ký thành công',
-      type: AuthResponseDto,
+      type: UserProfileResponseDto,
     }) as MethodDecorator,
   );
 

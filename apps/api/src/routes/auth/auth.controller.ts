@@ -37,13 +37,13 @@ export class AuthController {
     @Body() dto: RegisterDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponseDto> {
+  ): Promise<UserProfileResponseDto> {
     const result = await this.authService.register(
       dto,
       req.headers['user-agent'],
     );
     this.setRefreshCookie(res, result.refreshToken);
-    return result;
+    return result.user;
   }
 
   @Public()
