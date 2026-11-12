@@ -23,6 +23,21 @@ export const envSchema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL là bắt buộc'),
   DATABASE_URL_TEST: z.string().optional(),
   POSTGRES_PORT: z.coerce.number().default(5432),
+  ACCESS_TOKEN_SECRET: z
+    .string()
+    .min(1, 'ACCESS_TOKEN_SECRET là bắt buộc')
+    .default('dev-access-secret'),
+  ACCESS_TOKEN_EXPIRES_IN: z.string().default('15m'),
+  REFRESH_TOKEN_SECRET: z
+    .string()
+    .min(1, 'REFRESH_TOKEN_SECRET là bắt buộc')
+    .default('dev-refresh-secret'),
+  REFRESH_TOKEN_EXPIRES_IN: z.string().default('7d'),
+  COOKIE_SECURE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  FRONTEND_ORIGIN: z.string().default('http://localhost:5173'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
