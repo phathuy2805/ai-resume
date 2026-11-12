@@ -19,3 +19,8 @@ export const AuthResponseSchema = z.object({
   user: UserProfileResponseSchema,
 });
 export class AuthResponseDto extends createZodDto(AuthResponseSchema) {}
+
+export const LogoutResponseSchema = z.object({
+  message: z.string().describe('Thông báo kết quả đăng xuất'),
+});
+export class LogoutResponseDto extends createZodDto(LogoutResponseSchema) {}
