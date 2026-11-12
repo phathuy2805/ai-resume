@@ -35,7 +35,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthResponseDto_Output"
+                  "$ref": "#/components/schemas/UserProfileResponseDto_Output"
                 }
               }
             }
@@ -761,15 +761,15 @@
             "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
             "description": "Email người dùng"
           },
-          "password": {
-            "type": "string",
-            "minLength": 8,
-            "description": "Mật khẩu người dùng"
-          },
           "fullName": {
             "type": "string",
             "minLength": 1,
             "description": "Họ và tên đầy đủ"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Mật khẩu người dùng"
           },
           "role": {
             "type": "string",
@@ -782,9 +782,72 @@
         },
         "required": [
           "email",
-          "password",
           "fullName",
+          "password",
           "role"
+        ]
+      },
+      "UserProfileResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "ID người dùng (UUID)"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "Email người dùng"
+          },
+          "fullName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Họ và tên đầy đủ"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "HR",
+              "CANDIDATE",
+              "ADMIN"
+            ],
+            "description": "Vai trò người dùng"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm tạo tài khoản (ISO 8601)"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "role",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "Email người dùng"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Mật khẩu"
+          }
+        },
+        "required": [
+          "email",
+          "password"
         ]
       },
       "AuthResponseDto_Output": {
@@ -793,10 +856,6 @@
           "accessToken": {
             "type": "string",
             "description": "Access Token JWT"
-          },
-          "refreshToken": {
-            "type": "string",
-            "description": "Refresh Token JWT"
           },
           "user": {
             "type": "object",
@@ -815,7 +874,8 @@
               },
               "fullName": {
                 "type": "string",
-                "description": "Họ và tên"
+                "minLength": 1,
+                "description": "Họ và tên đầy đủ"
               },
               "role": {
                 "type": "string",
@@ -843,70 +903,7 @@
         },
         "required": [
           "accessToken",
-          "refreshToken",
           "user"
-        ],
-        "additionalProperties": false
-      },
-      "LoginDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-            "description": "Email đăng nhập"
-          },
-          "password": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Mật khẩu"
-          }
-        },
-        "required": [
-          "email",
-          "password"
-        ]
-      },
-      "UserProfileResponseDto_Output": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "description": "ID người dùng (UUID)"
-          },
-          "email": {
-            "type": "string",
-            "format": "email",
-            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-            "description": "Email người dùng"
-          },
-          "fullName": {
-            "type": "string",
-            "description": "Họ và tên"
-          },
-          "role": {
-            "type": "string",
-            "enum": [
-              "HR",
-              "CANDIDATE",
-              "ADMIN"
-            ],
-            "description": "Vai trò người dùng"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Thời điểm tạo tài khoản (ISO 8601)"
-          }
-        },
-        "required": [
-          "id",
-          "email",
-          "fullName",
-          "role",
-          "createdAt"
         ],
         "additionalProperties": false
       },
@@ -950,29 +947,32 @@
                 },
                 "title": {
                   "type": "string",
+                  "minLength": 1,
                   "description": "Tiêu đề tuyển dụng"
                 },
                 "description": {
                   "type": "string",
+                  "minLength": 1,
                   "description": "Nội dung chi tiết của JD"
                 },
                 "requiredSkills": {
+                  "minItems": 1,
                   "type": "array",
                   "items": {
                     "type": "string"
                   },
-                  "description": "Kỹ năng bắt buộc"
+                  "description": "Danh sách kỹ năng bắt buộc"
                 },
                 "preferredSkills": {
                   "type": "array",
                   "items": {
                     "type": "string"
                   },
-                  "description": "Kỹ năng ưu tiên"
+                  "description": "Danh sách kỹ năng ưu tiên"
                 },
                 "minYearsExperience": {
                   "type": "integer",
-                  "minimum": -9007199254740991,
+                  "minimum": 0,
                   "maximum": 9007199254740991,
                   "description": "Số năm kinh nghiệm tối thiểu"
                 },
@@ -986,14 +986,14 @@
                 },
                 "cvPassThreshold": {
                   "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "maximum": 100,
                   "description": "Điểm sàn qua vòng CV (0-100)"
                 },
                 "interviewQuestionCount": {
                   "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991,
+                  "minimum": 3,
+                  "maximum": 5,
                   "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
                 },
                 "rubricWeights": {
@@ -1124,29 +1124,32 @@
           },
           "title": {
             "type": "string",
+            "minLength": 1,
             "description": "Tiêu đề tuyển dụng"
           },
           "description": {
             "type": "string",
+            "minLength": 1,
             "description": "Nội dung chi tiết của JD"
           },
           "requiredSkills": {
             "type": "array",
+            "minItems": 1,
             "items": {
               "type": "string"
             },
-            "description": "Kỹ năng bắt buộc"
+            "description": "Danh sách kỹ năng bắt buộc"
           },
           "preferredSkills": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Kỹ năng ưu tiên"
+            "description": "Danh sách kỹ năng ưu tiên"
           },
           "minYearsExperience": {
             "type": "integer",
-            "minimum": -9007199254740991,
+            "minimum": 0,
             "maximum": 9007199254740991,
             "description": "Số năm kinh nghiệm tối thiểu"
           },
@@ -1160,14 +1163,14 @@
           },
           "cvPassThreshold": {
             "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991,
+            "minimum": 0,
+            "maximum": 100,
             "description": "Điểm sàn qua vòng CV (0-100)"
           },
           "interviewQuestionCount": {
             "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991,
+            "minimum": 3,
+            "maximum": 5,
             "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
           },
           "rubricWeights": {
@@ -1248,12 +1251,12 @@
           "title": {
             "type": "string",
             "minLength": 1,
-            "description": "Tiêu đề vị trí tuyển dụng"
+            "description": "Tiêu đề tuyển dụng"
           },
           "description": {
             "type": "string",
             "minLength": 1,
-            "description": "Nội dung chi tiết JD"
+            "description": "Nội dung chi tiết của JD"
           },
           "requiredSkills": {
             "minItems": 1,
@@ -1263,33 +1266,11 @@
             },
             "description": "Danh sách kỹ năng bắt buộc"
           },
-          "preferredSkills": {
-            "default": [],
-            "description": "Danh sách kỹ năng ưu tiên",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
           "minYearsExperience": {
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991,
             "description": "Số năm kinh nghiệm tối thiểu"
-          },
-          "cvPassThreshold": {
-            "default": 70,
-            "description": "Điểm sàn AI Screening (0-100)",
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 100
-          },
-          "interviewQuestionCount": {
-            "default": 3,
-            "description": "Số câu hỏi phỏng vấn Voice AI (3-5 câu)",
-            "type": "integer",
-            "minimum": 3,
-            "maximum": 5
           },
           "rubricWeights": {
             "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn",
@@ -1324,6 +1305,28 @@
                 "maximum": 100
               }
             }
+          },
+          "preferredSkills": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng ưu tiên"
+          },
+          "cvPassThreshold": {
+            "default": 70,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Điểm sàn qua vòng CV (0-100)"
+          },
+          "interviewQuestionCount": {
+            "default": 3,
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 5,
+            "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
           }
         },
         "required": [
@@ -1339,12 +1342,12 @@
           "title": {
             "type": "string",
             "minLength": 1,
-            "description": "Tiêu đề vị trí tuyển dụng"
+            "description": "Tiêu đề tuyển dụng"
           },
           "description": {
             "type": "string",
             "minLength": 1,
-            "description": "Nội dung chi tiết JD"
+            "description": "Nội dung chi tiết của JD"
           },
           "requiredSkills": {
             "minItems": 1,
@@ -1354,33 +1357,11 @@
             },
             "description": "Danh sách kỹ năng bắt buộc"
           },
-          "preferredSkills": {
-            "default": [],
-            "description": "Danh sách kỹ năng ưu tiên",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
           "minYearsExperience": {
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991,
             "description": "Số năm kinh nghiệm tối thiểu"
-          },
-          "cvPassThreshold": {
-            "default": 70,
-            "description": "Điểm sàn AI Screening (0-100)",
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 100
-          },
-          "interviewQuestionCount": {
-            "default": 3,
-            "description": "Số câu hỏi phỏng vấn Voice AI (3-5 câu)",
-            "type": "integer",
-            "minimum": 3,
-            "maximum": 5
           },
           "rubricWeights": {
             "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn",
@@ -1415,6 +1396,28 @@
                 "maximum": 100
               }
             }
+          },
+          "preferredSkills": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng ưu tiên"
+          },
+          "cvPassThreshold": {
+            "default": 70,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Điểm sàn qua vòng CV (0-100)"
+          },
+          "interviewQuestionCount": {
+            "default": 3,
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 5,
+            "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
           }
         }
       },
@@ -1455,7 +1458,8 @@
               },
               "title": {
                 "type": "string",
-                "description": "Tiêu đề vị trí tuyển dụng"
+                "minLength": 1,
+                "description": "Tiêu đề tuyển dụng"
               }
             },
             "required": [

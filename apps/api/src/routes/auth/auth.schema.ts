@@ -38,7 +38,6 @@ export const UserProfileResponseSchema = UserSchema;
 
 export const AuthResponseSchema = z.object({
   accessToken: z.string().describe('Access Token JWT'),
-  refreshToken: z.string().describe('Refresh Token JWT'),
   user: UserProfileResponseSchema,
 });
 
