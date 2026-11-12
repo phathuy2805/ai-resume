@@ -22,7 +22,7 @@ export const JobSchema = z.object({
   rubricWeights: RubricWeightsSchema.optional().describe(
     'Trọng số 4 tiêu chí chấm điểm phỏng vấn',
   ),
-  createdById: z.string().uuid().describe('ID người tạo (HR)'),
+  createdById: z.uuid().describe('ID người tạo (HR)'),
   createdAt: z.string().describe('Thời điểm đăng tin (ISO 8601)'),
   updatedAt: z.string().describe('Thời điểm cập nhật gần nhất (ISO 8601)'),
 });
