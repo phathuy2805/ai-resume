@@ -55,5 +55,6 @@
   body {
     @apply bg-background text-foreground;
     margin: 0;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   }
 }
