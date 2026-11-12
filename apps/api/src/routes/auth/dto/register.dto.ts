@@ -12,7 +12,9 @@ export const RegisterSchema = z.object({
     .string()
     .min(1, 'Họ tên không được để trống')
     .describe('Họ và tên đầy đủ'),
-  role: z.enum(Role).describe('Vai trò trong hệ thống (HR hoặc CANDIDATE)'),
+  role: z
+    .enum([Role.CANDIDATE, Role.HR])
+    .describe('Vai trò trong hệ thống (HR hoặc CANDIDATE)'),
 });
 
 export class RegisterDto extends createZodDto(RegisterSchema) {}
