@@ -112,7 +112,22 @@ async function main() {
   const defaultPassword = process.env.SEED_DEFAULT_PASSWORD || 'ChangeMe123!';
   const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
-  // 1. Seed 1 HR + 2 Candidates
+  // 1. Seed 1 Admin + 1 HR + 2 Candidates
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@hireflow.vn' },
+    update: {
+      fullName: 'Quản trị viên Hệ thống (Admin)',
+      passwordHash,
+      role: Role.ADMIN,
+    },
+    create: {
+      email: 'admin@hireflow.vn',
+      fullName: 'Quản trị viên Hệ thống (Admin)',
+      passwordHash,
+      role: Role.ADMIN,
+    },
+  });
+
   const hrUser = await prisma.user.upsert({
     where: { email: 'hr@hireflow.vn' },
     update: {
@@ -151,7 +166,7 @@ async function main() {
   });
 
   console.log(
-    `✅ Seeded Users: HR (${hrUser.email}), Candidates (${candidate1.email}, ${candidate2.email})`,
+    `✅ Seeded Users: Admin (${adminUser.email}), HR (${hrUser.email}), Candidates (${candidate1.email}, ${candidate2.email})`,
   );
 
   // 2. Seed 3 Jobs (trùng với 3 vị trí JD của W1-AI-06)
