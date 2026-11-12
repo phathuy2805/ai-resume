@@ -22,7 +22,7 @@ const profile = {
   createdAt: '2026-11-12',
 };
 const envelope = (token = 'new') => ({
-  data: { accessToken: token, refreshToken: 'cookie-only', user: profile },
+  data: { accessToken: token, user: profile },
 });
 function response(config: InternalAxiosRequestConfig, data: unknown, status = 200) {
   return { config, data, status, statusText: 'test', headers: {} };
@@ -237,6 +237,31 @@ describe('refresh and replay', () => {
 });
 
 describe('session lifecycle', () => {
+  it('discards a late register profile after logout and orders the cookie writes', async () => {
+    const gate = deferred();
+    const calls: string[] = [];
+    authTransport.defaults.adapter = async (config) => {
+      calls.push(config.url!);
+      if (config.url === '/auth/register') {
+        await gate.promise;
+        return response(config, { data: profile }, 201);
+      }
+      return response(config, { data: { message: 'Signed out' } });
+    };
+    const registering = register({
+      email: 'test@example.com',
+      password: 'password',
+      fullName: 'Test',
+      role: 'HR',
+    }).catch((error) => error);
+    await waitFor(() => expect(calls).toEqual(['/auth/register']));
+    const signingOut = logout();
+    gate.resolve();
+    expect(await registering).toMatchObject({ kind: 'cancelled' });
+    await signingOut;
+    expect(calls).toEqual(['/auth/register', '/auth/logout']);
+    expect(getAccessToken()).toBeNull();
+  });
   it('clears private cache, toasts and navigates once for concurrent expired-cookie failures', async () => {
     setAccessToken('old');
     queryClient.setQueryData(['private'], 'secret');

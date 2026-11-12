@@ -19,9 +19,10 @@ export interface AuthResult {
   accessToken: string;
   user: UserProfile;
 }
-export interface AuthResponse extends AuthResult {
-  refreshToken: string;
-}
+/** Login/refresh JSON; refreshToken exists only in the HttpOnly cookie. */
+export type AuthResponse = AuthResult;
+/** Register returns a profile, not an authenticated token result. */
+export type RegisterResponse = UserProfile;
 export interface LogoutResponse {
   message: string;
 }

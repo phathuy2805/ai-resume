@@ -121,11 +121,9 @@ describe('transport and contracts', () => {
     expect(window.location.href).toBe(href);
     expect(toast.error).not.toHaveBeenCalled();
   });
-  it('login/register keep only access token and drop refresh from the returned value', async () => {
+  it('login accepts accessToken/user without refreshToken and clears the previous cache', async () => {
     authTransport.defaults.adapter = async (config) =>
-      response(config, {
-        data: { accessToken: 'new', refreshToken: 'do-not-store', user: profile },
-      });
+      response(config, { data: { accessToken: 'new', user: profile } });
     queryClient.setQueryData(['private'], 'old user');
     expect(await login({ email: 'test@example.com', password: 'example-password' })).toEqual({
       accessToken: 'new',
@@ -133,15 +131,46 @@ describe('transport and contracts', () => {
     });
     expect(getAccessToken()).toBe('new');
     expect(queryClient.getQueryData(['private'])).toBeUndefined();
-    expect(
-      await register({
-        email: 'test@example.com',
-        password: 'example-password',
-        fullName: 'Test',
-        role: 'HR',
-      }),
-    ).not.toHaveProperty('refreshToken');
   });
+  it('register returns the profile, clears the old session, and makes no implicit login/refresh', async () => {
+    const adapter = vi.fn<AxiosAdapter>(async (config) => response(config, { data: profile }, 201));
+    authTransport.defaults.adapter = adapter;
+    setAccessToken('previous-account');
+    queryClient.setQueryData(['private'], 'old user');
+    const result = await register({
+      email: 'test@example.com',
+      password: 'example-password',
+      fullName: 'Test',
+      role: 'HR',
+    });
+    expect(result).toEqual(profile);
+    expect(result).not.toHaveProperty('accessToken');
+    expect(result).not.toHaveProperty('refreshToken');
+    expect(getAccessToken()).toBeNull();
+    expect(queryClient.getQueryData(['private'])).toBeUndefined();
+    expect(adapter).toHaveBeenCalledTimes(1);
+    expect(adapter.mock.calls[0][0].url).toBe('/auth/register');
+    expect(adapter.mock.calls[0][0].withCredentials).toBe(true);
+  });
+  it.each([
+    { data: { accessToken: 'old-contract', user: profile } },
+    { data: { id: 'incomplete' } },
+    profile,
+  ])(
+    'rejects an invalid register response instead of treating it as a successful session',
+    async (body) => {
+      authTransport.defaults.adapter = async (config) => response(config, body, 201);
+      await expect(
+        register({
+          email: 'test@example.com',
+          password: 'example-password',
+          fullName: 'Test',
+          role: 'HR',
+        }),
+      ).rejects.toMatchObject({ kind: 'contract' });
+      expect(getAccessToken()).toBeNull();
+    },
+  );
   it('logout clears token and cache even if server rejects, while preserving the error', async () => {
     authTransport.defaults.adapter = failingAdapter(500);
     setAccessToken('old');

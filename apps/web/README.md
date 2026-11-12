@@ -49,9 +49,11 @@ Error filter trả `{ statusCode, message, errors?: string[], timestamp? }`, val
 
 RegisterSchema và RegisterRequest chỉ cho đăng ký HR/CANDIDATE. Role của UserProfile vẫn có ADMIN để đọc tài khoản quản trị đã được cấp.
 
-W1-BE-03 dùng JWT và cookie HttpOnly `refresh_token`, path `/api/auth`, SameSite=Lax. BE vẫn trả refreshToken trong JSON; FE bỏ trường này và chỉ trả `{ accessToken, user }`. Cookie được trình duyệt gửi qua `withCredentials: true`, không đọc bằng JavaScript hoặc lưu vào storage/cache.
+W1-BE-03 dùng JWT và cookie HttpOnly `refresh_token`, path `/api/auth`, SameSite=Lax. Theo main `1f0af87`, BE không trả refreshToken trong JSON nữa. Login/refresh trả `{ data: { accessToken, user } }`; register trả `{ data: UserProfile }`. Cookie được trình duyệt gửi qua `withCredentials: true`, không đọc bằng JavaScript hoặc lưu vào storage/cache.
 
 ## Token và phiên
+
+`register(body)` trả `Promise<UserProfile>` (các field id/email/fullName/role/createdAt), không phải `{ accessToken, user }`. Backend vẫn đặt cookie HttpOnly khi đăng ký; FE dọn phiên/cache cũ và chưa đặt accessToken. Không tự gọi thêm login/refresh sau register: tạo tài khoản thành công không bị biến thành lỗi chỉ vì request thứ hai thất bại. FE-04 có thể chuyển sang login hoặc chủ động gọi `refreshSession()` để lấy phiên nếu muốn đăng nhập ngay; reload cũng khôi phục từ cookie này. Các component nhận kết quả đăng ký dùng `user.id`, không dùng `result.user.id`.
 
 `tokenStore` giữ accessToken trong bộ nhớ; không localStorage/sessionStorage/persisted cache. Bearer tính lại cho từng request. Login/logout đổi phiên và làm vô hiệu request cũ; rotation chỉ thay accessToken trong cùng phiên.
 
@@ -178,7 +180,7 @@ Kiểm tra thủ công với BE local và trình duyệt:
 
 Kết quả ngày 12/11/2026:
 
-- Build FE, lint và 49 tests tự động đều đạt.
-- 8 kịch bản trên Edge headless với Vite + NestJS W1-BE-03 + PostgreSQL thật đã đạt: guest startup im lặng; register đặt cookie HttpOnly và FE bỏ refreshToken; 5 request JWT hết hạn chỉ rotate một lần; reload khôi phục user; refresh 500 giữ phiên và explicit retry khôi phục; xóa cookie + JWT hết hạn dọn cache/chuyển login; logout trong lúc rotation xóa cookie mới; reload sau logout vẫn guest.
+- Build FE, lint và 54 tests tự động đều đạt.
+- 8 kịch bản trên Edge headless với Vite + NestJS W1-BE-03 + PostgreSQL thật đã đạt: guest startup im lặng; register trả profile và đặt cookie HttpOnly; 5 request JWT hết hạn chỉ rotate một lần; reload khôi phục user; refresh 500 giữ phiên và explicit retry khôi phục; xóa cookie + JWT hết hạn dọn cache/chuyển login; logout trong lúc rotation xóa cookie mới; reload sau logout vẫn guest.
 - Backend kiểm thử dùng access TTL 2 giây bằng biến môi trường của process. Database tạm được migrate và xóa sau kiểm tra; không sửa .env hoặc database ứng dụng. Kịch bản 500 dùng network interception có chủ đích; các luồng JWT/cookie còn lại gọi BE thật.
 - Khóa liên tab và cookie Secure trên production HTTPS chưa được kiểm chứng. Không coi unit tests hoặc bài kiểm tra một browser context là bằng chứng cho các trường hợp đó.

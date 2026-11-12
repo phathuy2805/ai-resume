@@ -1,7 +1,12 @@
 import { apiClient } from '@/lib/axios';
 import { authTransport } from '@/lib/authTransport';
 import { acceptRefreshedToken, getSessionVersion } from '@/lib/tokenStore';
-import { parseAuthResult, runSessionChange, staleSessionError } from '@/lib/session';
+import {
+  parseAuthResult,
+  parseUserProfile,
+  runSessionChange,
+  staleSessionError,
+} from '@/lib/session';
 import { queryClient } from '@/lib/queryClient';
 import type { ApiResponse } from '@/types/api';
 import type {
@@ -9,6 +14,7 @@ import type {
   AuthResult,
   LoginRequest,
   RegisterRequest,
+  RegisterResponse,
   LogoutResponse,
   UserProfile,
 } from '@/types/auth';
@@ -19,9 +25,9 @@ function clearSessionCache() {
   void queryClient.cancelQueries();
   queryClient.clear();
 }
-function authenticate(path: string, body: LoginRequest | RegisterRequest): Promise<AuthResult> {
+export function login(body: LoginRequest): Promise<AuthResult> {
   const task = runSessionChange(async (version) => {
-    const { data } = await authTransport.post<ApiResponse<AuthResponse>>(path, body);
+    const { data } = await authTransport.post<ApiResponse<AuthResponse>>('/auth/login', body);
     if (version !== getSessionVersion()) throw staleSessionError(version);
     const result = parseAuthResult(data);
     acceptRefreshedToken(result.accessToken, version);
@@ -30,8 +36,20 @@ function authenticate(path: string, body: LoginRequest | RegisterRequest): Promi
   clearSessionCache();
   return task;
 }
-export const register = (body: RegisterRequest) => authenticate('/auth/register', body);
-export const login = (body: LoginRequest) => authenticate('/auth/login', body);
+export function register(body: RegisterRequest): Promise<RegisterResponse> {
+  const task = runSessionChange(async (version) => {
+    const { data } = await authTransport.post<ApiResponse<RegisterResponse>>(
+      '/auth/register',
+      body,
+    );
+    if (version !== getSessionVersion()) throw staleSessionError(version);
+    // BE sets the cookie but returns only the profile. Do not invent an access
+    // token or couple successful account creation to a second network request.
+    return parseUserProfile(unwrap(data));
+  });
+  clearSessionCache();
+  return task;
+}
 export async function getMe(signal?: AbortSignal): Promise<UserProfile> {
   return unwrap((await apiClient.get<ApiResponse<UserProfile>>('/auth/me', { signal })).data);
 }

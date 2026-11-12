@@ -1,5 +1,5 @@
 import { ApiError, type ApiResponse } from '@/types/api';
-import type { AuthResponse, AuthResult } from '@/types/auth';
+import type { AuthResponse, AuthResult, UserProfile } from '@/types/auth';
 import { unwrap } from '@/api/response';
 import { toApiError } from './apiError';
 import { authTransport } from './authTransport';
@@ -49,22 +49,38 @@ export function expireSession(version: number): ApiError {
   return error;
 }
 
-export function parseAuthResult(body: ApiResponse<AuthResponse>): AuthResult {
-  const data = unwrap(body);
+export function parseUserProfile(data: unknown): UserProfile {
   if (
     !data ||
-    typeof data.accessToken !== 'string' ||
-    !data.accessToken.trim() ||
-    !data.user ||
-    typeof data.user.id !== 'string' ||
-    typeof data.user.email !== 'string' ||
-    typeof data.user.fullName !== 'string' ||
-    typeof data.user.createdAt !== 'string' ||
-    !['HR', 'CANDIDATE', 'ADMIN'].includes(data.user.role)
+    typeof data !== 'object' ||
+    !('id' in data) ||
+    typeof data.id !== 'string' ||
+    !('email' in data) ||
+    typeof data.email !== 'string' ||
+    !('fullName' in data) ||
+    typeof data.fullName !== 'string' ||
+    !('createdAt' in data) ||
+    typeof data.createdAt !== 'string' ||
+    !('role' in data) ||
+    (data.role !== 'HR' && data.role !== 'CANDIDATE' && data.role !== 'ADMIN')
   ) {
+    throw new ApiError('Response thông tin người dùng không đúng contract.', { kind: 'contract' });
+  }
+  return {
+    id: data.id,
+    email: data.email,
+    fullName: data.fullName,
+    createdAt: data.createdAt,
+    role: data.role,
+  };
+}
+
+export function parseAuthResult(body: ApiResponse<AuthResponse>): AuthResult {
+  const data = unwrap(body);
+  if (!data || typeof data.accessToken !== 'string' || !data.accessToken.trim()) {
     throw new ApiError('Response xác thực không đúng contract.', { kind: 'contract' });
   }
-  return { accessToken: data.accessToken, user: data.user };
+  return { accessToken: data.accessToken, user: parseUserProfile(data.user) };
 }
 
 // Explicit call for startup/manual retry. Concurrent callers share one rotation.
