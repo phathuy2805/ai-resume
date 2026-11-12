@@ -1,15 +1,9 @@
-import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import {
   AiRecommendation,
   ApplicationStatus,
-} from '../../../shared/constants/application-status.enum.js';
-
-export const JobSummarySchema = z.object({
-  id: z.uuid().describe('Mã định danh công việc (UUID)'),
-  title: z.string().describe('Tiêu đề vị trí tuyển dụng'),
-});
-export class JobSummaryDto extends createZodDto(JobSummarySchema) {}
+} from '../constants/application-status.enum.js';
+import { JobSummarySchema } from './job.model.js';
 
 export const ApplicationSchema = z.object({
   id: z.uuid().describe('Mã định danh đơn ứng tuyển (UUID)'),
@@ -33,7 +27,5 @@ export const ApplicationSchema = z.object({
     .describe('Thời điểm cập nhật trạng thái gần nhất (ISO 8601)'),
 });
 
-export class ApplicationDto extends createZodDto(ApplicationSchema) {}
+export type ApplicationModel = z.infer<typeof ApplicationSchema>;
 
-export const ApplicationResponseDto = ApplicationDto;
-export type ApplicationResponseDto = ApplicationDto;

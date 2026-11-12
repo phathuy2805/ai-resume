@@ -17,7 +17,7 @@ import {
   ApiApplyJobDoc,
   ApiGetMyApplicationsDoc,
 } from './applications.docs.js';
-import { ApplicationDto } from './dto/application.dto.js';
+import { ApplicationDto } from './applications.dto.js';
 
 @ApiApplicationsController()
 @Controller()

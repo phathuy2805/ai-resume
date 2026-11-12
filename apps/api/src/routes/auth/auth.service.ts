@@ -15,9 +15,11 @@ import { parseDurationMs } from '../../shared/utils/time.util.js';
 import { type SafeUser, UsersService } from '../users/users.service.js';
 import { BCRYPT_SALT_ROUNDS } from './auth.constant.js';
 import type { AuthTokensResult, JwtRefreshPayload } from './auth.type.js';
-import type { UserProfileResponseDto } from './dto/auth-response.dto.js';
-import type { LoginDto } from './dto/login.dto.js';
-import type { RegisterDto } from './dto/register.dto.js';
+import type {
+  LoginDto,
+  RegisterDto,
+  UserProfileResponseDto,
+} from './auth.dto.js';
 
 @Injectable()
 export class AuthService {

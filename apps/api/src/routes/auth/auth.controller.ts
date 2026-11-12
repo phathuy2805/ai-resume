@@ -18,12 +18,12 @@ import {
 import { AuthService } from './auth.service.js';
 import {
   AuthResponseDto,
+  LoginDto,
   LogoutResponseDto,
+  RefreshTokenDto,
+  RegisterDto,
   UserProfileResponseDto,
-} from './dto/auth-response.dto.js';
-import { LoginDto } from './dto/login.dto.js';
-import { RefreshTokenDto } from './dto/refresh-token.dto.js';
-import { RegisterDto } from './dto/register.dto.js';
+} from './auth.dto.js';
 
 @ApiAuthController()
 @Controller('auth')

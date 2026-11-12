@@ -1,10 +1,13 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { JobStatus } from '../../shared/constants/job-status.enum.js';
 import { Public } from '../../shared/decorators/public.decorator.js';
-import { CreateJobDto } from './dto/create-job.dto.js';
-import { JobListResponseDto, JobResponseDto } from './dto/job-response.dto.js';
-import { JobListQueryDto } from './dto/query-jobs.dto.js';
-import { UpdateJobDto } from './dto/update-job.dto.js';
+import {
+  CreateJobDto,
+  JobListQueryDto,
+  JobListResponseDto,
+  JobResponseDto,
+  UpdateJobDto,
+} from './jobs.dto.js';
 import {
   ApiCloseJobDoc,
   ApiCreateJobDoc,

@@ -6,7 +6,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
-import { JobListResponseDto, JobResponseDto } from './dto/job-response.dto.js';
+import { JobListResponseDto, JobResponseDto } from './jobs.dto.js';
 
 const JOB_ID_PARAM = ApiParam({
   name: 'id',

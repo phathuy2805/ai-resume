@@ -5,7 +5,7 @@ import {
   AuthResponseDto,
   LogoutResponseDto,
   UserProfileResponseDto,
-} from './dto/auth-response.dto.js';
+} from './auth.dto.js';
 
 export const ApiAuthController = () => applyDecorators(ApiTags('Auth'));
 

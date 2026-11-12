@@ -8,7 +8,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
-import { ApplicationDto } from './dto/application.dto.js';
+import { ApplicationDto } from './applications.dto.js';
 
 export const ApiApplicationsController = () =>
   applyDecorators(ApiTags('Applications'));
