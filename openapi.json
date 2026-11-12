@@ -857,10 +857,6 @@
             "type": "string",
             "description": "Access Token JWT"
           },
-          "refreshToken": {
-            "type": "string",
-            "description": "Refresh Token JWT"
-          },
           "user": {
             "type": "object",
             "properties": {
@@ -907,7 +903,6 @@
         },
         "required": [
           "accessToken",
-          "refreshToken",
           "user"
         ],
         "additionalProperties": false
