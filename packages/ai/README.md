@@ -125,6 +125,47 @@ Quy tắc gộp dữ liệu HR với kết quả AI (viết bằng code, không 
 
 Gọi Gemini với `temperature: 0`. Lỗi từ AI (`AiError`) được ném nguyên vẹn để BE xử lý như các hàm khác.
 
+## Trích chữ từ CV PDF (`extractCvText`)
+
+Dùng khi ứng viên nộp CV (W1-BE-05). Chỉ nhận bytes của file, không tự tải file qua mạng.
+
+```ts
+import { extractCvText, isCvExtractionError } from '@hireflow/ai';
+
+try {
+  const cv = await extractCvText(file.buffer, { ocrFallback: { ai }, logger: new Logger('AI') });
+  // cv = { text, pageCount, charCount, truncated, source: 'pdf-text' | 'ai-ocr' }
+  // → lưu cv.text vào applications.cv_text, rồi upload ĐÚNG file.buffer lên S3
+} catch (error) {
+  if (isCvExtractionError(error)) {
+    // 422 cho ứng viên, không lưu gì
+    throw new UnprocessableEntityException({ code: error.code, message: error.messageVi });
+  }
+  throw error;
+}
+```
+
+| Mã lỗi           | Khi nào                                                         |
+| ---------------- | --------------------------------------------------------------- |
+| `ENCRYPTED`      | PDF có mật khẩu mở file (chỉ khóa quyền sửa thì vẫn đọc được)   |
+| `CORRUPTED`      | File hỏng, không phải PDF, hoặc 0 byte                          |
+| `TOO_MANY_PAGES` | Quá 10 trang (kiểm tra trước khi trích chữ)                     |
+| `SCANNED`        | Trung bình dưới 100 ký tự/trang, hoặc không có chữ nhưng có ảnh |
+| `EMPTY`          | Không có chữ và không có ảnh (trang trắng)                      |
+
+Câu thông báo tiếng Việt cho từng mã: `error.messageVi`, hoặc `CV_EXTRACTION_MESSAGES_VI` (để FE dùng chung).
+
+- **Làm sạch chữ:** chuẩn hóa Unicode NFC (gộp dấu tiếng Việt bị tách), bỏ ký tự điều khiển / vô hình / lỗi `�`,
+  gộp khoảng trắng, giữ xuống dòng. Chữ dài quá 20.000 ký tự thì cắt (ưu tiên ở chỗ xuống dòng), `truncated: true`.
+- **Không làm hỏng `file.buffer`:** PDF.js chiếm mất mảng bytes truyền vào, nên hàm luôn đưa cho PDF.js một bản sao.
+- **CV dạng ảnh scan:** mặc định bị từ chối `SCANNED`. Truyền `ocrFallback: { ai }` để nhờ Gemini đọc
+  (khoảng 1–2 giây, ~750 token/trang). Gemini lỗi hoặc đọc không đủ chữ thì vẫn từ chối `SCANNED`.
+  Chữ do Gemini đọc có `source: 'ai-ocr'` và **có thể bị AI sửa** (vd. tự thêm dấu), không chính xác tuyệt đối như `pdf-text`.
+- **CV 2 cột:** chữ được trích **theo từng cột** (cột phụ như liên hệ, kỹ năng, học vấn trước; cột chính như mục tiêu,
+  kinh nghiệm sau), không trộn lẫn giữa các dòng. Prompt của `parseCv` (W1-AI-04) nên nêu rõ điều này.
+- **Log:** chỉ số trang, số ký tự, mã lỗi, nguồn, thời gian; không ghi nội dung CV.
+- Chạy được từ cả bản ESM và CommonJS của package (Node 24).
+
 ## Scripts
 
 Chạy từ thư mục gốc repo:
@@ -136,6 +177,7 @@ Chạy từ thư mục gốc repo:
 | `npm run test -w packages/ai`                          | Unit test (không gọi Gemini thật)                                                 |
 | `npm run test:cov -w packages/ai`                      | Test + độ phủ (báo cáo HTML ở `coverage/`)                                        |
 | `npm run typecheck -w packages/ai`                     | Kiểm tra kiểu, kể cả kiểu trong test                                              |
-| `npm run try -w packages/ai [-- text\|structured\|jd]` | Chạy thử với Gemini thật (`jd`: `parseJd` trên 3 JD fixtures, có tự đánh dấu ✓/✗) |
+| `npm run try -w packages/ai [-- text\|structured\|jd\|cv]` | Chạy thử với Gemini thật (`jd`: `parseJd` trên 3 JD; `cv`: `extractCvText` trên 30 CV + 2 scan, có tự đánh dấu ✓/✗) |
+| `npm run try -w packages/ai -- cv <tên file>` | Như `cv`, in nội dung một CV chỉ định để kiểm tra bằng mắt (mặc định `cv_be_06.pdf`) |
 
 `npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT`.

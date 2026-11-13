@@ -4,6 +4,8 @@
 //   npm run try -w packages/ai -- text         # chỉ generateText
 //   npm run try -w packages/ai -- structured   # chỉ generateStructured
 //   npm run try -w packages/ai -- jd           # parseJd trên 3 JD của fixtures (W1-AI-05)
+//   npm run try -w packages/ai -- cv           # extractCvText trên 30 CV + 2 scan (W1-AI-03)
+//   npm run try -w packages/ai -- cv cv_mkt_03.pdf   # như trên, in nội dung CV chỉ định để xem bằng mắt
 //
 // Biến môi trường đọc từ packages/ai/.env (copy từ .env.example) hoặc từ terminal ($env:...).
 // Biến đặt trong terminal được ưu tiên hơn file .env.
@@ -13,7 +15,9 @@ import path from 'node:path';
 import { z } from 'zod';
 import {
   createAiClient,
+  extractCvText,
   isAiError,
+  isCvExtractionError,
   normalizeSkills,
   parseJd,
   ParsedJdSchema,
@@ -126,6 +130,75 @@ async function jdDemo() {
   if (failedChecks > 0) process.exitCode = 1;
 }
 
+// ── Demo cv: extractCvText trên 30 CV + 2 scan của W1-AI-01 ─────────────
+const CV_DIR = path.resolve(import.meta.dirname, '../fixtures/cvs');
+const quietLogger = { log() {}, warn() {}, error() {} };
+
+async function cvDemo() {
+  const readCv = (file) => new Uint8Array(readFileSync(path.join(CV_DIR, file)));
+  const cvFiles = ['be', 'da', 'mkt'].flatMap((role) =>
+    Array.from({ length: 10 }, (_, i) => `cv_${role}_${String(i + 1).padStart(2, '0')}.pdf`),
+  );
+  const scanFiles = ['scans/cv_scan_01.pdf', 'scans/cv_scan_02.pdf'];
+  let failed = 0;
+
+  // (1) Không bật Gemini: 30 CV phải đọc được, 2 scan phải bị từ chối SCANNED.
+  console.log('\n── (1) unpdf, không bật Gemini');
+  for (const file of [...cvFiles, ...scanFiles]) {
+    const expectScan = file.startsWith('scans/');
+    try {
+      const r = await extractCvText(readCv(file), { logger: quietLogger });
+      const ok = !expectScan;
+      if (!ok) failed++;
+      console.log(
+        `   ${ok ? '✓' : '✗'} ${file.padEnd(22)} ${r.pageCount} trang, ${String(r.charCount).padStart(5)} ký tự, truncated=${r.truncated}`,
+      );
+    } catch (error) {
+      if (!isCvExtractionError(error)) throw error;
+      const ok = expectScan && error.code === 'SCANNED';
+      if (!ok) failed++;
+      console.log(`   ${ok ? '✓' : '✗'} ${file.padEnd(22)} bị từ chối: ${error.code}`);
+    }
+  }
+
+  // (2) Xem bằng mắt: mặc định CV 2 cột tiếng Việt (khó nhất: thứ tự cột + dấu).
+  const visualFile = process.argv[3] ?? 'cv_be_06.pdf';
+  const visual = await extractCvText(readCv(visualFile), { logger: quietLogger });
+  console.log(`\n── (2) Nội dung ${visualFile} (kiểm tra thứ tự chữ và dấu tiếng Việt)`);
+  console.log(
+    visual.text
+      .split('\n')
+      .map((line) => `   │ ${line}`)
+      .join('\n'),
+  );
+
+  // (3) Bật Gemini đọc dự phòng cho 2 file scan.
+  console.log('\n── (3) Bật Gemini đọc dự phòng (ocrFallback) cho 2 file scan');
+  for (const file of scanFiles) {
+    try {
+      const r = await extractCvText(readCv(file), { ocrFallback: { ai } });
+      const ok = r.source === 'ai-ocr';
+      if (!ok) failed++;
+      console.log(`   ${ok ? '✓' : '✗'} ${file}: nguồn ${r.source}, ${r.charCount} ký tự`);
+      console.log(
+        r.text
+          .split('\n')
+          .map((line) => `     │ ${line}`)
+          .join('\n'),
+      );
+    } catch (error) {
+      if (!isCvExtractionError(error)) throw error;
+      failed++;
+      const cause =
+        error.cause instanceof Error ? ` (cause: ${error.cause.message.slice(0, 120)})` : '';
+      console.log(`   ✗ ${file}: vẫn bị từ chối ${error.code}${cause}`);
+    }
+  }
+
+  console.log(`\n${failed === 0 ? '✓ Tất cả kiểm tra đạt' : `✗ ${failed} kiểm tra không đạt`}`);
+  if (failed > 0) process.exitCode = 1;
+}
+
 const demos = {
   text: () => ai.generateText('Trả lời trong 1 câu: thủ đô của Việt Nam là gì?'),
   structured: () =>
@@ -135,6 +208,7 @@ const demos = {
       { temperature: 0 },
     ),
   jd: jdDemo,
+  cv: cvDemo,
 };
 
 /** Gợi ý cách xử lý cho các lỗi hay gặp khi chạy thử. */
