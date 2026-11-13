@@ -151,3 +151,37 @@ describe('generateText', () => {
     });
   });
 });
+
+describe('readPdfText', () => {
+  const PDF = new TextEncoder().encode('%PDF-1.4 fake scanned cv');
+
+  it('gửi file PDF dạng inline (base64) cho model text, temperature 0, trả chữ đã trim', async () => {
+    const { client, api } = setup(async () => fakeResponse('  HO SO UNG VIEN  '));
+
+    await expect(client.readPdfText(PDF)).resolves.toBe('HO SO UNG VIEN');
+
+    const params = api.generateContent.mock.calls[0]![0] as GenerateContentParameters;
+    expect(params.model).toBe('text-model');
+    expect(params.config).toMatchObject({ temperature: 0 });
+    expect(JSON.stringify(params.contents)).toContain(
+      JSON.stringify({
+        inlineData: { mimeType: 'application/pdf', data: Buffer.from(PDF).toString('base64') },
+      }),
+    );
+  });
+
+  it('Gemini không trả chữ nào: trả chuỗi rỗng (không ném lỗi)', async () => {
+    const { client } = setup(async () => fakeResponse(undefined));
+    await expect(client.readPdfText(PDF)).resolves.toBe('');
+  });
+
+  it('dùng chung retry và log; log không chứa nội dung file', async () => {
+    const { client, api, lines } = setup(async () => fakeResponse('HO SO UNG VIEN'));
+    api.generateContent.mockRejectedValueOnce(apiError(503));
+
+    await client.readPdfText(PDF);
+    expect(api.generateContent).toHaveBeenCalledTimes(2);
+    expect(lines.at(-1)).toMatch(/^log ai\.readPdfText model=text-model ok /);
+    expect(lines.join('\n')).not.toContain('HO SO UNG VIEN');
+  });
+});

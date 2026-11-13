@@ -32,6 +32,20 @@ export type { JobLevel } from './level.js';
 export { parseJd, ParsedJdSchema } from './jd.js';
 export type { ParsedJd, ParseJdInput, ParseJdOptions } from './jd.js';
 
+// Trích chữ từ CV PDF (W1-AI-03)
+export {
+  extractCvText,
+  CvExtractionError,
+  isCvExtractionError,
+  CV_EXTRACTION_MESSAGES_VI,
+} from './cv-text.js';
+export type {
+  CvExtractionResult,
+  CvExtractionErrorCode,
+  CvTextSource,
+  ExtractCvTextOptions,
+} from './cv-text.js';
+
 /**
  * @deprecated Chỉ còn để apps/api (AppService) không bị lỗi.
  * Sẽ xóa khi BE tích hợp createAiClient (W2-BE-02).

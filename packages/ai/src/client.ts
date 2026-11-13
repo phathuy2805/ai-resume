@@ -38,6 +38,14 @@ export interface GenerateTextOptions extends CallOptions {
 
 export type GenerateStructuredOptions = GenerateTextOptions;
 
+/** Câu lệnh để Gemini chép lại nguyên văn chữ trong file PDF (dùng cho CV dạng ảnh scan). */
+export const READ_PDF_TEXT_INSTRUCTION = `Transcribe all readable text in this PDF exactly as written, in reading order.
+Rules:
+- Keep the original language and Vietnamese diacritics. Do not translate, summarize, correct or add anything.
+- Keep line breaks between lines and a blank line between sections.
+- Output plain text only, without markdown or comments.
+- If there is no readable text, output nothing.`;
+
 export interface AiClient {
   /** Tên model đang dùng (để BE lưu kèm kết quả chấm, phục vụ đối chiếu). */
   readonly models: Readonly<AiModels>;
@@ -51,6 +59,11 @@ export interface AiClient {
     schema: T,
     options?: GenerateStructuredOptions,
   ): Promise<z.output<T>>;
+  /**
+   * Nhờ Gemini đọc (OCR) chữ trong file PDF, vd. CV dạng ảnh scan. Trả '' nếu không đọc được chữ nào.
+   * Lưu ý: kết quả do AI đọc, có thể sót hoặc sai chữ; không kiểm chứng lại được như text gốc của PDF.
+   */
+  readPdfText(pdf: Uint8Array, options?: CallOptions): Promise<string>;
 }
 
 /** Phần nhỏ của SDK mà client cần. Tách ra để test truyền bản giả vào. */
@@ -137,6 +150,32 @@ export function buildAiClient(
         ]);
       }
       return text;
+    },
+
+    async readPdfText(pdf, options = {}) {
+      const response = await generateContent(
+        'readPdfText',
+        {
+          model: config.models.text,
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: 'application/pdf',
+                    data: Buffer.from(pdf).toString('base64'),
+                  },
+                },
+                { text: 'Transcribe the text of this document.' },
+              ],
+            },
+          ],
+          config: { systemInstruction: READ_PDF_TEXT_INSTRUCTION, temperature: 0 },
+        },
+        options,
+      );
+      return (response.text ?? '').trim();
     },
 
     async generateStructured(prompt, schema, options = {}) {
