@@ -21,4 +21,3 @@ export const JobResponseDto = JobDto;
 export type JobResponseDto = JobDto;
 
 export class JobListResponseDto extends createZodDto(JobListResponseSchema) {}
-

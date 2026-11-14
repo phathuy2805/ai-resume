@@ -12,4 +12,3 @@ export const ApplyJobSchema = UploadCvFileSchema;
 
 export type UploadCvFileBody = z.infer<typeof UploadCvFileSchema>;
 export type ApplyJobBody = z.infer<typeof ApplyJobSchema>;
-

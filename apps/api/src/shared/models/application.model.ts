@@ -28,4 +28,3 @@ export const ApplicationSchema = z.object({
 });
 
 export type ApplicationModel = z.infer<typeof ApplicationSchema>;
-

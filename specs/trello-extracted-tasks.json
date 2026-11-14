@@ -84,9 +84,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955afde2c5737933568b1",
@@ -162,9 +160,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae955aab68ddb004da293f4",
@@ -236,9 +232,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955ada1777724fbda30b5",
@@ -339,9 +333,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955b07713bd683d73165f",
@@ -421,9 +413,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae955a6c3dace8716534f8b",
@@ -507,9 +497,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955b10d0911ef7a06bbc3",
@@ -589,9 +577,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae955ac6ff847841002b92b",
@@ -675,9 +661,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955a8c4cc0dab9b678c48",
@@ -761,9 +745,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955ab2eb8149f848b6728",
@@ -843,9 +825,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955b434d4b3f5a4b2cb96",
@@ -921,9 +901,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae955ab9275027ebf707412",
@@ -978,9 +956,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955c2e8de153814f9ffed",
@@ -1048,9 +1024,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae955bb6fdf999705f72c75",
@@ -1142,9 +1116,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955b6bff076d12b884544",
@@ -1228,9 +1200,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6aeb379d4faf559b43df6685",
@@ -1281,9 +1251,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae955bc92f74d4c88e98966",
@@ -1359,9 +1327,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955b7d044c4716437d97c",
@@ -1441,9 +1407,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955c0072243d7f7f5d5c0",
@@ -1560,9 +1524,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955ba93919fd7954e4b0a",
@@ -1634,9 +1596,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955c4f60ecaee1ab6c25e",
@@ -1708,9 +1668,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae955c5ceb18e77656854d5",
@@ -1761,9 +1719,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae955beb75ece505455d7c8",
@@ -1855,9 +1811,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955b8139db8ee6dd88164",
@@ -1933,9 +1887,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955b945c1e786b0454174",
@@ -1990,9 +1942,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955bf9245c430d8f4ffb3",
@@ -2043,9 +1993,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955ae06a038bb12481ce0",
@@ -2109,9 +2057,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955c17b9753469efbc5e9",
@@ -2187,9 +2133,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6aeb393fbbb6742189ff69c9",
@@ -2294,9 +2238,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae9559c251a283d8d4d6636",
@@ -2430,9 +2372,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae95597fe13384d49e24711",
@@ -2554,9 +2494,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae9559cc74adc790d68611f",
@@ -2687,9 +2625,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae955989f1cbe2c97f9bd7f",
@@ -2782,9 +2718,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955a080832af775c41bc7",
@@ -2935,9 +2869,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae9559d1fec42574db08fe7",
@@ -3099,9 +3031,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae9559b7477d56516a99693",
@@ -3285,9 +3215,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955a111ad9e9c19d924bc",
@@ -3426,9 +3354,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae95599e885b44970fbea94",
@@ -3558,9 +3484,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955a224ceff6c6656e5a0",
@@ -3682,9 +3606,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae9559ecb4de4265be38fa4",
@@ -3785,9 +3707,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae9559a051ee6a4d0c806de",
@@ -3905,9 +3825,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae955a35cec13c36c829e2f",
@@ -3979,9 +3897,7 @@
           ]
         }
       ],
-      "labels": [
-        "AI/Pipeline"
-      ]
+      "labels": ["AI/Pipeline"]
     },
     {
       "id": "6ae9559fb38fa4033038826e",
@@ -4107,9 +4023,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend"
-      ]
+      "labels": ["Backend"]
     },
     {
       "id": "6ae9559a769d7d8adc508d96",
@@ -4214,9 +4128,7 @@
           ]
         }
       ],
-      "labels": [
-        "Frontend"
-      ]
+      "labels": ["Frontend"]
     },
     {
       "id": "6ae9d7bf057ed10db23c22f9",
@@ -4349,11 +4261,7 @@
           ]
         }
       ],
-      "labels": [
-        "Backend",
-        "Frontend",
-        "AI/Pipeline"
-      ]
+      "labels": ["Backend", "Frontend", "AI/Pipeline"]
     }
   ]
 }

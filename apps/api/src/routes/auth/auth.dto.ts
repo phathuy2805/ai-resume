@@ -16,4 +16,3 @@ export class UserProfileResponseDto extends createZodDto(
 ) {}
 export class AuthResponseDto extends createZodDto(AuthResponseSchema) {}
 export class LogoutResponseDto extends createZodDto(LogoutResponseSchema) {}
-

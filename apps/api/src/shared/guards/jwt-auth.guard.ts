@@ -63,4 +63,3 @@ export class JwtAuthGuard implements CanActivate {
     return type === 'Bearer' && token ? token : undefined;
   }
 }
-

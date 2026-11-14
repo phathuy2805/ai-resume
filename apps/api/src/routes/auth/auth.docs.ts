@@ -59,4 +59,3 @@ export const ApiLogoutDoc = () =>
       type: LogoutResponseDto,
     }) as MethodDecorator,
   );
-

@@ -29,7 +29,9 @@ export const ApiFindAllJobsDoc = () =>
 export const ApiFindMyJobsDoc = () =>
   applyDecorators(
     ApiBearerAuth('JWT-auth'),
-    ApiOperation({ summary: 'Lấy danh sách việc làm do HR đang đăng nhập tạo' }),
+    ApiOperation({
+      summary: 'Lấy danh sách việc làm do HR đang đăng nhập tạo',
+    }),
     ZodResponse({
       status: HttpStatus.OK,
       description: 'Danh sách việc làm của HR',
@@ -74,7 +76,9 @@ export const ApiUpdateJobDoc = () =>
 export const ApiCloseJobDoc = () =>
   applyDecorators(
     ApiBearerAuth('JWT-auth'),
-    ApiOperation({ summary: 'Đóng tin tuyển dụng (chuyển status sang CLOSED)' }),
+    ApiOperation({
+      summary: 'Đóng tin tuyển dụng (chuyển status sang CLOSED)',
+    }),
     JOB_ID_PARAM,
     ZodResponse({
       status: HttpStatus.OK,
@@ -82,4 +86,3 @@ export const ApiCloseJobDoc = () =>
       type: JobResponseDto,
     }) as MethodDecorator,
   );
-

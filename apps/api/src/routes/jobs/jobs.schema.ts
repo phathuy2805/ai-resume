@@ -47,4 +47,3 @@ export type CreateJobBody = z.infer<typeof CreateJobSchema>;
 export type UpdateJobBody = z.infer<typeof UpdateJobSchema>;
 export type JobListQuery = z.infer<typeof JobListQuerySchema>;
 export type JobListResponse = z.infer<typeof JobListResponseSchema>;
-

@@ -12,20 +12,8 @@
     "Đo lường, theo dõi và lập báo cáo định kỳ về chi phí CPA, ROI, ROAS bằng Google Analytics 4.",
     "Thực hiện thử nghiệm A/B Testing về thông điệp, hình ảnh và trang đích để tối đa hóa tỷ lệ chuyển đổi."
   ],
-  "requiredSkills": [
-    "SEO",
-    "Google Ads",
-    "Meta Ads",
-    "Content Marketing",
-    "Google Analytics"
-  ],
-  "preferredSkills": [
-    "TikTok Ads",
-    "Copywriting",
-    "Email Marketing",
-    "Canva",
-    "A/B Testing"
-  ],
+  "requiredSkills": ["SEO", "Google Ads", "Meta Ads", "Content Marketing", "Google Analytics"],
+  "preferredSkills": ["TikTok Ads", "Copywriting", "Email Marketing", "Canva", "A/B Testing"],
   "minYearsExperience": 2,
   "cvPassThreshold": 70,
   "interviewQuestionCount": 3,

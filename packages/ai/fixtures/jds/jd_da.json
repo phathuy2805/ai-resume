@@ -12,20 +12,8 @@
     "Theo dõi, đo lường các chỉ số kinh doanh chủ chốt (Conversion Rate, Retention Rate, Churn Rate).",
     "Trình bày các phát hiện và đề xuất giải pháp cải thiện kinh doanh trước đội ngũ quản lý."
   ],
-  "requiredSkills": [
-    "SQL",
-    "Python",
-    "PowerBI",
-    "Data Analysis",
-    "Statistics"
-  ],
-  "preferredSkills": [
-    "Tableau",
-    "Pandas",
-    "ETL",
-    "BigQuery",
-    "Data Modeling"
-  ],
+  "requiredSkills": ["SQL", "Python", "PowerBI", "Data Analysis", "Statistics"],
+  "preferredSkills": ["Tableau", "Pandas", "ETL", "BigQuery", "Data Modeling"],
   "minYearsExperience": 2,
   "cvPassThreshold": 70,
   "interviewQuestionCount": 3,

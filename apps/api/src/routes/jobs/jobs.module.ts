@@ -5,4 +5,3 @@ import { JobsController } from './jobs.controller.js';
   controllers: [JobsController],
 })
 export class JobsModule {}
-
