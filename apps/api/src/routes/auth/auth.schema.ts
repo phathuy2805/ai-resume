@@ -51,4 +51,3 @@ export type RefreshTokenBody = z.infer<typeof RefreshTokenSchema>;
 export type UserProfileResponse = z.infer<typeof UserProfileResponseSchema>;
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
 export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;
-

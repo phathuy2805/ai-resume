@@ -82,4 +82,3 @@ export const ApiGetCandidatesRankingDoc = () =>
         '[Phác thảo] Bảng xếp hạng ứng viên theo độ phù hợp ngữ nghĩa vector và điểm AI',
     }),
   );
-

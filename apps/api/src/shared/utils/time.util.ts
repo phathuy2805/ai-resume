@@ -15,4 +15,3 @@ export function parseDurationMs(duration: string): number {
   const unit = match[2].toLowerCase();
   return amount * DURATION_UNITS_MS[unit];
 }
-

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { JobStatus } from '../../shared/constants/job-status.enum.js';
 import { Public } from '../../shared/decorators/public.decorator.js';
 import {

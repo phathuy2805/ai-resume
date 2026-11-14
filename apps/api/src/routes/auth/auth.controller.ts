@@ -3,10 +3,7 @@ import type { CookieOptions, Request, Response } from 'express';
 import envConfig from '../../shared/config/env.config.js';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator.js';
 import { Public } from '../../shared/decorators/public.decorator.js';
-import {
-  REFRESH_COOKIE_NAME,
-  REFRESH_COOKIE_PATH,
-} from './auth.constant.js';
+import { REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH } from './auth.constant.js';
 import {
   ApiAuthController,
   ApiGetProfileDoc,
@@ -15,7 +12,6 @@ import {
   ApiRefreshTokenDoc,
   ApiRegisterDoc,
 } from './auth.docs.js';
-import { AuthService } from './auth.service.js';
 import {
   AuthResponseDto,
   LoginDto,
@@ -24,6 +20,7 @@ import {
   RegisterDto,
   UserProfileResponseDto,
 } from './auth.dto.js';
+import { AuthService } from './auth.service.js';
 
 @ApiAuthController()
 @Controller('auth')

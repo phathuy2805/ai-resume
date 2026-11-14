@@ -14,4 +14,3 @@ export type ApplicationResponseDto = ApplicationDto;
 export class UploadCvFileDto extends createZodDto(UploadCvFileSchema) {}
 export const ApplyJobDto = UploadCvFileDto;
 export type ApplyJobDto = UploadCvFileDto;
-

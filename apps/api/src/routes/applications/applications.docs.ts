@@ -59,4 +59,3 @@ export const ApiGetMyApplicationsDoc = () =>
       type: [ApplicationDto],
     }) as MethodDecorator,
   );
-

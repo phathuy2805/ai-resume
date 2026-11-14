@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "npm run build -w packages/ai && concurrently -n \"AI,API,WEB\" -c \"magenta,blue,green\" \"npm run dev -w packages/ai\" \"npm run start:dev -w apps/api\" \"npm run dev -w apps/web\"",
     "build": "npm run build --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{js,ts,jsx,tsx,json,css,scss,md}\""
   },
   "keywords": [],
   "author": "",

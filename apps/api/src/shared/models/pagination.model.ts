@@ -25,4 +25,3 @@ export const PaginationMetaSchema = z.object({
 
 export type PaginationQueryModel = z.infer<typeof PaginationQuerySchema>;
 export type PaginationMetaModel = z.infer<typeof PaginationMetaSchema>;
-
