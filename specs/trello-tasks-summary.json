@@ -5,9 +5,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR — **làm đầu tuần**, các thẻ BE khác dùng lại",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 2",
@@ -15,9 +13,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 2",
@@ -25,9 +21,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR — làm đầu tuần (chỉ cần API của tuần 1)",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 2",
@@ -35,9 +29,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR — **cập nhật Swagger trước** để TV1 mock",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 2",
@@ -45,9 +37,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 2",
@@ -55,9 +45,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 2",
@@ -65,9 +53,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 2",
@@ -75,9 +61,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 2",
@@ -85,9 +69,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 2",
@@ -95,9 +77,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 2",
@@ -105,9 +85,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "2 - Sàng lọc CV & Dashboard HR",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 2",
@@ -115,9 +93,7 @@
     "person": "TV1 - Frontend",
     "prio": "Nên có",
     "week": "2 - Sàng lọc CV & Dashboard HR — làm sau khi xong hết thẻ Bắt buộc của tuần",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 3",
@@ -125,9 +101,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy — **làm đầu tuần**, W3-BE-01 cần hàm này",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 3",
@@ -135,9 +109,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy — **chốt danh sách event với TV1 ngay đầu tuần**",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 3",
@@ -145,9 +117,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy — làm chế độ trả lời bằng chữ trước, giọng nói thêm ở W3-FE-02",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 3",
@@ -155,9 +125,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc (cần cho phỏng vấn voice; thay cho thẻ \"Chuyển audio thành text\" đã lưu trữ)",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 3",
@@ -165,9 +133,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc (phỏng vấn voice là tính năng chính)",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 3",
@@ -175,9 +141,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc (phỏng vấn voice là tính năng chính)",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 3",
@@ -185,9 +149,7 @@
     "person": "TV2 - Backend (TV1 làm image web ở W3-FE-05)",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy — **deploy lần đầu giữa tuần** với code đang có, deploy lại cuối tuần",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 3",
@@ -195,9 +157,7 @@
     "person": "TV1 - Frontend (phối hợp TV2 ở W3-BE-05)",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy — **deploy lần đầu giữa tuần** cùng W3-BE-05, deploy lại cuối tuần",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 3",
@@ -205,9 +165,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 3",
@@ -215,9 +173,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 3",
@@ -225,9 +181,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 3",
@@ -235,9 +189,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 3",
@@ -245,9 +197,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 3",
@@ -255,9 +205,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 3",
@@ -265,9 +213,7 @@
     "person": "TV2 - Backend",
     "prio": "Nên có (thiếu thì ứng viên vẫn thấy lời mời và kết quả ở trang \"Hồ sơ của tôi\")",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 3",
@@ -275,9 +221,7 @@
     "person": "TV2 - Backend (TV3 cung cấp số liệu AI, TV1 chụp màn hình)",
     "prio": "Bắt buộc",
     "week": "3 - Phỏng vấn AI, phản hồi & deploy — **thẻ cuối cùng**",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 1",
@@ -293,9 +237,7 @@
     "person": "TV3 - AI (TV1 (FE) hoặc TV2 (BE) gán nhãn thứ hai)",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 1",
@@ -303,9 +245,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 1",
@@ -313,9 +253,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 1",
@@ -323,9 +261,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD — **làm ngay đầu tuần**, chặn W1-FE-06",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 1",
@@ -333,9 +269,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 1",
@@ -343,9 +277,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 1",
@@ -353,9 +285,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 1",
@@ -363,9 +293,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 1",
@@ -373,9 +301,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 1",
@@ -383,9 +309,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 1",
@@ -393,9 +317,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 1",
@@ -403,9 +325,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 1",
@@ -413,9 +333,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Backlog Week 1",
@@ -423,9 +341,7 @@
     "person": "TV3 - AI",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "AI/Pipeline"
-    ]
+    "labels": ["AI/Pipeline"]
   },
   {
     "list": "Backlog Week 1",
@@ -433,9 +349,7 @@
     "person": "TV2 - Backend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Backend"
-    ]
+    "labels": ["Backend"]
   },
   {
     "list": "Backlog Week 1",
@@ -443,9 +357,7 @@
     "person": "TV1 - Frontend",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Frontend"
-    ]
+    "labels": ["Frontend"]
   },
   {
     "list": "Code Review / Testing",
@@ -453,10 +365,6 @@
     "person": "Huy",
     "prio": "Bắt buộc",
     "week": "1 - Nền tảng & phân tích CV/JD",
-    "labels": [
-      "Backend",
-      "Frontend",
-      "AI/Pipeline"
-    ]
+    "labels": ["Backend", "Frontend", "AI/Pipeline"]
   }
 ]

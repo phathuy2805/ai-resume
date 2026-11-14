@@ -3,21 +3,8 @@
     "id": "d19e9185-1715-46a2-94b2-e1e779a1d123",
     "title": "Senior Backend NodeJS / NestJS Developer",
     "description": "Chúng tôi tìm kiếm Senior Backend Developer tham gia phát triển hệ thống nền tảng tuyển dụng thông minh. Bạn sẽ chịu trách nhiệm thiết kế kiến trúc hệ thống, phát triển RESTful API hiệu năng cao bằng NestJS, tối ưu hóa cơ sở dữ liệu PostgreSQL và tích hợp các pipeline hàng đợi xử lý bất đồng bộ.",
-    "requiredSkills": [
-      "NodeJS",
-      "NestJS",
-      "TypeScript",
-      "PostgreSQL",
-      "RESTful API",
-      "Docker"
-    ],
-    "preferredSkills": [
-      "Redis",
-      "BullMQ",
-      "AWS S3",
-      "Microservices",
-      "GraphQL"
-    ],
+    "requiredSkills": ["NodeJS", "NestJS", "TypeScript", "PostgreSQL", "RESTful API", "Docker"],
+    "preferredSkills": ["Redis", "BullMQ", "AWS S3", "Microservices", "GraphQL"],
     "minYearsExperience": 3,
     "cvPassThreshold": 70,
     "interviewQuestionCount": 3,
@@ -33,20 +20,8 @@
     "id": "e28f8296-2826-57b3-85c3-f2f880b2e234",
     "title": "Middle / Senior Data Analyst",
     "description": "Vị trí Data Analyst chịu trách nhiệm phân tích sâu dữ liệu người dùng và kinh doanh, xây dựng các Dashboard trực quan hóa dữ liệu theo thời gian thực, thiết kế các mô hình chỉ số KPI và phối hợp với ban điều hành để đưa ra các đề xuất tối ưu hóa tăng trưởng dựa trên dữ liệu thực chứng.",
-    "requiredSkills": [
-      "SQL",
-      "Python",
-      "PowerBI",
-      "Data Analysis",
-      "Statistics"
-    ],
-    "preferredSkills": [
-      "Tableau",
-      "Pandas",
-      "ETL",
-      "BigQuery",
-      "Data Modeling"
-    ],
+    "requiredSkills": ["SQL", "Python", "PowerBI", "Data Analysis", "Statistics"],
+    "preferredSkills": ["Tableau", "Pandas", "ETL", "BigQuery", "Data Modeling"],
     "minYearsExperience": 2,
     "cvPassThreshold": 70,
     "interviewQuestionCount": 3,
@@ -62,20 +37,8 @@
     "id": "f39a9307-3937-68c4-96d4-a3a991c3f345",
     "title": "Digital Marketing Specialist",
     "description": "Chúng tôi tìm kiếm Digital Marketing Specialist nhiệt huyết để dẫn dắt các chiến dịch tiếp thị số đa kênh. Bạn sẽ phụ trách tối ưu hóa công cụ tìm kiếm (SEO), vận hành quảng cáo trả phí (Google Ads, Meta Ads), sáng tạo nội dung chuyển đổi và đo lường hiệu quả chiến dịch bằng dữ liệu phân tích.",
-    "requiredSkills": [
-      "SEO",
-      "Google Ads",
-      "Meta Ads",
-      "Content Marketing",
-      "Google Analytics"
-    ],
-    "preferredSkills": [
-      "TikTok Ads",
-      "Copywriting",
-      "Email Marketing",
-      "Canva",
-      "A/B Testing"
-    ],
+    "requiredSkills": ["SEO", "Google Ads", "Meta Ads", "Content Marketing", "Google Analytics"],
+    "preferredSkills": ["TikTok Ads", "Copywriting", "Email Marketing", "Canva", "A/B Testing"],
     "minYearsExperience": 2,
     "cvPassThreshold": 70,
     "interviewQuestionCount": 3,

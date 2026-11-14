@@ -59,7 +59,8 @@ export class ApplicationsController {
         cvFileName: 'Nguyen_Van_A_CV.pdf',
         cvSizeBytes: 245760,
         cvMimeType: 'application/pdf',
-        cvUrl: 'https://example-bucket.s3.amazonaws.com/cvs/Nguyen_Van_A_CV.pdf',
+        cvUrl:
+          'https://example-bucket.s3.amazonaws.com/cvs/Nguyen_Van_A_CV.pdf',
         aiRecommendation: AiRecommendation.PASS,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

@@ -12,21 +12,8 @@
     "Đóng gói ứng dụng với Docker và hỗ trợ triển khai hạ tầng trên môi trường cloud/VPS.",
     "Review mã nguồn, hướng dẫn các thành viên junior và tối ưu quy trình CI/CD."
   ],
-  "requiredSkills": [
-    "NodeJS",
-    "NestJS",
-    "TypeScript",
-    "PostgreSQL",
-    "RESTful API",
-    "Docker"
-  ],
-  "preferredSkills": [
-    "Redis",
-    "BullMQ",
-    "AWS S3",
-    "Microservices",
-    "GraphQL"
-  ],
+  "requiredSkills": ["NodeJS", "NestJS", "TypeScript", "PostgreSQL", "RESTful API", "Docker"],
+  "preferredSkills": ["Redis", "BullMQ", "AWS S3", "Microservices", "GraphQL"],
   "minYearsExperience": 3,
   "cvPassThreshold": 70,
   "interviewQuestionCount": 3,

@@ -1,0 +1,18 @@
+node_modules
+dist
+build
+coverage
+.cache
+.vite-temp
+.agents
+.agent
+.claude
+.windsurf
+skills-lock.json
+
+# Prisma generated client
+src/generated
+generated
+
+# Package manager locks
+package-lock.json
