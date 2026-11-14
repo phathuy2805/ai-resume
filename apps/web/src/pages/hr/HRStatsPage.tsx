@@ -1,7 +1,58 @@
-import { BarChart3, Clock3, Target, TrendingUp } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { BarChart3, Clock3, Target, TrendingUp } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function HRStatsPage() {
-  return <div className="mx-auto max-w-7xl space-y-6"><div><Badge variant="success">Live analytics</Badge><h1 className="mt-2 text-2xl font-bold text-slate-900">Thống kê tuyển dụng</h1><p className="mt-1 text-sm text-slate-500">Theo dõi hiệu quả pipeline và chất lượng ứng viên theo thời gian thực.</p></div><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["Tỷ lệ AI Match", "91.4%", TrendingUp], ["Thời gian tuyển trung bình", "18 ngày", Clock3], ["Ứng viên đủ chuẩn", "342", Target], ["Hiệu suất pipeline", "+28.6%", BarChart3]].map(([label, value, Icon]) => <Card key={label as string} className="border-0 shadow-sm"><CardContent className="p-5"><div className="flex justify-between"><span className="text-xs uppercase tracking-wide text-slate-400">{label as string}</span><Icon className="h-5 w-5 text-indigo-600" /></div><div className="mt-4 text-3xl font-bold text-slate-900">{value as string}</div><div className="mt-4 h-2 rounded-full bg-indigo-100"><div className="h-2 w-3/4 rounded-full bg-indigo-600" /></div></CardContent></Card>)}</div><Card className="border-0 shadow-sm"><CardHeader><CardTitle>Hiệu suất theo tháng</CardTitle></CardHeader><CardContent><div className="flex h-64 items-end gap-3 rounded-lg bg-slate-50 p-6">{[45, 62, 52, 76, 68, 91, 82, 100, 88, 95, 78, 92].map((height, index) => <div key={index} className="flex flex-1 flex-col items-center gap-2"><div className="w-full rounded-t-md bg-indigo-500" style={{ height: `${height}%` }} /><span className="text-[10px] text-slate-400">T{index + 1}</span></div>)}</div></CardContent></Card></div>;
+  return (
+    <div className="mx-auto max-w-7xl space-y-6">
+      <div>
+        <Badge variant="success">Live analytics</Badge>
+        <h1 className="mt-2 text-2xl font-bold text-slate-900">Thống kê tuyển dụng</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Theo dõi hiệu quả pipeline và chất lượng ứng viên theo thời gian thực.
+        </p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          ['Tỷ lệ AI Match', '91.4%', TrendingUp],
+          ['Thời gian tuyển trung bình', '18 ngày', Clock3],
+          ['Ứng viên đủ chuẩn', '342', Target],
+          ['Hiệu suất pipeline', '+28.6%', BarChart3],
+        ].map(([label, value, Icon]) => (
+          <Card key={label as string} className="border-0 shadow-sm">
+            <CardContent className="p-5">
+              <div className="flex justify-between">
+                <span className="text-xs uppercase tracking-wide text-slate-400">
+                  {label as string}
+                </span>
+                <Icon className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div className="mt-4 text-3xl font-bold text-slate-900">{value as string}</div>
+              <div className="mt-4 h-2 rounded-full bg-indigo-100">
+                <div className="h-2 w-3/4 rounded-full bg-indigo-600" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle>Hiệu suất theo tháng</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-64 items-end gap-3 rounded-lg bg-slate-50 p-6">
+            {[45, 62, 52, 76, 68, 91, 82, 100, 88, 95, 78, 92].map((height, index) => (
+              <div key={index} className="flex flex-1 flex-col items-center gap-2">
+                <div
+                  className="w-full rounded-t-md bg-indigo-500"
+                  style={{ height: `${height}%` }}
+                />
+                <span className="text-[10px] text-slate-400">T{index + 1}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
