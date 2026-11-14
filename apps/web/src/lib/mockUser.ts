@@ -1,7 +1,6 @@
 export const mockUser = {
   id: 'user-1',
   name: 'Lương Anh Minh',
-  email: 'minh@example.com',
+  email: 'minh@hireflow.vn',
   role: 'HR' as 'HR' | 'CANDIDATE',
-  avatar: '',
 };

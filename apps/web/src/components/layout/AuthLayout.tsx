@@ -1,27 +1,22 @@
 import { Outlet } from 'react-router-dom';
-import { LockKeyhole, ShieldCheck } from 'lucide-react';
+import Logo from '@/components/common/Logo';
 
 export default function AuthLayout() {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-700">
-      <div className="flex items-center justify-between px-4 py-3 text-xs text-slate-400 sm:px-8">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 font-medium text-emerald-700 shadow-sm">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-600" />
-          SOC-2 Verified
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <LockKeyhole className="h-4 w-4" />
-          256-bit SSL
-        </span>
-      </div>
-      <main className="flex flex-1 items-center justify-center px-4 py-8">
-        <div className="w-full max-w-[420px]">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10">
+      <div className="flex w-full max-w-[400px] flex-col items-center">
+        <div className="mb-8 flex select-none flex-col items-center text-center">
+          <Logo size="lg" className="mb-3.5" />
+          <span className="text-page-title text-foreground">HireFlow</span>
+          <p className="mt-1 text-muted-foreground">Sàng lọc hồ sơ thông minh với AI</p>
+        </div>
+        <div className="w-full">
           <Outlet />
         </div>
-      </main>
-      <footer className="flex items-center justify-center gap-1 px-4 py-6 text-center text-xs text-slate-400">
-        <ShieldCheck className="h-4 w-4" />© 2025 RecruitAI Enterprise Inc. Safe Harbor Certified.
-      </footer>
+        <p className="mt-6 text-xs text-muted-foreground/80">
+          © 2026 HireFlow · Tuyển dụng minh bạch với AI
+        </p>
+      </div>
     </div>
   );
 }

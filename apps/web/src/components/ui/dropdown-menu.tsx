@@ -4,22 +4,58 @@ import { cn } from '@/lib/utils';
 type DropdownContextValue = { open: boolean; setOpen: (open: boolean) => void };
 const DropdownContext = createContext<DropdownContextValue | null>(null);
 
-export function DropdownMenu({ children }: { children: ReactNode }) {
+function useDropdown(component: string) {
+  const context = useContext(DropdownContext);
+  if (!context) throw new Error(`${component} must be used within DropdownMenu`);
+  return context;
+}
+
+export function DropdownMenu({ children, className }: { children: ReactNode; className?: string }) {
   const [open, setOpen] = useState(false);
-  return <DropdownContext.Provider value={{ open, setOpen }}>{children}</DropdownContext.Provider>;
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+  return (
+    <DropdownContext.Provider value={{ open, setOpen }}>
+      <div ref={rootRef} className={cn('relative inline-block', className)}>
+        {children}
+      </div>
+    </DropdownContext.Provider>
+  );
 }
 
 export function DropdownMenuTrigger({
   children,
   className,
+  'aria-label': ariaLabel,
 }: {
   children: ReactNode;
   className?: string;
+  'aria-label'?: string;
 }) {
-  const context = useContext(DropdownContext);
-  if (!context) throw new Error('DropdownMenuTrigger must be used within DropdownMenu');
+  const context = useDropdown('DropdownMenuTrigger');
   return (
-    <button type="button" className={className} onClick={() => context.setOpen(!context.open)}>
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      aria-haspopup="menu"
+      aria-expanded={context.open}
+      className={className}
+      onClick={() => context.setOpen(!context.open)}
+    >
       {children}
     </button>
   );
@@ -28,33 +64,38 @@ export function DropdownMenuTrigger({
 export function DropdownMenuContent({
   children,
   className,
+  align = 'end',
 }: {
   children: ReactNode;
   className?: string;
+  align?: 'start' | 'end';
 }) {
-  const context = useContext(DropdownContext);
-  const contentRef = useRef<HTMLDivElement>(null);
-  if (!context) throw new Error('DropdownMenuContent must be used within DropdownMenu');
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (contentRef.current && !contentRef.current.contains(event.target as Node))
-        context.setOpen(false);
-    };
-    if (context.open) document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [context]);
+  const context = useDropdown('DropdownMenuContent');
   if (!context.open) return null;
   return (
     <div
-      ref={contentRef}
+      role="menu"
       className={cn(
-        'absolute right-0 top-full z-50 mt-2 min-w-48 rounded-md border bg-popover p-1 text-popover-foreground shadow-md',
+        'absolute top-full z-50 mt-1 min-w-44 rounded-lg border border-border bg-popover py-1.5 text-popover-foreground shadow-md',
+        align === 'end' ? 'right-0' : 'left-0',
         className,
       )}
     >
       {children}
     </div>
   );
+}
+
+export function DropdownMenuLabel({ children }: { children: ReactNode }) {
+  return (
+    <div className="px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+      {children}
+    </div>
+  );
+}
+
+export function DropdownMenuSeparator() {
+  return <div className="my-1 h-px bg-border" />;
 }
 
 export function DropdownMenuItem({
@@ -66,13 +107,13 @@ export function DropdownMenuItem({
   className?: string;
   onClick?: () => void;
 }) {
-  const context = useContext(DropdownContext);
-  if (!context) throw new Error('DropdownMenuItem must be used within DropdownMenu');
+  const context = useDropdown('DropdownMenuItem');
   return (
     <button
       type="button"
+      role="menuitem"
       className={cn(
-        'flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent',
+        'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-slate-50 [&_svg]:size-4 [&_svg]:text-muted-foreground',
         className,
       )}
       onClick={() => {

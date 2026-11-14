@@ -4,9 +4,9 @@ import CandidateHeader from '@/components/layout/CandidateHeader';
 
 export default function CandidateLayout() {
   return (
-    <div className="flex min-h-screen flex-col justify-between">
+    <div className="flex min-h-screen flex-col bg-background">
       <CandidateHeader />
-      <main className="w-full max-w-7xl mx-auto flex-1 px-4 py-6">
+      <main className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-8 md:px-8">
         <Outlet />
       </main>
       <CandidateFooter />

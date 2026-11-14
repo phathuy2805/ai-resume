@@ -1,13 +1,9 @@
-import { Menu, UserCircle } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useState } from 'react';
+import { Menu } from 'lucide-react';
+import { Link, NavLink } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { mockUser } from '@/lib/mockUser';
+import Logo from '@/components/common/Logo';
+import UserMenu from '@/components/layout/UserMenu';
 import { cn } from '@/lib/utils';
 
 const links = [
@@ -16,23 +12,25 @@ const links = [
 ];
 
 export default function CandidateHeader() {
-  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
-    <header className="border-b bg-background">
-      <div className="container flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-6">
-          <NavLink to="/candidate/jobs" className="font-bold text-primary">
-            AI Resume
-          </NavLink>
-          <nav className="hidden items-center gap-1 md:flex">
+    <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-md">
+      <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 md:px-8">
+        <div className="flex h-full items-center gap-8">
+          <Link to="/candidate/jobs">
+            <Logo />
+          </Link>
+          <nav className="hidden h-full items-center gap-6 md:flex">
             {links.map(({ to, label }) => (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
                   cn(
-                    'rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent',
-                    isActive && 'bg-primary/10 font-medium text-primary',
+                    'relative flex h-full items-center font-medium transition-colors',
+                    isActive
+                      ? 'font-semibold text-primary after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-primary'
+                      : 'text-slate-600 hover:text-foreground',
                   )
                 }
               >
@@ -41,32 +39,37 @@ export default function CandidateHeader() {
             ))}
           </nav>
         </div>
-        <div className="flex items-center gap-2">
-          <Sheet>
-            <SheetTrigger className="rounded-md p-2 hover:bg-accent md:hidden" aria-label="Mở menu">
+        <div className="flex items-center gap-1">
+          <UserMenu showDetails={false} />
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger
+              className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden"
+              aria-label="Mở menu"
+            >
               <Menu className="h-5 w-5" />
             </SheetTrigger>
-            <SheetContent>
-              <nav className="mt-8 space-y-2">
+            <SheetContent side="right" className="w-64">
+              <nav className="mt-8 flex flex-col gap-1">
                 {links.map(({ to, label }) => (
-                  <NavLink key={to} to={to} className="block rounded-md px-3 py-2 hover:bg-accent">
+                  <NavLink
+                    key={to}
+                    to={to}
+                    onClick={() => setMenuOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        'rounded-lg px-3 py-2 font-medium',
+                        isActive
+                          ? 'bg-indigo-50 text-primary'
+                          : 'text-slate-600 hover:bg-slate-100',
+                      )
+                    }
+                  >
                     {label}
                   </NavLink>
                 ))}
               </nav>
             </SheetContent>
           </Sheet>
-          <div className="relative">
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent">
-                <UserCircle className="h-5 w-5" />
-                <span className="hidden text-sm sm:inline">{mockUser.name}</span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => navigate('/login')}>Đăng xuất</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
         </div>
       </div>
     </header>

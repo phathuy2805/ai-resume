@@ -1,19 +1,31 @@
+import { useMemo, useState } from 'react';
 import {
-  Activity,
-  ArrowUpRight,
+  Ban,
   BriefcaseBusiness,
-  CalendarDays,
   MoreHorizontal,
+  Pencil,
   Plus,
-  Search,
-  Sparkles,
+  RotateCcw,
   Users,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import EmptyState from '@/components/common/EmptyState';
+import PageHeader from '@/components/common/PageHeader';
+import SearchInput from '@/components/common/SearchInput';
+import SegmentedControl from '@/components/common/SegmentedControl';
+import SkillChip from '@/components/common/SkillChip';
+import StatCard from '@/components/common/StatCard';
+import { JobStatusBadge } from '@/components/common/StatusBadges';
+import { buttonVariants } from '@/components/ui/button-variants';
+import { Card } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -22,191 +34,194 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { formatDate } from '@/lib/format';
+import { mockCandidates, mockJobStats, mockJobs } from '@/lib/mockData';
+import type { Job } from '@/types/jobs';
 
-const jobs = [
-  [
-    'Lead AI Scientist / LLM Architect',
-    'AI Labs & R&D',
-    '142 CV',
-    '38 AI Match ≥90%',
-    'Đang mở',
-    'L4 · High Priority',
-  ],
-  [
-    'Senior Fullstack Engineer (React / Go)',
-    'Engineering',
-    '285 CV',
-    '64 AI Match ≥90%',
-    'Đang mở',
-    'L4 · Core Infra',
-  ],
-  [
-    'Staff Product Designer (Design Systems)',
-    'Product & UX',
-    '88 CV',
-    '19 AI Match ≥90%',
-    'Đang mở',
-    'L5 · Crucial',
-  ],
-  [
-    'DevOps / Cloud Platform (AWS/K8s)',
-    'Infrastructure',
-    '45 CV',
-    '42 AI Match ≥90%',
-    'Đang mở',
-    'L5 · Infra',
-  ],
-  ['Lead Recruiter', 'Talent & People', '54 CV', '8 AI Match ≥90%', 'Tạm dừng', 'L4 · People'],
-];
+type StatusFilter = 'all' | 'OPEN' | 'CLOSED';
+
+const createJobLink = (
+  <Link to="/hr/jobs/new" className={buttonVariants()}>
+    <Plus />
+    Tạo tin mới
+  </Link>
+);
 
 export default function HRJobsPage() {
+  const navigate = useNavigate();
+  // TODO(W1-FE-04): replace with getMyJobs() via TanStack Query.
+  const [jobs, setJobs] = useState<Job[]>(mockJobs);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('all');
+
+  const visibleJobs = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return jobs.filter(
+      (job) =>
+        (status === 'all' || job.status === status) &&
+        (!query || job.title.toLowerCase().includes(query)),
+    );
+  }, [jobs, search, status]);
+
+  const openCount = jobs.filter((job) => job.status === 'OPEN').length;
+  const totalApplications = jobs.reduce(
+    (sum, job) => sum + (mockJobStats[job.id]?.applications ?? 0),
+    0,
+  );
+  const awaitingReview = mockCandidates.filter((c) => c.status === 'SCREENED').length;
+
+  const toggleStatus = (job: Job) => {
+    const next = job.status === 'OPEN' ? 'CLOSED' : 'OPEN';
+    setJobs((current) => current.map((j) => (j.id === job.id ? { ...j, status: next } : j)));
+    toast.success(next === 'CLOSED' ? `Đã đóng tin "${job.title}"` : `Đã mở lại "${job.title}"`);
+  };
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-xs text-slate-400">
-            Tổng quan <span>/</span> Dashboard Overview{' '}
-            <Badge variant="success">AI Engine Online</Badge>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Tin tuyển dụng"
+        description="Quản lý các vị trí đang tuyển"
+        actions={jobs.length > 0 && createJobLink}
+      />
+
+      {jobs.length === 0 ? (
+        <EmptyState
+          icon={BriefcaseBusiness}
+          title="Chưa có tin tuyển dụng nào"
+          description="Tạo tin đầu tiên để AI bắt đầu sàng lọc hồ sơ ứng viên cho bạn."
+          action={
+            <Link to="/hr/jobs/new" className={buttonVariants()}>
+              <Plus />
+              Tạo tin đầu tiên
+            </Link>
+          }
+        />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="Tin đang mở" value={openCount} />
+            <StatCard label="Tổng hồ sơ" value={totalApplications} />
+            <StatCard label="Chờ HR duyệt" value={awaitingReview} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Chào buổi sáng, Alexandra 👋
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Hệ thống AI tự động đã xuất{' '}
-            <span className="font-semibold text-indigo-600">48 ứng viên tiềm năng cao</span> trong
-            24 giờ qua.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">Xuất báo cáo</Button>
-          <Link
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-            to="/hr/jobs/new"
-          >
-            <Plus className="h-4 w-4" />
-            Tạo tin tuyển dụng mới
-          </Link>
-        </div>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          {
-            label: 'Tổng tin tuyển dụng',
-            value: '18',
-            note: '+2 tháng này',
-            icon: BriefcaseBusiness,
-          },
-          {
-            label: 'Ứng viên đang xử lý',
-            value: '1,284',
-            note: '+18.4% so với tuần trước',
-            icon: Users,
-          },
-          { label: 'AI Match ≥ 90%', value: '342', note: 'Top 1% Talent', icon: Sparkles },
-          { label: 'Lịch phỏng vấn', value: '28', note: '8 cuộc hẹn hôm nay', icon: CalendarDays },
-        ].map(({ label, value, note, icon: Icon }) => (
-          <Card key={label} className="border-0 shadow-sm">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                  {label}
-                </span>
-                <span className="rounded-lg bg-indigo-50 p-2 text-indigo-600">
-                  <Icon className="h-4 w-4" />
-                </span>
-              </div>
-              <div className="mt-4 text-3xl font-bold text-slate-900">{value}</div>
-              <div className="mt-2 flex items-center gap-1 text-xs text-emerald-700">
-                <ArrowUpRight className="h-3.5 w-3.5" />
-                {note}
-              </div>
-            </CardContent>
+
+          <Card className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+            <SearchInput
+              className="sm:w-80"
+              placeholder="Tìm theo tên vị trí"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+            <SegmentedControl
+              ariaLabel="Lọc theo trạng thái"
+              className="self-start sm:self-auto"
+              value={status}
+              onChange={setStatus}
+              options={[
+                { value: 'all', label: 'Tất cả' },
+                { value: 'OPEN', label: 'Đang mở' },
+                { value: 'CLOSED', label: 'Đã đóng' },
+              ]}
+            />
           </Card>
-        ))}
-      </div>
-      <Card className="border-0 bg-indigo-50 shadow-none">
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="rounded-lg bg-indigo-600 p-2 text-white">
-              <Activity className="h-5 w-5" />
-            </span>
-            <div>
-              <div className="text-sm font-semibold text-indigo-950">
-                AI AUTONOMOUS PIPELINE{' '}
-                <Badge className="ml-2 bg-emerald-100 text-emerald-700">Real-time Scoring</Badge>
-              </div>
-              <p className="text-xs text-indigo-800/70">
-                Đã quét 4,120 hồ sơ từ LinkedIn &amp; GitHub cho vị trí “Senior AI Engineer”.
-              </p>
+
+          <Card>
+            {/* Visible overflow on wide screens so the row menu is not clipped. */}
+            <Table containerClassName="xl:overflow-visible">
+              <TableHeader>
+                <tr>
+                  <TableHead className="w-[40%] pl-5">Vị trí</TableHead>
+                  <TableHead className="text-right">Hồ sơ</TableHead>
+                  <TableHead className="text-right">Đạt sàng lọc</TableHead>
+                  <TableHead className="text-center">Ngưỡng điểm</TableHead>
+                  <TableHead className="text-center">Trạng thái</TableHead>
+                  <TableHead>Ngày tạo</TableHead>
+                  <TableHead className="w-16 text-right">Thao tác</TableHead>
+                </tr>
+              </TableHeader>
+              <TableBody>
+                {visibleJobs.map((job) => {
+                  const stats = mockJobStats[job.id] ?? { applications: 0, shortlisted: 0 };
+                  return (
+                    <TableRow key={job.id}>
+                      <TableCell className="py-4 pl-5">
+                        <Link
+                          to={`/hr/candidates?jobId=${job.id}`}
+                          className="font-semibold text-foreground transition-colors hover:text-primary"
+                        >
+                          {job.title}
+                        </Link>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {job.requiredSkills.slice(0, 3).map((skill) => (
+                            <SkillChip key={skill}>{skill}</SkillChip>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">{stats.applications}</TableCell>
+                      <TableCell className="text-right font-semibold text-green-600">
+                        {stats.shortlisted}
+                      </TableCell>
+                      <TableCell className="text-center">{job.cvPassThreshold}</TableCell>
+                      <TableCell className="text-center">
+                        <JobStatusBadge status={job.status} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(job.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            aria-label="Thao tác"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground"
+                          >
+                            <MoreHorizontal className="h-[18px] w-[18px]" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => navigate(`/hr/jobs/${job.id}/edit`)}>
+                              <Pencil />
+                              Sửa
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/hr/candidates?jobId=${job.id}`)}
+                            >
+                              <Users />
+                              Xem ứng viên
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {job.status === 'OPEN' ? (
+                              <DropdownMenuItem
+                                className="text-red-600 hover:bg-red-50 [&_svg]:text-red-600"
+                                onClick={() => toggleStatus(job)}
+                              >
+                                <Ban />
+                                Đóng tin
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onClick={() => toggleStatus(job)}>
+                                <RotateCcw />
+                                Mở lại tin
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {visibleJobs.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-10 text-center text-muted-foreground">
+                      Không có tin tuyển dụng nào phù hợp với bộ lọc.
+                    </td>
+                  </tr>
+                )}
+              </TableBody>
+            </Table>
+            <div className="border-t border-border px-5 py-3 text-muted-foreground">
+              Hiển thị {visibleJobs.length} trên tổng số {jobs.length} tin
             </div>
-          </div>
-          <Button variant="outline" className="bg-white">
-            Xem 48 hồ sơ mới
-          </Button>
-        </CardContent>
-      </Card>
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="gap-4 border-b sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle className="text-lg">Danh sách tin tuyển dụng gần đây</CardTitle>
-            <p className="mt-1 text-xs text-slate-400">
-              Quản lý vị trí, số lượng hồ sơ AI phân tích và tiến độ phỏng vấn
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input className="w-64 pl-9" placeholder="Tìm kiếm vị trí, kỹ năng..." />
-            </div>
-            <Button variant="outline">Tất cả phòng ban</Button>
-            <Button variant="outline">Lọc nâng cao</Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Vị trí tuyển dụng</TableHead>
-                <TableHead>Phòng ban</TableHead>
-                <TableHead>Hồ sơ &amp; AI Match</TableHead>
-                <TableHead>Trạng thái</TableHead>
-                <TableHead className="text-right">Hành động</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {jobs.map(([title, department, cvs, match, status, level]) => (
-                <TableRow key={title}>
-                  <TableCell>
-                    <div className="font-semibold text-slate-900">{title}</div>
-                    <div className="mt-1 text-xs text-slate-400">{level}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{department}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium text-slate-700">{cvs}</div>
-                    <div className="text-xs text-indigo-600">{match}</div>
-                    <div className="mt-1 h-1.5 w-24 rounded-full bg-slate-100">
-                      <div className="h-1.5 w-3/4 rounded-full bg-indigo-600" />
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={status === 'Đang mở' ? 'success' : 'secondary'}>{status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <button
-                      type="button"
-                      className="rounded-md p-2 text-slate-400 hover:bg-slate-100"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

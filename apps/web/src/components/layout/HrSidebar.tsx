@@ -1,35 +1,43 @@
-import { BriefcaseBusiness, ChartNoAxesCombined, Users } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
+import Logo from '@/components/common/Logo';
+import { hrLinks } from '@/components/layout/hrLinks';
 import { cn } from '@/lib/utils';
-
-const links = [
-  { to: '/hr/jobs', label: 'Tin tuyển dụng', icon: BriefcaseBusiness },
-  { to: '/hr/candidates', label: 'Ứng viên', icon: Users },
-  { to: '/hr/stats', label: 'Thống kê', icon: ChartNoAxesCombined },
-];
 
 export default function HrSidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r bg-background p-4">
-      <div className="mb-8 px-3 text-lg font-bold text-primary">AI Resume</div>
-      <nav className="space-y-1">
-        {links.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
-                isActive && 'bg-primary/10 font-medium text-primary',
-              )
-            }
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </NavLink>
-        ))}
-      </nav>
+    <aside className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-card">
+      <Link
+        to="/hr/jobs"
+        onClick={onNavigate}
+        className="flex h-14 items-center border-b border-border px-6"
+      >
+        <Logo />
+      </Link>
+      <div className="p-4">
+        <div className="px-2 pb-1 text-xs uppercase tracking-wider text-muted-foreground">
+          Tuyển dụng
+        </div>
+        <nav className="flex flex-col gap-1">
+          {hrLinks.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              onClick={onNavigate}
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center gap-2 rounded-lg px-2 py-2 font-medium transition-colors',
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-foreground',
+                )
+              }
+            >
+              <Icon className="h-5 w-5" />
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+      </div>
     </aside>
   );
 }

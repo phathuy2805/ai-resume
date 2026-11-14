@@ -10,7 +10,9 @@
             "description": ""
           }
         },
-        "tags": ["App"]
+        "tags": [
+          "App"
+        ]
       }
     },
     "/api/auth/register": {
@@ -40,7 +42,9 @@
           }
         },
         "summary": "Đăng ký tài khoản mới (HR hoặc CANDIDATE)",
-        "tags": ["Auth"]
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/api/auth/login": {
@@ -70,7 +74,9 @@
           }
         },
         "summary": "Đăng nhập vào hệ thống",
-        "tags": ["Auth"]
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/api/auth/me": {
@@ -95,7 +101,9 @@
           }
         ],
         "summary": "Lấy thông tin tài khoản đang đăng nhập",
-        "tags": ["Auth"]
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/api/auth/refresh": {
@@ -125,7 +133,9 @@
           }
         },
         "summary": "Làm mới Access Token bằng Refresh Token",
-        "tags": ["Auth"]
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/api/auth/logout": {
@@ -155,7 +165,9 @@
           }
         },
         "summary": "Đăng xuất khỏi hệ thống",
-        "tags": ["Auth"]
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/api/jobs": {
@@ -202,7 +214,10 @@
             "description": "Lọc theo trạng thái tin tuyển dụng (OPEN hoặc CLOSED)",
             "schema": {
               "type": "string",
-              "enum": ["OPEN", "CLOSED"]
+              "enum": [
+                "OPEN",
+                "CLOSED"
+              ]
             }
           }
         ],
@@ -219,7 +234,9 @@
           }
         },
         "summary": "Lấy danh sách việc làm đang mở (Công khai)",
-        "tags": ["Jobs"]
+        "tags": [
+          "Jobs"
+        ]
       },
       "post": {
         "operationId": "JobsController_create",
@@ -252,7 +269,9 @@
           }
         ],
         "summary": "Tạo tin tuyển dụng mới (Yêu cầu tài khoản HR)",
-        "tags": ["Jobs"]
+        "tags": [
+          "Jobs"
+        ]
       }
     },
     "/api/jobs/mine": {
@@ -280,7 +299,9 @@
           }
         ],
         "summary": "Lấy danh sách việc làm do HR đang đăng nhập tạo",
-        "tags": ["Jobs"]
+        "tags": [
+          "Jobs"
+        ]
       }
     },
     "/api/jobs/{id}": {
@@ -311,7 +332,9 @@
           }
         },
         "summary": "Xem chi tiết một tin tuyển dụng theo ID",
-        "tags": ["Jobs"]
+        "tags": [
+          "Jobs"
+        ]
       },
       "patch": {
         "operationId": "JobsController_update",
@@ -355,7 +378,9 @@
           }
         ],
         "summary": "Cập nhật tin tuyển dụng theo ID",
-        "tags": ["Jobs"]
+        "tags": [
+          "Jobs"
+        ]
       }
     },
     "/api/jobs/{id}/close": {
@@ -391,7 +416,9 @@
           }
         ],
         "summary": "Đóng tin tuyển dụng (chuyển status sang CLOSED)",
-        "tags": ["Jobs"]
+        "tags": [
+          "Jobs"
+        ]
       }
     },
     "/api/jobs/{id}/applications": {
@@ -416,7 +443,9 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["file"],
+                "required": [
+                  "file"
+                ],
                 "properties": {
                   "file": {
                     "type": "string",
@@ -446,7 +475,9 @@
           }
         ],
         "summary": "Nộp CV ứng tuyển công việc (Multipart form-data, field: file)",
-        "tags": ["Applications"]
+        "tags": [
+          "Applications"
+        ]
       }
     },
     "/api/me/applications": {
@@ -474,7 +505,9 @@
           }
         ],
         "summary": "Lấy danh sách các đơn ứng tuyển của chính ứng viên đăng nhập",
-        "tags": ["Applications"]
+        "tags": [
+          "Applications"
+        ]
       }
     },
     "/api/screening/trigger/{applicationId}": {
@@ -501,7 +534,9 @@
           }
         ],
         "summary": "[Phác thảo Tuần 2] Kích hoạt phân tích và chấm điểm CV ứng viên bằng AI",
-        "tags": ["Draft - Screening (Week 2)"]
+        "tags": [
+          "Draft - Screening (Week 2)"
+        ]
       }
     },
     "/api/screening/result/{applicationId}": {
@@ -528,7 +563,9 @@
           }
         ],
         "summary": "[Phác thảo Tuần 2] Lấy kết quả chấm điểm sàng lọc, điểm mạnh và lỗ hổng kỹ năng",
-        "tags": ["Draft - Screening (Week 2)"]
+        "tags": [
+          "Draft - Screening (Week 2)"
+        ]
       }
     },
     "/api/interviews/session/{applicationId}": {
@@ -555,7 +592,9 @@
           }
         ],
         "summary": "[Phác thảo Tuần 3] Khởi tạo phiên phỏng vấn giọng nói hai chiều với AI",
-        "tags": ["Draft - Interview (Week 3)"]
+        "tags": [
+          "Draft - Interview (Week 3)"
+        ]
       }
     },
     "/api/interviews/session/{interviewId}/turn": {
@@ -582,7 +621,9 @@
           }
         ],
         "summary": "[Phác thảo Tuần 3] Nhận câu hỏi phỏng vấn tiếp theo từ AI thích ứng",
-        "tags": ["Draft - Interview (Week 3)"]
+        "tags": [
+          "Draft - Interview (Week 3)"
+        ]
       }
     },
     "/api/interviews/complete/{interviewId}": {
@@ -609,7 +650,9 @@
           }
         ],
         "summary": "[Phác thảo Tuần 3] Kết thúc phỏng vấn và kích hoạt đánh giá transcript",
-        "tags": ["Draft - Interview (Week 3)"]
+        "tags": [
+          "Draft - Interview (Week 3)"
+        ]
       }
     },
     "/api/interviews/report/{interviewId}": {
@@ -636,7 +679,9 @@
           }
         ],
         "summary": "[Phác thảo Tuần 3] Xem báo cáo 4 cột điểm phỏng vấn cho HR và ứng viên",
-        "tags": ["Draft - Interview (Week 3)"]
+        "tags": [
+          "Draft - Interview (Week 3)"
+        ]
       }
     },
     "/api/dashboard/overview": {
@@ -654,7 +699,9 @@
           }
         ],
         "summary": "[Phác thảo] Lấy thống kê số lượng hồ sơ, tỉ lệ đạt sơ tuyển cho HR",
-        "tags": ["Draft - Dashboard (Week 2 & 3)"]
+        "tags": [
+          "Draft - Dashboard (Week 2 & 3)"
+        ]
       }
     },
     "/api/dashboard/candidates-ranking/{jobId}": {
@@ -681,7 +728,9 @@
           }
         ],
         "summary": "[Phác thảo] Bảng xếp hạng ứng viên theo độ phù hợp ngữ nghĩa vector và điểm AI",
-        "tags": ["Draft - Dashboard (Week 2 & 3)"]
+        "tags": [
+          "Draft - Dashboard (Week 2 & 3)"
+        ]
       }
     }
   },
@@ -724,11 +773,19 @@
           },
           "role": {
             "type": "string",
-            "enum": ["CANDIDATE", "HR"],
+            "enum": [
+              "CANDIDATE",
+              "HR"
+            ],
             "description": "Vai trò trong hệ thống (HR hoặc CANDIDATE)"
           }
         },
-        "required": ["email", "fullName", "password", "role"]
+        "required": [
+          "email",
+          "fullName",
+          "password",
+          "role"
+        ]
       },
       "UserProfileResponseDto_Output": {
         "type": "object",
@@ -752,7 +809,11 @@
           },
           "role": {
             "type": "string",
-            "enum": ["HR", "CANDIDATE", "ADMIN"],
+            "enum": [
+              "HR",
+              "CANDIDATE",
+              "ADMIN"
+            ],
             "description": "Vai trò người dùng"
           },
           "createdAt": {
@@ -760,7 +821,13 @@
             "description": "Thời điểm tạo tài khoản (ISO 8601)"
           }
         },
-        "required": ["id", "email", "fullName", "role", "createdAt"],
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "role",
+          "createdAt"
+        ],
         "additionalProperties": false
       },
       "LoginDto": {
@@ -778,7 +845,10 @@
             "description": "Mật khẩu"
           }
         },
-        "required": ["email", "password"]
+        "required": [
+          "email",
+          "password"
+        ]
       },
       "AuthResponseDto_Output": {
         "type": "object",
@@ -809,7 +879,11 @@
               },
               "role": {
                 "type": "string",
-                "enum": ["HR", "CANDIDATE", "ADMIN"],
+                "enum": [
+                  "HR",
+                  "CANDIDATE",
+                  "ADMIN"
+                ],
                 "description": "Vai trò người dùng"
               },
               "createdAt": {
@@ -817,11 +891,20 @@
                 "description": "Thời điểm tạo tài khoản (ISO 8601)"
               }
             },
-            "required": ["id", "email", "fullName", "role", "createdAt"],
+            "required": [
+              "id",
+              "email",
+              "fullName",
+              "role",
+              "createdAt"
+            ],
             "additionalProperties": false
           }
         },
-        "required": ["accessToken", "user"],
+        "required": [
+          "accessToken",
+          "user"
+        ],
         "additionalProperties": false
       },
       "RefreshTokenDto": {
@@ -843,7 +926,9 @@
             "description": "Thông báo kết quả đăng xuất"
           }
         },
-        "required": ["message"],
+        "required": [
+          "message"
+        ],
         "additionalProperties": false
       },
       "JobListResponseDto_Output": {
@@ -893,7 +978,10 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": ["OPEN", "CLOSED"],
+                  "enum": [
+                    "OPEN",
+                    "CLOSED"
+                  ],
                   "description": "Trạng thái tin tuyển dụng (OPEN hoặc CLOSED)"
                 },
                 "cvPassThreshold": {
@@ -941,7 +1029,12 @@
                       "maximum": 100
                     }
                   },
-                  "required": ["technical", "communication", "relevance", "evidence"],
+                  "required": [
+                    "technical",
+                    "communication",
+                    "relevance",
+                    "evidence"
+                  ],
                   "additionalProperties": false
                 },
                 "createdById": {
@@ -1005,12 +1098,19 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": ["page", "limit", "total"],
+            "required": [
+              "page",
+              "limit",
+              "total"
+            ],
             "additionalProperties": false,
             "description": "Thông tin phân trang"
           }
         },
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "additionalProperties": false
       },
       "JobDto_Output": {
@@ -1055,7 +1155,10 @@
           },
           "status": {
             "type": "string",
-            "enum": ["OPEN", "CLOSED"],
+            "enum": [
+              "OPEN",
+              "CLOSED"
+            ],
             "description": "Trạng thái tin tuyển dụng (OPEN hoặc CLOSED)"
           },
           "cvPassThreshold": {
@@ -1103,7 +1206,12 @@
                 "maximum": 100
               }
             },
-            "required": ["technical", "communication", "relevance", "evidence"],
+            "required": [
+              "technical",
+              "communication",
+              "relevance",
+              "evidence"
+            ],
             "additionalProperties": false
           },
           "createdById": {
@@ -1221,7 +1329,12 @@
             "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
           }
         },
-        "required": ["title", "description", "requiredSkills", "minYearsExperience"]
+        "required": [
+          "title",
+          "description",
+          "requiredSkills",
+          "minYearsExperience"
+        ]
       },
       "UpdateJobDto": {
         "type": "object",
@@ -1349,7 +1462,10 @@
                 "description": "Tiêu đề tuyển dụng"
               }
             },
-            "required": ["id", "title"],
+            "required": [
+              "id",
+              "title"
+            ],
             "additionalProperties": false,
             "description": "Thông tin công việc ứng tuyển"
           },
@@ -1374,7 +1490,12 @@
           },
           "aiRecommendation": {
             "type": "string",
-            "enum": ["PASS", "CONSIDER", "REJECT", null],
+            "enum": [
+              "PASS",
+              "CONSIDER",
+              "REJECT",
+              null
+            ],
             "description": "Kết luận của AI sau khi sàng lọc CV (null nếu chưa chấm)",
             "nullable": true
           },
