@@ -8,7 +8,11 @@ export const queryKeys = {
     mine: () => ['jobs', 'mine'] as const,
     detail: (id: string) => ['jobs', 'detail', id] as const,
   },
-  applications: { all: ['applications'] as const, mine: () => ['applications', 'mine'] as const },
+  applications: {
+    all: ['applications'] as const,
+    mine: (userId?: string) =>
+      userId ? (['applications', 'mine', userId] as const) : (['applications', 'mine'] as const),
+  },
   // Namespace only; no interview endpoint has been assumed or implemented.
   interviews: { all: ['interviews'] as const },
 };

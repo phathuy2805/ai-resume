@@ -14,6 +14,7 @@ export interface PaginatedResponse<T> {
   meta: PaginationMeta;
 }
 export interface ApiErrorResponse {
+  code?: string;
   statusCode: number;
   message: string;
   errors?: string[];
@@ -23,6 +24,7 @@ export interface ApiErrorResponse {
 export type ApiErrorKind = 'http' | 'network' | 'cancelled' | 'unknown' | 'contract';
 
 export class ApiError extends Error {
+  readonly code?: string;
   readonly status?: number;
   readonly kind: ApiErrorKind;
   readonly errors: string[];
@@ -32,6 +34,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     options: {
+      code?: string;
       status?: number;
       kind: ApiErrorKind;
       errors?: string[];
@@ -41,6 +44,7 @@ export class ApiError extends Error {
   ) {
     super(message);
     this.name = 'ApiError';
+    this.code = options.code;
     this.status = options.status;
     this.kind = options.kind;
     this.errors = options.errors ?? [];

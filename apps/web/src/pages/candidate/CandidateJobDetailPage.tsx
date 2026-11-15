@@ -13,14 +13,30 @@ import SkillChip from '@/components/common/SkillChip';
 import { buttonVariants } from '@/components/ui/button-variants';
 import { Card } from '@/components/ui/card';
 import { formatDate, formatExperience } from '@/lib/format';
-import { mockJobs, mockMyApplications } from '@/lib/mockData';
+import { useQuery } from '@tanstack/react-query';
+import { getJob } from '@/api/jobs';
+import { queryKeys } from '@/api/queryKeys';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import QueryError from '@/components/common/QueryError';
+import { ApiError } from '@/types/api';
 
 export default function CandidateJobDetailPage() {
   const { id } = useParams();
-  // TODO(W1-FE-05): load with getJob(id).
-  const job = mockJobs.find((item) => item.id === id);
-
-  if (!job) {
+  const session = useCurrentUser();
+  const query = useQuery({
+    queryKey: queryKeys.jobs.detail(id ?? ''),
+    queryFn: ({ signal }) => getJob(id!, signal),
+    enabled: !!id,
+    meta: { errorMode: 'local' },
+  });
+  const job = query.data;
+  if (query.isPending && id) return <p role="status">Đang tải thông tin việc làm…</p>;
+  if (query.isError && !(query.error instanceof ApiError && query.error.status === 404)) {
+    return (
+      <QueryError message="Không tải được thông tin việc làm." retry={() => void query.refetch()} />
+    );
+  }
+  if (!job || (query.error instanceof ApiError && query.error.status === 404)) {
     return (
       <EmptyState
         icon={FileQuestion}
@@ -35,7 +51,6 @@ export default function CandidateJobDetailPage() {
     );
   }
 
-  const alreadyApplied = mockMyApplications.some((app) => app.job.id === job.id);
   const paragraphs = job.description.split('\n').filter((line) => line.trim());
 
   return (
@@ -61,6 +76,7 @@ export default function CandidateJobDetailPage() {
                 <BriefcaseBusiness className="h-4 w-4 text-muted-foreground" />
                 {formatExperience(job.minYearsExperience)}
               </span>
+              <span>Cấp độ: {job.level || 'Chưa cung cấp'}</span>
               <span className="text-slate-300">·</span>
               <span className="flex items-center gap-1">
                 <CalendarDays className="h-4 w-4 text-muted-foreground" />
@@ -119,7 +135,7 @@ export default function CandidateJobDetailPage() {
         </div>
 
         <div className="lg:sticky lg:top-24 lg:col-span-5">
-          <ApplyCard key={job.id} alreadyApplied={alreadyApplied} />
+          <ApplyCard key={`${job.id}:${session.user?.id ?? 'guest'}`} job={job} />
         </div>
       </div>
     </div>

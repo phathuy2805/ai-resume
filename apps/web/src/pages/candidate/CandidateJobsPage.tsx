@@ -1,55 +1,24 @@
-import { useState } from 'react';
-import {
-  ArrowRight,
-  ArrowDownWideNarrow,
-  Bot,
-  BriefcaseBusiness,
-  Check,
-  ChevronDown,
-  Clock,
-  FileCheck2,
-  FileText,
-  Lightbulb,
-  Mic,
-  SearchX,
-  Sparkles,
-  Trophy,
-  Upload,
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowRight, Bot, BriefcaseBusiness, Check, Clock, SearchX, Sparkles } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import SearchInput from '@/components/common/SearchInput';
-import SegmentedControl from '@/components/common/SegmentedControl';
+import EmptyState from '@/components/common/EmptyState';
+import QueryError from '@/components/common/QueryError';
 import SkillChip from '@/components/common/SkillChip';
 import { Badge, type BadgeVariant } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button-variants';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { getCandidateProgress, type CandidateTone } from '@/lib/applicationStatus';
 import { formatExperience, formatRelativeDate } from '@/lib/format';
-import { mockJobs, mockMyApplications } from '@/lib/mockData';
 import { cn } from '@/lib/utils';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useMyApplications } from '@/hooks/useMyApplications';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { getJobs } from '@/api/jobs';
+import { queryKeys } from '@/api/queryKeys';
 import type { Application } from '@/types/applications';
 import type { Job } from '@/types/jobs';
-
-type ExperienceFilter = 'all' | 'entry' | 'junior' | 'senior';
-type SortKey = 'newest' | 'experience';
-
-const EXPERIENCE_RANGE: Record<ExperienceFilter, (years: number) => boolean> = {
-  all: () => true,
-  entry: (years) => years === 0,
-  junior: (years) => years >= 1 && years <= 2,
-  senior: (years) => years >= 3,
-};
-
-const SORT_LABEL: Record<SortKey, string> = {
-  newest: 'Mới nhất',
-  experience: 'Kinh nghiệm thấp → cao',
-};
 
 const toneBadge: Record<CandidateTone, BadgeVariant> = {
   neutral: 'secondary',
@@ -104,7 +73,7 @@ function JobCard({ job, application }: { job: Job; application?: Application }) 
           </div>
         </div>
         {progress && (
-          <Badge variant={toneBadge[progress.tone]} className="hidden shrink-0 sm:inline-flex">
+          <Badge variant={toneBadge[progress.tone]} className="shrink-0">
             <Check />
             Đã nộp
           </Badge>
@@ -148,7 +117,7 @@ function JobCard({ job, application }: { job: Job; application?: Application }) 
         ) : (
           <span className="inline-flex items-center gap-1.5 text-xs text-slate-600">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            AI đánh giá CV và phản hồi trong khoảng 1 phút
+            Xem yêu cầu và nộp CV PDF
           </span>
         )}
         <div className="flex gap-2">
@@ -221,184 +190,146 @@ function MyApplicationsCard({ applications }: { applications: Application[] }) {
   );
 }
 
-const processSteps = [
-  { icon: Upload, title: 'Nộp CV dạng PDF', text: 'Chọn vị trí phù hợp và tải CV lên.' },
-  {
-    icon: FileCheck2,
-    title: 'AI đánh giá CV',
-    text: 'Chấm điểm và đối chiếu kỹ năng trong ~1 phút.',
-  },
-  { icon: Mic, title: 'Phỏng vấn giọng nói với AI', text: '3–5 câu hỏi, khoảng 10 phút.' },
-  {
-    icon: Trophy,
-    title: 'Nhận kết quả & góp ý',
-    text: 'Biết rõ điểm mạnh và kỹ năng cần cải thiện.',
-  },
-];
-
-function ProcessCard() {
-  return (
-    <Card className="p-5">
-      <h3 className="text-card-title text-foreground">Quy trình ứng tuyển</h3>
-      <ol className="relative mt-4 flex flex-col gap-4">
-        <span className="absolute bottom-4 left-4 top-4 w-px bg-slate-200" aria-hidden />
-        {processSteps.map(({ icon: Icon, title, text }, index) => (
-          <li key={title} className="relative flex gap-3">
-            <span className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-indigo-100 bg-indigo-50 text-primary">
-              <Icon className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="font-medium text-foreground">
-                <span className="text-muted-foreground">{index + 1}. </span>
-                {title}
-              </p>
-              <p className="text-xs text-slate-600">{text}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </Card>
-  );
-}
-
-function TipsCard() {
-  return (
-    <Card className="border-amber-200 bg-amber-50/60 p-5">
-      <h3 className="flex items-center gap-2 text-card-title text-foreground">
-        <Lightbulb className="h-5 w-5 text-amber-600" />
-        Mẹo để CV được đánh giá tốt
-      </h3>
-      <ul className="mt-3 flex flex-col gap-2 text-slate-700">
-        {[
-          'Dùng PDF xuất từ Word/Google Docs, tránh ảnh scan.',
-          'Ghi rõ tên kỹ năng giống trong tin tuyển dụng.',
-          'Nêu số năm kinh nghiệm và kết quả cụ thể của từng dự án.',
-        ].map((tip) => (
-          <li key={tip} className="flex gap-2">
-            <FileText className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-            {tip}
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-}
-
+const LIMIT = 6;
 export default function CandidateJobsPage() {
-  const [search, setSearch] = useState('');
-  const [experience, setExperience] = useState<ExperienceFilter>('all');
-  const [sort, setSort] = useState<SortKey>('newest');
-  // TODO(W1-FE-05): load with getJobs({ status: 'OPEN', search }) and getMyApplications().
-  const openJobs = mockJobs.filter((job) => job.status === 'OPEN');
-  const applications = mockMyApplications;
-  const appliedByJob = new Map(applications.map((app) => [app.job.id, app]));
-
-  const query = search.trim().toLowerCase();
-  const jobs = openJobs
-    .filter(
-      (job) =>
-        EXPERIENCE_RANGE[experience](job.minYearsExperience) &&
-        (!query ||
-          job.title.toLowerCase().includes(query) ||
-          [...job.requiredSkills, ...job.preferredSkills].some((skill) =>
-            skill.toLowerCase().includes(query),
-          )),
-    )
-    .sort((a, b) =>
-      sort === 'newest'
-        ? b.createdAt.localeCompare(a.createdAt)
-        : a.minYearsExperience - b.minYearsExperience,
-    );
-
-  const resetFilters = () => {
-    setSearch('');
-    setExperience('all');
-  };
-
+  const [url, setUrl] = useSearchParams();
+  const search = url.get('search') ?? '';
+  const debounced = useDebouncedValue(search, 300);
+  const rawPage = Number(url.get('page') ?? 1);
+  const page = Number.isSafeInteger(rawPage) && rawPage >= 1 ? rawPage : 1;
+  const pendingSearch = search !== debounced;
+  const params = { status: 'OPEN' as const, search: debounced.trim(), page, limit: LIMIT };
+  const jobs = useQuery({
+    queryKey: queryKeys.jobs.list(params),
+    queryFn: ({ signal }) => getJobs(params, signal),
+    enabled: !pendingSearch,
+    meta: { errorMode: 'local' },
+  });
+  const session = useCurrentUser();
+  const applications = useMyApplications(
+    session.user?.role === 'CANDIDATE' ? session.user.id : undefined,
+  );
+  const appliedByJob = new Map(applications.data?.map((app) => [app.job.id, app]));
+  const total = jobs.data?.meta.total ?? 0;
+  const pages = Math.max(1, Math.ceil(total / LIMIT));
+  const changePage = (next: number) =>
+    setUrl((current) => {
+      const updated = new URLSearchParams(current);
+      updated.set('page', String(next));
+      return updated;
+    });
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
-        <div>
-          <h1 className="text-page-title text-foreground">Việc làm đang tuyển</h1>
-          <p className="mt-1 text-slate-600">
-            Khám phá các vị trí phù hợp — AI sàng lọc minh bạch và phản hồi nhanh cho bạn
-          </p>
-        </div>
-        <span className="inline-flex items-center gap-2 self-start rounded-md bg-indigo-50 px-3 py-1 text-xs font-medium text-slate-600 md:self-auto">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          Đang có {openJobs.length} vị trí mở
-        </span>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-page-title">Việc làm đang tuyển</h1>
+        <p className="mt-1 text-slate-600">Tìm vị trí phù hợp và nộp CV của bạn.</p>
       </div>
-
-      <Card className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between lg:px-4">
+      <Card className="p-4">
         <SearchInput
-          className="lg:w-[360px]"
-          placeholder="Tìm vị trí hoặc kỹ năng (Node.js, React, SQL...)"
+          aria-label="Tìm việc theo tên"
+          placeholder="Tìm theo tên công việc…"
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            const next = new URLSearchParams(url);
+            next.set('search', event.target.value);
+            next.set('page', '1');
+            setUrl(next, { replace: true });
+          }}
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <SegmentedControl
-            ariaLabel="Lọc theo kinh nghiệm"
-            value={experience}
-            onChange={setExperience}
-            options={[
-              { value: 'all', label: 'Tất cả' },
-              { value: 'entry', label: 'Chưa có KN' },
-              { value: 'junior', label: '1–2 năm' },
-              { value: 'senior', label: '3+ năm' },
-            ]}
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs transition-colors hover:bg-slate-50">
-              <ArrowDownWideNarrow className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">{SORT_LABEL[sort]}</span>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
-                <DropdownMenuItem key={key} onClick={() => setSort(key)}>
-                  <span className="flex-1">{SORT_LABEL[key]}</span>
-                  {key === sort && <Check className="!text-primary" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
       </Card>
-
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-        <section className="flex flex-col gap-4 lg:col-span-8">
-          <p className="text-xs text-muted-foreground">
-            Hiển thị <strong className="font-semibold text-foreground">{jobs.length}</strong> vị trí
-            phù hợp
-          </p>
-          {jobs.length > 0 ? (
-            jobs.map((job) => (
-              <JobCard key={job.id} job={job} application={appliedByJob.get(job.id)} />
-            ))
+      <div className="grid items-start gap-6 lg:grid-cols-12">
+        <section
+          aria-label="Danh sách việc làm"
+          className="space-y-4 lg:col-span-8"
+          aria-busy={jobs.isFetching || pendingSearch}
+        >
+          {pendingSearch || jobs.isPending ? (
+            <p role="status">Đang tìm việc làm…</p>
+          ) : jobs.isError ? (
+            <QueryError
+              message="Không tải được danh sách việc làm."
+              retry={() => void jobs.refetch()}
+            />
           ) : (
-            <Card className="flex flex-col items-center justify-center p-12 text-center">
-              <SearchX className="mb-2 h-8 w-8 text-slate-400" />
-              <p className="font-semibold text-foreground">Không tìm thấy vị trí phù hợp</p>
-              <p className="mt-1 text-xs text-slate-600">
-                Hãy thử từ khoá kỹ năng khác hoặc bỏ bớt bộ lọc
+            <>
+              <p className="text-sm text-slate-600">
+                {total} vị trí đang mở · Trang {page}/{pages}
               </p>
-              <button
-                type="button"
-                onClick={resetFilters}
-                className={buttonVariants({ variant: 'outline', size: 'sm', className: 'mt-4' })}
+              {jobs.isFetching && <p role="status">Đang cập nhật…</p>}
+              {jobs.data?.data.length ? (
+                jobs.data.data
+                  .filter((job) => job.status === 'OPEN')
+                  .map((job) => (
+                    <JobCard key={job.id} job={job} application={appliedByJob.get(job.id)} />
+                  ))
+              ) : (
+                <EmptyState
+                  icon={SearchX}
+                  title={
+                    page > 1 ? 'Trang này không có việc làm' : 'Không tìm thấy việc làm phù hợp'
+                  }
+                  description="Hãy thử từ khóa khác hoặc quay về trang đầu."
+                  action={
+                    <Button variant="outline" onClick={() => setUrl({})}>
+                      Xóa tìm kiếm
+                    </Button>
+                  }
+                />
+              )}
+              <nav
+                aria-label="Phân trang việc làm"
+                className="flex items-center justify-between gap-3"
               >
-                Xoá bộ lọc
-              </button>
-            </Card>
+                <Button
+                  variant="outline"
+                  disabled={page <= 1 || jobs.isFetching}
+                  onClick={() => changePage(page - 1)}
+                >
+                  Trang trước
+                </Button>
+                <span className="text-sm">Trang {page}</span>
+                <Button
+                  variant="outline"
+                  disabled={page >= pages || jobs.isFetching}
+                  onClick={() => changePage(page + 1)}
+                >
+                  Trang sau
+                </Button>
+              </nav>
+            </>
           )}
         </section>
-
-        <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:col-span-4">
-          <MyApplicationsCard applications={applications} />
-          <ProcessCard />
-          <TipsCard />
+        <aside className="space-y-4 lg:col-span-4">
+          {session.isLoading ? (
+            <p role="status">Đang xác minh tài khoản…</p>
+          ) : session.error ? (
+            <QueryError message="Không tải được tài khoản." retry={() => void session.retry()} />
+          ) : session.user?.role === 'CANDIDATE' ? (
+            applications.isPending ? (
+              <p role="status">Đang tải hồ sơ đã nộp…</p>
+            ) : applications.isError ? (
+              <QueryError
+                message="Không tải được trạng thái hồ sơ đã nộp."
+                retry={() => void applications.refetch()}
+              />
+            ) : (
+              <MyApplicationsCard applications={applications.data ?? []} />
+            )
+          ) : (
+            <Card className="p-5">
+              <h2 className="text-card-title">Ứng tuyển bằng CV</h2>
+              <p className="mt-2 text-slate-600">
+                Chọn việc làm để xem chi tiết. Đăng nhập bằng tài khoản ứng viên khi bạn muốn nộp
+                CV.
+              </p>
+            </Card>
+          )}
+          <Card className="p-5">
+            <h2 className="text-card-title">Chuẩn bị CV</h2>
+            <p className="mt-2 text-slate-600">
+              Dùng PDF xuất từ Word hoặc Google Docs, có thể chọn chữ, tối đa 5MB.
+            </p>
+          </Card>
         </aside>
       </div>
     </div>

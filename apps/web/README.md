@@ -1,5 +1,7 @@
 # W1-FE-03 — Tầng API dùng chung
 
+Luồng ứng viên W1-FE-06: xem [W1-FE-06.md](./W1-FE-06.md) để chạy mock riêng, kiểm tra tìm kiếm/nộp CV và xem các phụ thuộc BE-04/05 còn chờ.
+
 Phần nền cho W1-FE-04/05/06: transport, types, Query, helpers và hook mẫu. Không xây UI nghiệp vụ hay backend. Đã tích hợp refresh cookie với contract W1-BE-03; AuthProvider và UI đăng nhập nghiệp vụ thuộc W1-FE-04.
 
 ## Chạy và chuyển BE/mock

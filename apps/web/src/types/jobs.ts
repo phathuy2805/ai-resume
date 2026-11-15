@@ -23,6 +23,8 @@ export interface CreateJobRequest {
 }
 export type UpdateJobRequest = Partial<CreateJobRequest>;
 export interface Job {
+  /** Optional until BE-04 publishes the level contract. Never infer from years. */
+  level?: string | null;
   id: string;
   title: string;
   description: string;
