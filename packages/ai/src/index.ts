@@ -32,6 +32,12 @@ export type { JobLevel } from './level.js';
 export { parseJd, ParsedJdSchema } from './jd.js';
 export type { ParsedJd, ParseJdInput, ParseJdOptions } from './jd.js';
 
+// Phân tích CV (W1-AI-04)
+export { parseCv, ParsedCvSchema } from './cv.js';
+export type { ParsedCv, ParseCvOptions } from './cv.js';
+export { calculateTotalYearsExperience } from './experience.js';
+export type { ExperiencePeriod, TotalYearsOptions } from './experience.js';
+
 // Trích chữ từ CV PDF (W1-AI-03)
 export {
   extractCvText,

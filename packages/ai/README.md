@@ -162,9 +162,75 @@ Câu thông báo tiếng Việt cho từng mã: `error.messageVi`, hoặc `CV_EX
   (khoảng 1–2 giây, ~750 token/trang). Gemini lỗi hoặc đọc không đủ chữ thì vẫn từ chối `SCANNED`.
   Chữ do Gemini đọc có `source: 'ai-ocr'` và **có thể bị AI sửa** (vd. tự thêm dấu), không chính xác tuyệt đối như `pdf-text`.
 - **CV 2 cột:** chữ được trích **theo từng cột** (cột phụ như liên hệ, kỹ năng, học vấn trước; cột chính như mục tiêu,
-  kinh nghiệm sau), không trộn lẫn giữa các dòng. Prompt của `parseCv` (W1-AI-04) nên nêu rõ điều này.
+  kinh nghiệm sau), không trộn lẫn giữa các dòng. Prompt của `parseCv` (W1-AI-04) có nêu điều này.
 - **Log:** chỉ số trang, số ký tự, mã lỗi, nguồn, thời gian; không ghi nội dung CV.
 - Chạy được từ cả bản ESM và CommonJS của package (Node 24).
+
+## Phân tích CV (`parseCv`)
+
+Biến text CV (kết quả của `extractCvText`, đã lưu ở `applications.cv_text`) thành dữ liệu có cấu trúc để chấm điểm ở tuần 2.
+
+```ts
+import { parseCv, ParsedCvSchema, type ParsedCv } from '@hireflow/ai';
+
+const parsedCv: ParsedCv = await parseCv(ai, application.cvText);
+await prisma.application.update({ where: { id }, data: { parsedCv } });
+
+// Tùy chọn: timeoutMs, maxRetries (ghi đè cho riêng lần gọi này), referenceDate (xem dưới)
+await parseCv(ai, cvText, { timeoutMs: 60_000 });
+
+// Đọc lại từ DB: kiểm tra trước khi dùng (dữ liệu cũ có thể khác schemaVersion)
+const stored = ParsedCvSchema.safeParse(application.parsedCv);
+```
+
+Kết quả (`ParsedCv`, `schemaVersion: 1`). Mảng mặc định `[]`, trường đơn có thể `null`:
+
+| Trường                 | Nội dung                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `summary`              | Tóm tắt 1–2 câu, theo ngôn ngữ của CV, không nêu tên                                              |
+| `skills`               | Kỹ năng đã chuẩn hóa (cùng bảng alias với JD), **gồm cả** công nghệ trong `experiences`, `projects` |
+| `experiences`          | `company`, `title`, `startDate`, `endDate` (`YYYY-MM`; `endDate: null` là đang làm hoặc không rõ), `description`, `technologies` |
+| `education`            | `school`, `major`, `degree`, `graduationYear`                                                     |
+| `projects`             | `name`, `role`, `technologies`, `description`                                                     |
+| `certifications`       | Tên chứng chỉ, kèm điểm nếu có (vd. `IELTS 7.0`)                                                  |
+| `languages`            | Ngoại ngữ, kèm trình độ nếu có                                                                    |
+| `totalYearsExperience` | Tổng số năm kinh nghiệm, **tính bằng code**, làm tròn 1 chữ số thập phân                          |
+
+- **Không bịa, không lấy thông tin cá nhân:** prompt cấm trích họ tên, email, SĐT, địa chỉ, ngày sinh, giới tính,
+  ảnh, link cá nhân. Thông tin không có trong CV thì để `null` / `[]`.
+- **Số năm kinh nghiệm** (`calculateTotalYearsExperience`, cũng được export): tháng bắt đầu tính từ ngày 01, tháng kết thúc
+  ghi cụ thể được tính hết tháng đó, đang làm thì tính đến đầu tháng của `referenceDate`. Các khoảng chồng nhau hoặc
+  nối tiếp chỉ tính một lần. Công việc có ngày kết thúc không đọc được thì không tính vào tổng (để không bị tính nhầm là đang làm).
+- **`referenceDate`:** mốc "hôm nay" cho công việc đang làm. BE không truyền (mặc định là lúc gọi hàm).
+  Fixtures và test truyền `new Date('2026-11-01')` (ngày đánh giá cố định, xem `fixtures/README.md`).
+- **Ngày tháng:** Gemini được yêu cầu trả `YYYY-MM`; code vẫn đọc được `03/2024`, `T3/2024`, `Mar 2024`, `2024`
+  (chỉ có năm: bắt đầu tháng 01, kết thúc tháng 12).
+- **Lỗi:** text rỗng ném `CvExtractionError('EMPTY')` (không gọi Gemini). Lỗi gọi Gemini là `AiError` như các hàm khác.
+- Gọi Gemini với `temperature: 0`. Client ghi log thời gian và token, không ghi nội dung CV.
+
+### Kết quả chạy thử (W1-AI-04)
+
+Chạy bằng `npm run try -w packages/ai -- parse-cv [all]`, model `gemini-3.5-flash-lite`, ngày tham chiếu 01/11/2026.
+Prompt chỉ được chỉnh dựa trên 11 CV **tập dev**; tập test chỉ chạy để xác nhận.
+
+| Kiểm tra (30 CV)                                                        | Kết quả                                   |
+| ----------------------------------------------------------------------- | ----------------------------------------- |
+| Hợp lệ theo `ParsedCvSchema`, không phải gọi lại do sai schema          | 30/30                                     |
+| Không chứa họ tên, email, SĐT, địa chỉ, link GitHub                     | 30/30                                     |
+| `totalYearsExperience` đúng với mốc thời gian gốc của fixtures          | 30/30                                     |
+| Số công việc trích được đúng                                            | 30/30                                     |
+| Kỹ năng bắt buộc của JD mục tiêu không thấy trong CV = `missing_skills` của `labels.csv` | 30/30                    |
+| Thời gian trung bình                                                    | ~1,6 giây/CV (1,2–2,3 giây)               |
+| Token mỗi CV                                                            | ~650–850 vào, ~300–500 ra                 |
+
+Ghi nhận khi chạy:
+
+- `cv_be_08` (dev): câu "Integrated third-party REST APIs" chỉ nằm trong mô tả công việc, lần đầu không thành kỹ năng.
+  Đã sửa prompt: kỹ năng nhắc trong các gạch đầu dòng công việc / dự án cũng phải đưa vào `skills`.
+- Kỹ năng tiếng Việt **không có trong bảng alias** (vd. "Dự báo chuỗi thời gian", "Tổ chức sự kiện", "Kế toán thuế")
+  được Gemini dịch sang tên tiếng Anh. Không ảnh hưởng so khớp với JD (mọi kỹ năng của 3 JD đều có trong bảng alias),
+  nhưng nếu JD mới có kỹ năng tiếng Việt thì nên thêm alias vào `skills.ts`.
+- Kỹ năng ghép như "CRM (HubSpot)" có thể bị tách thành `HubSpot` + "Client Relationship Management".
 
 ## Scripts
 
@@ -179,5 +245,9 @@ Chạy từ thư mục gốc repo:
 | `npm run typecheck -w packages/ai`                     | Kiểm tra kiểu, kể cả kiểu trong test                                              |
 | `npm run try -w packages/ai [-- text\|structured\|jd\|cv]` | Chạy thử với Gemini thật (`jd`: `parseJd` trên 3 JD; `cv`: `extractCvText` trên 30 CV + 2 scan, có tự đánh dấu ✓/✗) |
 | `npm run try -w packages/ai -- cv <tên file>` | Như `cv`, in nội dung một CV chỉ định để kiểm tra bằng mắt (mặc định `cv_be_06.pdf`) |
+| `npm run try -w packages/ai -- parse-cv` | `parseCv` trên 11 CV tập dev, in JSON + tự kiểm tra ✓/✗ (dùng để chỉnh prompt) |
+| `npm run try -w packages/ai -- parse-cv all` | `parseCv` trên cả 30 CV, chỉ in kết quả kiểm tra (chỉ để xác nhận, không chỉnh prompt theo tập test) |
+| `npm run try -w packages/ai -- parse-cv <tên file>` | `parseCv` trên một CV của fixtures, in JSON |
+| `npm run try -w packages/ai -- parse-cv <đường dẫn...> [--jd be\|da\|mkt]` | `parseCv` trên CV tự thêm: file `.pdf` / `.txt` hoặc thư mục chứa chúng. In JSON, kiểm tra schema và email/SĐT/link; `--jd` liệt kê kỹ năng bắt buộc của JD còn thiếu. Ngày tham chiếu là hôm nay |
 
 `npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT`.

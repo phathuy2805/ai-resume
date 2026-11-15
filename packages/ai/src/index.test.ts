@@ -12,7 +12,9 @@ describe('public API (src/index.ts)', () => {
       'AiTimeoutError',
       'CV_EXTRACTION_MESSAGES_VI',
       'CvExtractionError',
+      'ParsedCvSchema',
       'ParsedJdSchema',
+      'calculateTotalYearsExperience',
       'createAiClient',
       'extractCvText',
       'helloAI',
@@ -21,6 +23,7 @@ describe('public API (src/index.ts)', () => {
       'normalizeLevel',
       'normalizeSkill',
       'normalizeSkills',
+      'parseCv',
       'parseJd',
     ]);
   });
