@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Role } from '../../shared/constants/role.enum.js';
+import { Role } from '../../shared/constants/auth.constant.js';
 import { PublicUserSchema, UserSchema } from '../../shared/models/user.model.js';
 
 // ==================== Request Schemas (Body / Param / Query) ====================
