@@ -18,12 +18,17 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const registeredEmail =
+    typeof location.state?.registeredEmail === 'string' ? location.state.registeredEmail : '';
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: registeredEmail },
+  });
   const mutation = useMutation({
     mutationFn: loginApi,
     onSuccess: ({ user: nextUser, accessToken }) => {

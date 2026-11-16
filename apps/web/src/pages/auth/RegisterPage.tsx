@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { register as registerApi, refreshSession, getMe } from '@/api/auth';
+import { register as registerApi } from '@/api/auth';
 import { Field, PasswordInput } from '@/components/common/FormField';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -12,11 +12,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { handleFormError } from '@/lib/errorUtils';
 import { registerSchema, type RegisterFormValues } from '@/lib/schemas/auth.schema';
 import { toApiError } from '@/lib/apiError';
-import { roleHome, useAuth } from '@/providers/auth-context';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const {
     register,
     handleSubmit,
@@ -37,14 +35,14 @@ export default function RegisterPage() {
         password: values.password,
         role: values.role,
       });
-      const session = await refreshSession();
-      const user = await getMe();
-      return { user, accessToken: session.accessToken };
+      return values.email;
     },
-    onSuccess: ({ user, accessToken }) => {
-      login(user, accessToken);
-      toast.success('Tạo tài khoản thành công');
-      void navigate(roleHome(user.role), { replace: true });
+    onSuccess: (registeredEmail) => {
+      toast.success('Đăng ký tài khoản thành công! Vui lòng đăng nhập.');
+      void navigate('/login', {
+        replace: true,
+        state: { registeredEmail },
+      });
     },
     onError: (error) => {
       const apiError = toApiError(error);
