@@ -1,0 +1,11 @@
+{$DOMAIN:localhost} {
+    # Chuyển hướng API và WebSocket vào service api
+    reverse_proxy /api/* api:3000
+    reverse_proxy /socket.io/* api:3000
+
+    # Phục vụ Frontend Vite tĩnh
+    root * /srv
+    encode gzip zstd
+    file_server
+    try_files {path} /index.html
+}
