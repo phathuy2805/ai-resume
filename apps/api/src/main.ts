@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import fs from 'fs';
@@ -8,8 +9,9 @@ import { AppModule } from './app.module.js';
 import envConfig from './shared/config/env.config.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.set('trust proxy', 1);
   app.use(cookieParser());
   app.enableCors({
     origin: envConfig.FRONTEND_ORIGIN,

@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import type { CookieOptions, Request, Response } from 'express';
 import envConfig from '../../shared/config/env.config.js';
+import { REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH } from '../../shared/constants/auth.constant.js';
+import { ClientIp } from '../../shared/decorators/client-ip.decorator.js';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator.js';
 import { Public } from '../../shared/decorators/public.decorator.js';
-import { REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH } from './auth.constant.js';
+import { UserAgent } from '../../shared/decorators/user-agent.decorator.js';
+import { getRefreshTokenExpiresInMs } from '../../shared/utils/time.util.js';
 import {
   ApiAuthController,
   ApiGetProfileDoc,
@@ -13,12 +16,14 @@ import {
   ApiRegisterDoc,
 } from './auth.docs.js';
 import {
-  AuthResponseDto,
-  LoginDto,
-  LogoutResponseDto,
-  RefreshTokenDto,
-  RegisterDto,
-  UserProfileResponseDto,
+  GetProfileResDto,
+  LoginBodyDto,
+  LoginResDto,
+  LogoutResDto,
+  RefreshTokenBodyDto,
+  RefreshTokenResDto,
+  RegisterBodyDto,
+  RegisterResDto,
 } from './auth.dto.js';
 import { AuthService } from './auth.service.js';
 
@@ -31,14 +36,17 @@ export class AuthController {
   @Post('register')
   @ApiRegisterDoc()
   async register(
-    @Body() dto: RegisterDto,
-    @Req() req: Request,
+    @Body() body: RegisterBodyDto,
+    // passthrough: true cho phép gắn cookie qua res
+    // nhưng vẫn để NestJS tự xử lý giá trị return
     @Res({ passthrough: true }) res: Response,
-  ): Promise<UserProfileResponseDto> {
-    const result = await this.authService.register(
-      dto,
-      req.headers['user-agent'],
-    );
+    @UserAgent() userAgent?: string,
+    @ClientIp() ip?: string,
+  ): Promise<RegisterResDto> {
+    const result = await this.authService.register(body, {
+      userAgent,
+      ip,
+    });
     this.setRefreshCookie(res, result.refreshToken);
     return result.user;
   }
@@ -47,23 +55,22 @@ export class AuthController {
   @Post('login')
   @ApiLoginDoc()
   async login(
-    @Body() dto: LoginDto,
-    @Req() req: Request,
+    @Body() body: LoginBodyDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponseDto> {
-    const { refreshToken, ...response } = await this.authService.login(
-      dto,
-      req.headers['user-agent'],
-    );
+    @UserAgent() userAgent?: string,
+    @ClientIp() ip?: string,
+  ): Promise<LoginResDto> {
+    const { refreshToken, ...response } = await this.authService.login(body, {
+      userAgent,
+      ip,
+    });
     this.setRefreshCookie(res, refreshToken);
     return response;
   }
 
   @Get('me')
   @ApiGetProfileDoc()
-  async getProfile(
-    @CurrentUser('id') userId: string,
-  ): Promise<UserProfileResponseDto> {
+  async getProfile(@CurrentUser('id') userId: string): Promise<GetProfileResDto> {
     return this.authService.getProfile(userId);
   }
 
@@ -71,15 +78,17 @@ export class AuthController {
   @Post('refresh')
   @ApiRefreshTokenDoc()
   async refreshToken(
-    @Body() dto: RefreshTokenDto,
+    @Body() body: RefreshTokenBodyDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponseDto> {
-    const rawRefreshToken = this.extractRefreshToken(req, dto);
-    const { refreshToken, ...response } = await this.authService.refreshTokens(
-      rawRefreshToken,
-      req.headers['user-agent'],
-    );
+    @UserAgent() userAgent?: string,
+    @ClientIp() ip?: string,
+  ): Promise<RefreshTokenResDto> {
+    const rawRefreshToken = this.extractRefreshToken(req, body);
+    const { refreshToken, ...response } = await this.authService.refreshTokens(rawRefreshToken, {
+      userAgent,
+      ip,
+    });
     this.setRefreshCookie(res, refreshToken);
     return response;
   }
@@ -88,29 +97,26 @@ export class AuthController {
   @Post('logout')
   @ApiLogoutDoc()
   async logout(
-    @Body() dto: RefreshTokenDto,
+    @Body() body: RefreshTokenBodyDto,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<LogoutResponseDto> {
-    const rawRefreshToken = this.extractRefreshToken(req, dto);
+  ): Promise<LogoutResDto> {
+    const rawRefreshToken = this.extractRefreshToken(req, body);
     const result = await this.authService.logout(rawRefreshToken);
     res.clearCookie(REFRESH_COOKIE_NAME, this.getRefreshCookieBaseOptions());
     return result;
   }
 
-  private extractRefreshToken(
-    req: Request,
-    dto?: RefreshTokenDto,
-  ): string | undefined {
-    const cookies = req.cookies as
-      Record<string, string | undefined> | undefined;
-    return cookies?.[REFRESH_COOKIE_NAME] ?? dto?.refreshToken;
+  //Utility
+  private extractRefreshToken(req: Request, body?: RefreshTokenBodyDto): string | undefined {
+    const cookies = req.cookies as Record<string, string | undefined> | undefined;
+    return cookies?.[REFRESH_COOKIE_NAME] ?? body?.refreshToken;
   }
 
   private setRefreshCookie(res: Response, refreshToken: string): void {
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
       ...this.getRefreshCookieBaseOptions(),
-      maxAge: this.authService.getRefreshCookieMaxAgeMs(),
+      maxAge: getRefreshTokenExpiresInMs(),
     });
   }
 
