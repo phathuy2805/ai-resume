@@ -1,44 +1,82 @@
-import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { useForm, useWatch } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { register as registerApi, refreshSession, getMe } from '@/api/auth';
 import { Field, PasswordInput } from '@/components/common/FormField';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-
-type RegisterValues = {
-  fullName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { handleFormError } from '@/lib/errorUtils';
+import { registerSchema, type RegisterFormValues } from '@/lib/schemas/auth.schema';
+import { toApiError } from '@/lib/apiError';
+import { roleHome, useAuth } from '@/providers/auth-context';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const {
     register,
     handleSubmit,
-    getValues,
+    setError,
+    setValue,
+    control,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterValues>();
-
-  // TODO(W1-FE-03): call register() from '@/api/auth' with role CANDIDATE.
-  const onSubmit = (values: RegisterValues) => {
-    toast.success(`Đã tạo tài khoản cho ${values.fullName}`);
-    navigate('/login');
-  };
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { role: 'CANDIDATE' },
+  });
+  const role = useWatch({ control, name: 'role' });
+  const mutation = useMutation({
+    mutationFn: async (values: RegisterFormValues) => {
+      await registerApi({
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password,
+        role: values.role,
+      });
+      const session = await refreshSession();
+      const user = await getMe();
+      return { user, accessToken: session.accessToken };
+    },
+    onSuccess: ({ user, accessToken }) => {
+      login(user, accessToken);
+      toast.success('Tạo tài khoản thành công');
+      void navigate(roleHome(user.role), { replace: true });
+    },
+    onError: (error) => {
+      const apiError = toApiError(error);
+      if (apiError.status === 409) {
+        setError('email', { message: 'Email đã được sử dụng' });
+      } else {
+        handleFormError(error, setError, [
+          'fullName',
+          'email',
+          'password',
+          'confirmPassword',
+          'role',
+        ]);
+      }
+    },
+  });
 
   return (
     <Card className="p-6 shadow-sm">
-      <h1 className="mb-5 text-card-title text-foreground">Tạo tài khoản ứng viên</h1>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+      <h1 className="mb-5 text-card-title text-foreground">Tạo tài khoản</h1>
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={handleSubmit((values) => mutation.mutate(values))}
+        noValidate
+      >
         <Field id="fullName" label="Họ và tên" error={errors.fullName?.message}>
           <Input
             id="fullName"
             autoComplete="name"
             placeholder="Nguyễn Văn A"
             aria-invalid={!!errors.fullName}
-            {...register('fullName', { required: 'Vui lòng nhập họ và tên' })}
+            {...register('fullName')}
           />
         </Field>
         <Field id="email" label="Email" error={errors.email?.message}>
@@ -48,10 +86,7 @@ export default function RegisterPage() {
             autoComplete="email"
             placeholder="ungvien@email.com"
             aria-invalid={!!errors.email}
-            {...register('email', {
-              required: 'Vui lòng nhập email',
-              pattern: { value: /^\S+@\S+\.\S+$/, message: 'Email không hợp lệ' },
-            })}
+            {...register('email')}
           />
         </Field>
         <Field
@@ -64,10 +99,7 @@ export default function RegisterPage() {
             id="password"
             autoComplete="new-password"
             aria-invalid={!!errors.password}
-            {...register('password', {
-              required: 'Vui lòng nhập mật khẩu',
-              minLength: { value: 8, message: 'Mật khẩu tối thiểu 8 ký tự' },
-            })}
+            {...register('password')}
           />
         </Field>
         <Field
@@ -79,14 +111,41 @@ export default function RegisterPage() {
             id="confirmPassword"
             autoComplete="new-password"
             aria-invalid={!!errors.confirmPassword}
-            {...register('confirmPassword', {
-              validate: (value) =>
-                value === getValues('password') || 'Mật khẩu nhập lại không khớp',
-            })}
+            {...register('confirmPassword')}
           />
         </Field>
-        <Button type="submit" className="mt-1 w-full" disabled={isSubmitting}>
-          Đăng ký
+        <Field id="role" label="Vai trò" error={errors.role?.message}>
+          <RadioGroup
+            value={role}
+            onValueChange={(value) =>
+              setValue('role', value as RegisterFormValues['role'], { shouldValidate: true })
+            }
+            className="grid-cols-2"
+          >
+            <label
+              htmlFor="role-candidate"
+              className="flex cursor-pointer items-center gap-2 rounded-lg border p-3"
+            >
+              <RadioGroupItem id="role-candidate" value="CANDIDATE" />
+              <span>Ứng viên</span>
+            </label>
+            <label
+              htmlFor="role-hr"
+              className="flex cursor-pointer items-center gap-2 rounded-lg border p-3"
+            >
+              <RadioGroupItem id="role-hr" value="HR" />
+              <span>Nhà tuyển dụng (HR)</span>
+            </label>
+          </RadioGroup>
+          <input type="hidden" {...register('role')} />
+        </Field>
+        {errors.root?.server?.message && (
+          <p role="alert" className="text-sm text-destructive">
+            {errors.root.server.message}
+          </p>
+        )}
+        <Button type="submit" className="mt-1 w-full" disabled={isSubmitting || mutation.isPending}>
+          {mutation.isPending ? 'Đang tạo tài khoản…' : 'Đăng ký'}
         </Button>
       </form>
       <div className="mt-5 flex flex-col items-center gap-2 text-center">
