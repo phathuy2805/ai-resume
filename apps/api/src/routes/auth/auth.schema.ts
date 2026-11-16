@@ -1,30 +1,24 @@
 import { z } from 'zod';
 import { Role } from '../../shared/constants/role.enum.js';
-import { UserSchema } from '../../shared/models/user.model.js';
+import { PublicUserSchema, UserSchema } from '../../shared/models/user.model.js';
 
-export const RegisterSchema = UserSchema.pick({
+// ==================== Request Schemas (Body / Param / Query) ====================
+
+export const RegisterBodySchema = UserSchema.pick({
   email: true,
   fullName: true,
 }).extend({
-  password: z
-    .string()
-    .min(8, 'Mật khẩu phải có ít nhất 8 ký tự')
-    .describe('Mật khẩu người dùng'),
-  role: z
-    .enum([Role.CANDIDATE, Role.HR])
-    .describe('Vai trò trong hệ thống (HR hoặc CANDIDATE)'),
+  password: z.string().min(8, 'Mật khẩu phải có ít nhất 8 ký tự').describe('Mật khẩu người dùng'),
+  role: z.enum([Role.CANDIDATE, Role.HR]).describe('Vai trò trong hệ thống (HR hoặc CANDIDATE)'),
 });
 
-export const LoginSchema = UserSchema.pick({
+export const LoginBodySchema = UserSchema.pick({
   email: true,
 }).extend({
-  password: z
-    .string()
-    .min(1, 'Mật khẩu không được để trống')
-    .describe('Mật khẩu'),
+  password: z.string().min(1, 'Mật khẩu không được để trống').describe('Mật khẩu'),
 });
 
-export const RefreshTokenSchema = z
+export const RefreshTokenBodySchema = z
   .object({
     refreshToken: z
       .string()
@@ -34,20 +28,30 @@ export const RefreshTokenSchema = z
   })
   .prefault({});
 
-export const UserProfileResponseSchema = UserSchema;
+// ==================== Response Schemas ====================
 
-export const AuthResponseSchema = z.object({
+export const RegisterResSchema = PublicUserSchema;
+
+export const LoginResSchema = z.object({
   accessToken: z.string().describe('Access Token JWT'),
-  user: UserProfileResponseSchema,
+  user: PublicUserSchema,
 });
 
-export const LogoutResponseSchema = z.object({
+export const GetProfileResSchema = PublicUserSchema;
+
+export const RefreshTokenResSchema = LoginResSchema;
+
+export const LogoutResSchema = z.object({
   message: z.string().describe('Thông báo kết quả đăng xuất'),
 });
 
-export type RegisterBody = z.infer<typeof RegisterSchema>;
-export type LoginBody = z.infer<typeof LoginSchema>;
-export type RefreshTokenBody = z.infer<typeof RefreshTokenSchema>;
-export type UserProfileResponse = z.infer<typeof UserProfileResponseSchema>;
-export type AuthResponse = z.infer<typeof AuthResponseSchema>;
-export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;
+// ==================== Inferred Types ====================
+
+export type RegisterBodyType = z.infer<typeof RegisterBodySchema>;
+export type LoginBodyType = z.infer<typeof LoginBodySchema>;
+export type RefreshTokenBodyType = z.infer<typeof RefreshTokenBodySchema>;
+export type RegisterResType = z.infer<typeof RegisterResSchema>;
+export type LoginResType = z.infer<typeof LoginResSchema>;
+export type GetProfileResType = z.infer<typeof GetProfileResSchema>;
+export type RefreshTokenResType = z.infer<typeof RefreshTokenResSchema>;
+export type LogoutResType = z.infer<typeof LogoutResSchema>;
