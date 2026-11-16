@@ -6,11 +6,18 @@
 //   npm run try -w packages/ai -- jd           # parseJd trên 3 JD của fixtures (W1-AI-05)
 //   npm run try -w packages/ai -- cv           # extractCvText trên 30 CV + 2 scan (W1-AI-03)
 //   npm run try -w packages/ai -- cv cv_mkt_03.pdf   # như trên, in nội dung CV chỉ định để xem bằng mắt
+//   npm run try -w packages/ai -- parse-cv     # parseCv trên 11 CV tập dev, in JSON để chỉnh prompt (W1-AI-04)
+//   npm run try -w packages/ai -- parse-cv all # parseCv trên cả 30 CV, chỉ in kết quả kiểm tra
+//   npm run try -w packages/ai -- parse-cv cv_be_06.pdf   # một CV của fixtures, in JSON
+//   npm run try -w packages/ai -- parse-cv ./my-cvs [--jd be]   # CV tự thêm (.pdf/.txt, file hoặc thư mục)
+//
+// Chỉ chỉnh prompt dựa trên tập dev. "parse-cv all" chỉ dùng để xác nhận sau khi đã chốt prompt.
+// Nghỉ giữa các lần gọi Gemini: TRY_DELAY_MS (mặc định 2000) để không vượt quota.
 //
 // Biến môi trường đọc từ packages/ai/.env (copy từ .env.example) hoặc từ terminal ($env:...).
 // Biến đặt trong terminal được ưu tiên hơn file .env.
 // Package không tự đọc process.env: chỉ script này đọc rồi truyền vào createAiClient.
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 import {
@@ -19,6 +26,8 @@ import {
   isAiError,
   isCvExtractionError,
   normalizeSkills,
+  parseCv,
+  ParsedCvSchema,
   parseJd,
   ParsedJdSchema,
 } from '../dist/index.mjs';
@@ -199,6 +208,303 @@ async function cvDemo() {
   if (failed > 0) process.exitCode = 1;
 }
 
+// ── Demo parse-cv: parseCv trên CV của W1-AI-01 (W1-AI-04) ──────────────
+// Ngày đánh giá cố định của fixtures (fixtures/README.md): "Hiện tại" tính đến 01/11/2026.
+const FIXTURE_REFERENCE_DATE = new Date('2026-11-01');
+const FIXTURES_DIR = path.resolve(import.meta.dirname, '../fixtures');
+
+/** Tách một dòng CSV (hỗ trợ ô trong ngoặc kép có dấu phẩy). */
+function parseCsvLine(line) {
+  const cells = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (quoted && char === '"' && line[i + 1] === '"') {
+      cell += '"';
+      i++;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === ',' && !quoted) {
+      cells.push(cell);
+      cell = '';
+    } else {
+      cell += char;
+    }
+  }
+  cells.push(cell);
+  return cells;
+}
+
+/** Các dòng của labels.csv dạng object theo tên cột. */
+function readLabels() {
+  const [header, ...rows] = readFileSync(path.join(FIXTURES_DIR, 'labels.csv'), 'utf8')
+    .trim()
+    .split(/\r?\n/)
+    .map(parseCsvLine);
+  return rows.map((cells) => Object.fromEntries(header.map((name, i) => [name, cells[i] ?? ''])));
+}
+
+/**
+ * Đáp án của từng CV lấy thẳng từ dữ liệu gốc trong generate-fixtures.mjs
+ * (họ tên, liên hệ, mốc thời gian, kỹ năng), để không phải chép tay.
+ * Chỉ đọc mảng cvList, không chạy phần sinh PDF của script.
+ */
+function readFixtureTruth() {
+  const source = readFileSync(path.resolve(import.meta.dirname, 'generate-fixtures.mjs'), 'utf8');
+  const start = source.indexOf('const cvList = [');
+  const end = source.indexOf('\n];', start);
+  if (start < 0 || end < 0) throw new Error('Không tìm thấy cvList trong generate-fixtures.mjs');
+  const cvList = new Function(`${source.slice(start, end + 3)}\nreturn cvList;`)();
+  return new Map(cvList.map((cv) => [cv.fileName, cv]));
+}
+
+/** Số năm kỳ vọng, tính theo quy tắc của README từ các mốc "MM/YYYY - MM/YYYY | Present". */
+function expectedYears(cv) {
+  const toYm = (s) => {
+    const m = /(\d{1,2})\/(\d{4})/.exec(s ?? '');
+    return m ? `${m[2]}-${m[1].padStart(2, '0')}` : null;
+  };
+  const months = (cv.experience ?? []).map(({ period }) => {
+    const [from, to] = period.split(/\s+-\s+/);
+    const start = toYm(from);
+    const [sy, sm] = start.split('-').map(Number);
+    const end = /present|hiện tại/i.test(to) ? null : toYm(to);
+    const [ey, em] = end ? end.split('-').map(Number) : [2026, 10];
+    return [sy * 12 + sm - 1, ey * 12 + em];
+  });
+  // Fixtures không có khoảng chồng nhau, chỉ cộng và kiểm tra lại bằng tay.
+  const total = months.reduce((sum, [a, b]) => sum + (b - a), 0);
+  return Math.round((total / 12) * 10) / 10;
+}
+
+/** Các mẩu thông tin cá nhân của CV không được xuất hiện trong ParsedCv. */
+function personalDataOf(cv) {
+  const { email, phone, location, github, linkedin } = cv.contact ?? {};
+  return [cv.fullName, email, phone, location, github, linkedin].filter(Boolean);
+}
+
+const PII_PATTERNS = [/@/, /example\.com/i, /\b0900 000\b/, /\+84 900/];
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Thông tin cá nhân dạng chung (cho CV tự thêm, không có đáp án): email, SĐT Việt Nam, link hồ sơ.
+const GENERIC_PII_PATTERNS = [
+  [/[\w.+-]+@[\w-]+\.[\w.]+/, 'email'],
+  [/(?:\+84|\b0)[\s.-]?\d{2,3}[\s.-]?\d{3}[\s.-]?\d{3,4}\b/, 'số điện thoại'],
+  [/(?:linkedin|github|facebook|fb)\.com\//i, 'link hồ sơ'],
+];
+
+/** Lấy danh sách file CV từ các đường dẫn (file .pdf/.txt hoặc thư mục chứa chúng). */
+function collectOwnCvFiles(inputs) {
+  // npm run -w chạy script trong packages/ai; INIT_CWD là thư mục bạn gõ lệnh.
+  const baseDir = process.env.INIT_CWD ?? process.cwd();
+  return inputs.flatMap((input) => {
+    const resolved = path.resolve(baseDir, input);
+    if (!existsSync(resolved)) {
+      // "D:my-cvsfile.pdf": Git Bash đã xóa mất dấu \ trong "D:\my-cvs\file.pdf".
+      const hint = /^[a-z]:[^\\/]/i.test(input)
+        ? '\nCó vẻ dấu \\ trong đường dẫn đã bị terminal (Git Bash) xóa mất.' +
+          ' Dùng dấu / (vd. D:/my-cvs/cv.pdf) hoặc đặt đường dẫn trong nháy đơn.'
+        : '';
+      throw new Error(`Không tìm thấy file hoặc thư mục: ${resolved}${hint}`);
+    }
+    if (!statSync(resolved).isDirectory()) return [resolved];
+    return readdirSync(resolved)
+      .filter((name) => /\.(pdf|txt)$/i.test(name))
+      .sort()
+      .map((name) => path.join(resolved, name));
+  });
+}
+
+/**
+ * parseCv trên CV tự thêm (không có trong fixtures): in JSON + kiểm tra chung.
+ * Không có đáp án nên không kiểm tra số năm / số công việc; họ tên cần xem bằng mắt.
+ *   npm run try -w packages/ai -- parse-cv ./my-cvs/cv_a.pdf [./cv_b.txt ...] [--jd be|da|mkt]
+ */
+async function parseOwnCvDemo(inputs, jdName) {
+  const files = collectOwnCvFiles(inputs);
+  if (files.length === 0) throw new Error('Không có file .pdf hoặc .txt nào');
+  const jd = jdName ? readFixtureJd(jdName) : null;
+  const delayMs = Number(process.env.TRY_DELAY_MS ?? 2000);
+  const today = new Date();
+  console.log(
+    `\n── parseCv trên ${files.length} CV tự thêm, ngày tham chiếu ${today.toISOString().slice(0, 10)} (hôm nay)` +
+      (jd ? `, so với ${jd.code}` : ''),
+  );
+
+  let failed = 0;
+  for (const [i, file] of files.entries()) {
+    if (i > 0) await sleep(delayMs);
+    console.log(`\n${file}`);
+
+    let text;
+    if (/\.txt$/i.test(file)) {
+      text = readFileSync(file, 'utf8');
+    } else {
+      try {
+        const result = await extractCvText(new Uint8Array(readFileSync(file)), {
+          ocrFallback: { ai },
+          logger: quietLogger,
+        });
+        text = result.text;
+        console.log(
+          `   ℹ trích chữ: ${result.pageCount} trang, ${result.charCount} ký tự, nguồn ${result.source}`,
+        );
+      } catch (error) {
+        if (!isCvExtractionError(error)) throw error;
+        failed++;
+        console.log(`   ✗ không đọc được PDF: ${error.code} (${error.messageVi})`);
+        continue;
+      }
+    }
+
+    const startedAt = performance.now();
+    const parsed = await parseCv(ai, text);
+    console.log(`   ℹ parseCv: ${Math.round(performance.now() - startedAt)}ms`);
+    console.dir(parsed, { depth: null });
+
+    const schemaOk = ParsedCvSchema.safeParse(parsed).success;
+    const json = JSON.stringify(parsed);
+    const leaked = GENERIC_PII_PATTERNS.filter(([pattern]) => pattern.test(json)).map(
+      ([, name]) => name,
+    );
+    console.log(`   ${schemaOk ? '✓' : '✗'} hợp lệ theo ParsedCvSchema`);
+    console.log(
+      `   ${leaked.length === 0 ? '✓' : '✗'} không chứa email, SĐT, link hồ sơ${leaked.length ? `: ${leaked.join(', ')}` : ''}`,
+    );
+    console.log('   ℹ họ tên, địa chỉ, số năm kinh nghiệm: tự so với file CV bằng mắt');
+    if (jd) {
+      const notFound = jd.requiredSkills.filter((skill) => !parsed.skills.includes(skill));
+      console.log(
+        `   ℹ ${jd.code} bắt buộc không thấy trong CV: ${notFound.join(', ') || '(không)'}`,
+      );
+    }
+    if (!schemaOk || leaked.length > 0) failed++;
+  }
+
+  console.log(
+    `\n${failed === 0 ? '✓ Tất cả CV đạt' : `✗ ${failed}/${files.length} CV có kiểm tra không đạt`}`,
+  );
+  if (failed > 0) process.exitCode = 1;
+}
+
+async function parseCvDemo() {
+  const args = process.argv.slice(3);
+  const jdFlag = args.indexOf('--jd');
+  const jdName = jdFlag >= 0 ? args[jdFlag + 1] : undefined;
+  if (jdName !== undefined && !['be', 'da', 'mkt'].includes(jdName)) {
+    throw new Error('--jd chỉ nhận be, da hoặc mkt');
+  }
+  const positional = args.filter((_, i) => jdFlag < 0 || (i !== jdFlag && i !== jdFlag + 1));
+
+  const mode = positional[0] ?? 'dev';
+  const labels = readLabels();
+  // Mọi cặp của cùng một CV nằm cùng split (fixtures/README.md).
+  const splits = new Map(labels.map((row) => [row.cv_file, row.split]));
+  const truth = readFixtureTruth();
+  if (mode !== 'all' && mode !== 'dev' && !truth.has(mode)) {
+    return parseOwnCvDemo(positional, jdName);
+  }
+  const allFiles = [...truth.keys()];
+  const files =
+    mode === 'all'
+      ? allFiles
+      : mode === 'dev'
+        ? allFiles.filter((file) => splits.get(file) === 'dev')
+        : [mode];
+  const printJson = mode !== 'all';
+  const delayMs = Number(process.env.TRY_DELAY_MS ?? 2000);
+  const readCv = (file) => new Uint8Array(readFileSync(path.join(FIXTURES_DIR, 'cvs', file)));
+
+  console.log(
+    `\n── parseCv trên ${files.length} CV (${mode}), ngày tham chiếu ${FIXTURE_REFERENCE_DATE.toISOString().slice(0, 10)}`,
+  );
+  let failed = 0;
+  const durations = [];
+  const skillRecall = [];
+
+  for (const [i, file] of files.entries()) {
+    const cv = truth.get(file);
+    if (!cv) throw new Error(`Không có CV ${file} trong fixtures`);
+    if (i > 0) await sleep(delayMs);
+
+    const { text } = await extractCvText(readCv(file), { logger: quietLogger });
+    const startedAt = performance.now();
+    const parsed = await parseCv(ai, text, { referenceDate: FIXTURE_REFERENCE_DATE });
+    const durationMs = Math.round(performance.now() - startedAt);
+    durations.push(durationMs);
+
+    console.log(
+      `\n${file} [${splits.get(file) ?? '?'} | ${cv.layout} | ${cv.language}] ${durationMs}ms`,
+    );
+    if (printJson) console.dir(parsed, { depth: null });
+
+    const checks = [];
+    const check = (ok, label, detail = '') => {
+      checks.push(ok);
+      console.log(`   ${ok ? '✓' : '✗'} ${label}${detail ? `: ${detail}` : ''}`);
+    };
+
+    check(ParsedCvSchema.safeParse(parsed).success, 'hợp lệ theo ParsedCvSchema');
+
+    const json = JSON.stringify(parsed).toLowerCase();
+    const leaked = [
+      ...personalDataOf(cv).filter((value) => json.includes(value.toLowerCase())),
+      ...PII_PATTERNS.filter((pattern) => pattern.test(json)).map(String),
+    ];
+    check(leaked.length === 0, 'không chứa họ tên, email, SĐT, địa chỉ, link', leaked.join(', '));
+
+    const expected = expectedYears(cv);
+    check(
+      parsed.totalYearsExperience === expected,
+      'số năm kinh nghiệm',
+      `${parsed.totalYearsExperience} (kỳ vọng ${expected})`,
+    );
+    check(
+      parsed.experiences.length === (cv.experience ?? []).length,
+      'số công việc',
+      `${parsed.experiences.length} (kỳ vọng ${(cv.experience ?? []).length})`,
+    );
+
+    // Tham khảo: kỹ năng ghi trong mục Skills của CV có được trích ra không (sau chuẩn hóa).
+    const listed = normalizeSkills(cv.skills ?? []);
+    const missed = listed.filter((skill) => !parsed.skills.includes(skill));
+    skillRecall.push(listed.length ? (listed.length - missed.length) / listed.length : 1);
+    console.log(
+      `   ℹ kỹ năng mục Skills: trích được ${listed.length - missed.length}/${listed.length}` +
+        (missed.length ? ` (thiếu: ${missed.join(', ')})` : '') +
+        ` | tổng skills: ${parsed.skills.length}`,
+    );
+
+    // Tham khảo: tên kỹ năng CV có khớp tên trong JD mục tiêu không (cùng bảng alias).
+    // So với cột missing_skills do người gán nhãn; khác nhau chưa chắc là lỗi parse.
+    const jd = readFixtureJd(cv.jdId.replace('JD_', '').toLowerCase());
+    const notFound = jd.requiredSkills.filter((skill) => !parsed.skills.includes(skill));
+    const label = labels.find((row) => row.cv_file === file && row.jd_id === cv.jdId);
+    const labelMissing = (label?.missing_skills ?? '').split(';').filter(Boolean);
+    const same =
+      notFound.length === labelMissing.length && notFound.every((s) => labelMissing.includes(s));
+    console.log(
+      `   ℹ ${cv.jdId} bắt buộc không thấy trong CV: ${notFound.join(', ') || '(không)'}` +
+        ` | labels.csv ghi thiếu: ${labelMissing.join(', ') || '(không)'}` +
+        ` → ${same ? 'khớp nhãn' : 'KHÁC nhãn'}`,
+    );
+
+    if (checks.some((ok) => !ok)) failed++;
+  }
+
+  const average = (values) => values.reduce((a, b) => a + b, 0) / (values.length || 1);
+  console.log(
+    `\nThời gian parseCv trung bình: ${Math.round(average(durations))}ms/CV` +
+      ` (min ${Math.min(...durations)}, max ${Math.max(...durations)})` +
+      ` | kỹ năng mục Skills trích được trung bình: ${Math.round(average(skillRecall) * 100)}%`,
+  );
+  console.log(
+    failed === 0 ? '✓ Tất cả CV đạt' : `✗ ${failed}/${files.length} CV có kiểm tra không đạt`,
+  );
+  if (failed > 0) process.exitCode = 1;
+}
+
 const demos = {
   text: () => ai.generateText('Trả lời trong 1 câu: thủ đô của Việt Nam là gì?'),
   structured: () =>
@@ -209,6 +515,7 @@ const demos = {
     ),
   jd: jdDemo,
   cv: cvDemo,
+  'parse-cv': parseCvDemo,
 };
 
 /** Gợi ý cách xử lý cho các lỗi hay gặp khi chạy thử. */
