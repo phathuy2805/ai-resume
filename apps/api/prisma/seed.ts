@@ -2,6 +2,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 import {
+  JobLevel,
   JobStatus,
   PrismaClient,
   Role,
@@ -21,6 +22,8 @@ const SEED_JOBS = [
     title: 'Senior Backend NodeJS / NestJS Developer',
     description:
       'Chúng tôi tìm kiếm Senior Backend Developer tham gia phát triển hệ thống nền tảng tuyển dụng thông minh. Bạn sẽ chịu trách nhiệm thiết kế kiến trúc hệ thống, phát triển RESTful API hiệu năng cao bằng NestJS, tối ưu hóa cơ sở dữ liệu PostgreSQL và tích hợp các pipeline hàng đợi xử lý bất đồng bộ.',
+    requirements:
+      'Tối thiểu 3 năm kinh nghiệm phát triển Backend với NodeJS/TypeScript và NestJS. Thành thạo PostgreSQL, thiết kế RESTful API và làm việc với Docker.',
     requiredSkills: [
       'NodeJS',
       'NestJS',
@@ -31,6 +34,7 @@ const SEED_JOBS = [
     ],
     preferredSkills: ['Redis', 'BullMQ', 'AWS S3', 'Microservices', 'GraphQL'],
     minYearsExperience: 3,
+    level: JobLevel.SENIOR,
     cvPassThreshold: 70,
     interviewQuestionCount: 3,
     rubricWeights: {
@@ -45,9 +49,12 @@ const SEED_JOBS = [
     title: 'Middle / Senior Data Analyst',
     description:
       'Vị trí Data Analyst chịu trách nhiệm phân tích sâu dữ liệu người dùng và kinh doanh, xây dựng các Dashboard trực quan hóa dữ liệu theo thời gian thực, thiết kế các mô hình chỉ số KPI và phối hợp với ban điều hành để đưa ra các đề xuất tối ưu hóa tăng trưởng dựa trên dữ liệu thực chứng.',
+    requirements:
+      'Tối thiểu 2 năm kinh nghiệm phân tích dữ liệu. Thành thạo SQL, Python và PowerBI, có nền tảng vững về thống kê và thiết kế chỉ số KPI.',
     requiredSkills: ['SQL', 'Python', 'PowerBI', 'Data Analysis', 'Statistics'],
     preferredSkills: ['Tableau', 'Pandas', 'ETL', 'BigQuery', 'Data Modeling'],
     minYearsExperience: 2,
+    level: JobLevel.MIDDLE,
     cvPassThreshold: 70,
     interviewQuestionCount: 3,
     rubricWeights: {
@@ -62,6 +69,8 @@ const SEED_JOBS = [
     title: 'Digital Marketing Specialist',
     description:
       'Chúng tôi tìm kiếm Digital Marketing Specialist nhiệt huyết để dẫn dắt các chiến dịch tiếp thị số đa kênh. Bạn sẽ phụ trách tối ưu hóa công cụ tìm kiếm (SEO), vận hành quảng cáo trả phí (Google Ads, Meta Ads), sáng tạo nội dung chuyển đổi và đo lường hiệu quả chiến dịch bằng dữ liệu phân tích.',
+    requirements:
+      'Tối thiểu 2 năm kinh nghiệm triển khai SEO, Google Ads, Meta Ads và phân tích hiệu quả chiến dịch qua Google Analytics.',
     requiredSkills: [
       'SEO',
       'Google Ads',
@@ -77,6 +86,7 @@ const SEED_JOBS = [
       'A/B Testing',
     ],
     minYearsExperience: 2,
+    level: JobLevel.MIDDLE,
     cvPassThreshold: 70,
     interviewQuestionCount: 3,
     rubricWeights: {
@@ -158,9 +168,11 @@ async function main() {
       update: {
         title: job.title,
         description: job.description,
+        requirements: job.requirements,
         requiredSkills: job.requiredSkills,
         preferredSkills: job.preferredSkills,
         minYearsExperience: job.minYearsExperience,
+        level: job.level,
         status: JobStatus.OPEN,
         cvPassThreshold: job.cvPassThreshold,
         interviewQuestionCount: job.interviewQuestionCount,
@@ -171,9 +183,11 @@ async function main() {
         id: job.id,
         title: job.title,
         description: job.description,
+        requirements: job.requirements,
         requiredSkills: job.requiredSkills,
         preferredSkills: job.preferredSkills,
         minYearsExperience: job.minYearsExperience,
+        level: job.level,
         status: JobStatus.OPEN,
         cvPassThreshold: job.cvPassThreshold,
         interviewQuestionCount: job.interviewQuestionCount,

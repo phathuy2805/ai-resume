@@ -5,7 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { Role } from '../constants/role.enum.js';
+import type { Role } from '../constants/auth.constant.js';
 import { ROLES_KEY } from '../decorators/roles.decorator.js';
 import type { AuthenticatedUser } from '../types/auth.type.js';
 

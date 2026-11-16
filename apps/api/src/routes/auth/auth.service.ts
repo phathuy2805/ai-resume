@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { compare, hash } from 'bcryptjs';
 import { BCRYPT_SALT_ROUNDS } from '../../shared/constants/auth.constant.js';
-import type { Role } from '../../shared/constants/role.enum.js';
+import type { Role } from '../../shared/constants/auth.constant.js';
 import { isUniqueConstraintPrismaError } from '../../shared/helper.js';
 import {
   SharedUserRepository,

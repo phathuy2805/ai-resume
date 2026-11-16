@@ -1,4 +1,4 @@
-import type { Role } from '../constants/role.enum.js';
+import type { Role } from '../constants/auth.constant.js';
 
 export interface JwtAccessPayload {
   sub: string;

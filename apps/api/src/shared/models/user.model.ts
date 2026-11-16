@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Role } from '../constants/role.enum.js';
+import { Role } from '../constants/auth.constant.js';
 
 export const UserSchema = z.object({
   id: z.uuid().describe('ID người dùng (UUID)'),
