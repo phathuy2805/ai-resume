@@ -13,36 +13,52 @@ import HREditJobPage from '@/pages/hr/HREditJobPage';
 import HRCandidatesPage from '@/pages/hr/HRCandidatesPage';
 import HRJobsPage from '@/pages/hr/HRJobsPage';
 import HRStatsPage from '@/pages/hr/HRStatsPage';
+import { GuestRoute, ProtectedRoute } from './guards';
 
 export const router = createBrowserRouter([
   { path: '/', element: <Navigate to="/login" replace /> },
   {
-    element: <AuthLayout />,
+    element: <GuestRoute />,
     children: [
-      { path: 'login', element: <LoginPage /> },
-      { path: 'register', element: <RegisterPage /> },
+      {
+        element: <AuthLayout />,
+        children: [
+          { path: 'login', element: <LoginPage /> },
+          { path: 'register', element: <RegisterPage /> },
+        ],
+      },
     ],
   },
   {
-    path: 'hr',
-    element: <HrLayout />,
+    element: <ProtectedRoute allowedRoles={['HR']} />,
     children: [
-      { index: true, element: <Navigate to="jobs" replace /> },
-      { path: 'jobs', element: <HRJobsPage /> },
-      { path: 'candidates', element: <HRCandidatesPage /> },
-      { path: 'stats', element: <HRStatsPage /> },
-      { path: 'jobs/new', element: <HRCreateJobPage /> },
-      { path: 'jobs/:id/edit', element: <HREditJobPage /> },
+      {
+        path: 'hr',
+        element: <HrLayout />,
+        children: [
+          { index: true, element: <Navigate to="jobs" replace /> },
+          { path: 'jobs', element: <HRJobsPage /> },
+          { path: 'candidates', element: <HRCandidatesPage /> },
+          { path: 'stats', element: <HRStatsPage /> },
+          { path: 'jobs/new', element: <HRCreateJobPage /> },
+          { path: 'jobs/:id/edit', element: <HREditJobPage /> },
+        ],
+      },
     ],
   },
   {
-    path: 'candidate',
-    element: <CandidateLayout />,
+    element: <ProtectedRoute allowedRoles={['CANDIDATE']} />,
     children: [
-      { index: true, element: <Navigate to="jobs" replace /> },
-      { path: 'jobs', element: <CandidateJobsPage /> },
-      { path: 'jobs/:id', element: <CandidateJobDetailPage /> },
-      { path: 'applications', element: <CandidateApplicationsPage /> },
+      {
+        path: 'candidate',
+        element: <CandidateLayout />,
+        children: [
+          { index: true, element: <Navigate to="jobs" replace /> },
+          { path: 'jobs', element: <CandidateJobsPage /> },
+          { path: 'jobs/:id', element: <CandidateJobDetailPage /> },
+          { path: 'applications', element: <CandidateApplicationsPage /> },
+        ],
+      },
     ],
   },
   { path: '*', element: <NotFoundPage /> },
