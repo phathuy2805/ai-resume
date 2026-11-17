@@ -7,6 +7,7 @@ import { cleanupOpenApiDoc } from 'nestjs-zod';
 import path from 'path';
 import { AppModule } from './app.module.js';
 import envConfig from './shared/config/env.config.js';
+import { wrapOpenApiSuccessResponses } from './shared/utils/openapi.util.js';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -35,12 +36,9 @@ async function bootstrap() {
     .build();
 
   const rawDocument = SwaggerModule.createDocument(app, config);
-  const document = cleanupOpenApiDoc(rawDocument);
+  const document = wrapOpenApiSuccessResponses(cleanupOpenApiDoc(rawDocument));
   SwaggerModule.setup('api/docs', app, document);
 
-  // Khi dev: xuất spec ra openapi.json ở thư mục gốc repo (file FE import vào Apidog).
-  // Không dùng process.cwd(): `npm run ... -w apps/api` chạy với cwd = apps/api.
-  // Đường dẫn tính từ file đã build (apps/api/dist/main.js) lên 3 cấp là thư mục gốc.
   if (process.env.NODE_ENV !== 'production') {
     fs.writeFileSync(
       path.resolve(import.meta.dirname, '../../../openapi.json'),
@@ -51,8 +49,6 @@ async function bootstrap() {
   const port = envConfig.PORT;
   await app.listen(port);
   console.log(`🚀 Swagger UI sẵn sàng tại: http://localhost:${port}/api/docs`);
-  console.log(
-    `📄 Swagger JSON sẵn sàng tại: http://localhost:${port}/api/docs-json`,
-  );
+  console.log(`📄 Swagger JSON sẵn sàng tại: http://localhost:${port}/api/docs-json`);
 }
 await bootstrap();

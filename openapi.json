@@ -17,6 +17,7 @@
     },
     "/api/auth/register": {
       "post": {
+        "description": "Tạo tài khoản mới, đồng thời cấp httpOnly cookie `refresh_token` để client có thể gọi `/api/auth/refresh` lấy `accessToken` ngay.",
         "operationId": "AuthController_register",
         "parameters": [],
         "requestBody": {
@@ -35,10 +36,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserProfileResponseDto_Output"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/RegisterResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "Dữ liệu đầu vào không hợp lệ"
+          },
+          "409": {
+            "description": "Email đã được sử dụng"
           }
         },
         "summary": "Đăng ký tài khoản mới (HR hoặc CANDIDATE)",
@@ -49,6 +64,7 @@
     },
     "/api/auth/login": {
       "post": {
+        "description": "Trả về `accessToken` + thông tin user và gắn `refresh_token` vào httpOnly cookie.",
         "operationId": "AuthController_login",
         "parameters": [],
         "requestBody": {
@@ -67,10 +83,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthResponseDto_Output"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/LoginResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "Dữ liệu đầu vào không hợp lệ"
+          },
+          "401": {
+            "description": "Email hoặc mật khẩu không đúng"
           }
         },
         "summary": "Đăng nhập vào hệ thống",
@@ -89,10 +119,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserProfileResponseDto_Output"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GetProfileResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
+          },
+          "401": {
+            "description": "Thiếu access token, token không hợp lệ hoặc người dùng không tồn tại"
           }
         },
         "security": [
@@ -108,6 +149,7 @@
     },
     "/api/auth/refresh": {
       "post": {
+        "description": "Đọc `refresh_token` từ httpOnly cookie (hoặc body), xoay vòng token mới và cập nhật cookie.",
         "operationId": "AuthController_refreshToken",
         "parameters": [],
         "requestBody": {
@@ -126,10 +168,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthResponseDto_Output"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/RefreshTokenResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
+          },
+          "401": {
+            "description": "Thiếu refresh token, token không hợp lệ, hết hạn hoặc đã bị thu hồi"
           }
         },
         "summary": "Làm mới Access Token bằng Refresh Token",
@@ -140,6 +193,7 @@
     },
     "/api/auth/logout": {
       "post": {
+        "description": "Thu hồi `refresh_token` trong database và xóa cookie `refresh_token`.",
         "operationId": "AuthController_logout",
         "parameters": [],
         "requestBody": {
@@ -158,7 +212,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LogoutResponseDto_Output"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/LogoutResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
@@ -215,10 +277,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicJobListResponseDto_Output"
+                  "$ref": "#/components/schemas/GetJobsResDto_Output"
                 }
               }
             }
+          },
+          "400": {
+            "description": "Tham số phân trang hoặc tìm kiếm không hợp lệ"
           }
         },
         "summary": "Lấy danh sách việc làm đang mở (Công khai)",
@@ -234,7 +299,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateJobDto"
+                "$ref": "#/components/schemas/CreateJobBodyDto"
               }
             }
           }
@@ -245,10 +310,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HrJobDto_Output"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/CreateJobResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "Dữ liệu đầu vào không hợp lệ"
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
           },
           "403": {
             "description": "Chỉ tài khoản HR mới được tạo tin"
@@ -323,10 +402,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HrJobListResponseDto_Output"
+                  "$ref": "#/components/schemas/GetMyJobsResDto_Output"
                 }
               }
             }
+          },
+          "400": {
+            "description": "Tham số phân trang hoặc lọc trạng thái không hợp lệ"
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
           },
           "403": {
             "description": "Chỉ tài khoản HR mới được truy cập"
@@ -353,6 +438,8 @@
             "in": "path",
             "description": "Job UUID",
             "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
               "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
               "type": "string"
             }
@@ -364,10 +451,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicJobDto_Output"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GetJobResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "ID tin tuyển dụng không đúng định dạng UUID"
           },
           "404": {
             "description": "Tin tuyển dụng không tồn tại hoặc đã đóng"
@@ -387,6 +485,8 @@
             "in": "path",
             "description": "Job UUID",
             "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
               "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
               "type": "string"
             }
@@ -397,7 +497,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateJobDto"
+                "$ref": "#/components/schemas/UpdateJobBodyDto"
               }
             }
           }
@@ -408,10 +508,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HrJobDto_Output"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/UpdateJobResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "ID không phải UUID hoặc dữ liệu cập nhật không hợp lệ"
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
           },
           "403": {
             "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR"
@@ -444,6 +558,8 @@
             "in": "path",
             "description": "Job UUID",
             "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
               "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
               "type": "string"
             }
@@ -455,10 +571,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HrJobDto_Output"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/CloseJobResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "ID tin tuyển dụng không đúng định dạng UUID"
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
           },
           "403": {
             "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR"
@@ -520,7 +650,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApplicationDto_Output"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ApplicationDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
@@ -547,10 +685,18 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ApplicationDto_Output"
-                  }
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ApplicationDto_Output"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
@@ -813,10 +959,8 @@
         "type": "object",
         "properties": {
           "email": {
-            "type": "string",
-            "format": "email",
-            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-            "description": "Email người dùng"
+            "description": "Email người dùng",
+            "type": "string"
           },
           "fullName": {
             "type": "string",
@@ -844,7 +988,7 @@
           "role"
         ]
       },
-      "UserProfileResponseDto_Output": {
+      "RegisterResDto_Output": {
         "type": "object",
         "properties": {
           "id": {
@@ -855,9 +999,9 @@
           },
           "email": {
             "type": "string",
+            "description": "Email người dùng",
             "format": "email",
-            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-            "description": "Email người dùng"
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
           },
           "fullName": {
             "type": "string",
@@ -876,6 +1020,10 @@
           "createdAt": {
             "type": "string",
             "description": "Thời điểm tạo tài khoản (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
           }
         },
         "required": [
@@ -883,7 +1031,8 @@
           "email",
           "fullName",
           "role",
-          "createdAt"
+          "createdAt",
+          "updatedAt"
         ],
         "additionalProperties": false
       },
@@ -891,10 +1040,8 @@
         "type": "object",
         "properties": {
           "email": {
-            "type": "string",
-            "format": "email",
-            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-            "description": "Email người dùng"
+            "description": "Email người dùng",
+            "type": "string"
           },
           "password": {
             "type": "string",
@@ -907,7 +1054,7 @@
           "password"
         ]
       },
-      "AuthResponseDto_Output": {
+      "LoginResDto_Output": {
         "type": "object",
         "properties": {
           "accessToken": {
@@ -924,10 +1071,10 @@
                 "description": "ID người dùng (UUID)"
               },
               "email": {
+                "description": "Email người dùng",
                 "type": "string",
                 "format": "email",
-                "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-                "description": "Email người dùng"
+                "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
               },
               "fullName": {
                 "type": "string",
@@ -946,6 +1093,10 @@
               "createdAt": {
                 "type": "string",
                 "description": "Thời điểm tạo tài khoản (ISO 8601)"
+              },
+              "updatedAt": {
+                "type": "string",
+                "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
               }
             },
             "required": [
@@ -953,7 +1104,8 @@
               "email",
               "fullName",
               "role",
-              "createdAt"
+              "createdAt",
+              "updatedAt"
             ],
             "additionalProperties": false
           }
@@ -961,6 +1113,54 @@
         "required": [
           "accessToken",
           "user"
+        ],
+        "additionalProperties": false
+      },
+      "GetProfileResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "ID người dùng (UUID)"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email người dùng",
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "fullName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Họ và tên đầy đủ"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "HR",
+              "CANDIDATE",
+              "ADMIN"
+            ],
+            "description": "Vai trò người dùng"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm tạo tài khoản (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "role",
+          "createdAt",
+          "updatedAt"
         ],
         "additionalProperties": false
       },
@@ -975,7 +1175,69 @@
         },
         "default": {}
       },
-      "LogoutResponseDto_Output": {
+      "RefreshTokenResDto_Output": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Access Token JWT"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "description": "ID người dùng (UUID)"
+              },
+              "email": {
+                "description": "Email người dùng",
+                "type": "string",
+                "format": "email",
+                "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+              },
+              "fullName": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Họ và tên đầy đủ"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "HR",
+                  "CANDIDATE",
+                  "ADMIN"
+                ],
+                "description": "Vai trò người dùng"
+              },
+              "createdAt": {
+                "type": "string",
+                "description": "Thời điểm tạo tài khoản (ISO 8601)"
+              },
+              "updatedAt": {
+                "type": "string",
+                "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "fullName",
+              "role",
+              "createdAt",
+              "updatedAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "accessToken",
+          "user"
+        ],
+        "additionalProperties": false
+      },
+      "LogoutResDto_Output": {
         "type": "object",
         "properties": {
           "message": {
@@ -988,7 +1250,7 @@
         ],
         "additionalProperties": false
       },
-      "PublicJobListResponseDto_Output": {
+      "GetJobsResDto_Output": {
         "type": "object",
         "properties": {
           "data": {
@@ -1135,7 +1397,7 @@
         ],
         "additionalProperties": false
       },
-      "HrJobListResponseDto_Output": {
+      "GetMyJobsResDto_Output": {
         "type": "object",
         "properties": {
           "data": {
@@ -1206,25 +1468,17 @@
                   ],
                   "description": "Trạng thái tin tuyển dụng (OPEN hoặc CLOSED)"
                 },
-                "interviewQuestionCount": {
-                  "type": "integer",
-                  "minimum": 3,
-                  "maximum": 5,
-                  "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
-                },
-                "createdAt": {
-                  "type": "string",
-                  "description": "Thời điểm đăng tin (ISO 8601)"
-                },
-                "updatedAt": {
-                  "type": "string",
-                  "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
-                },
                 "cvPassThreshold": {
                   "type": "integer",
                   "minimum": 0,
                   "maximum": 100,
                   "description": "Điểm sàn qua vòng CV (0-100)"
+                },
+                "interviewQuestionCount": {
+                  "type": "integer",
+                  "minimum": 3,
+                  "maximum": 5,
+                  "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
                 },
                 "rubricWeights": {
                   "type": "object",
@@ -1269,6 +1523,14 @@
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
                   "description": "ID người tạo (HR)"
                 },
+                "createdAt": {
+                  "type": "string",
+                  "description": "Thời điểm đăng tin (ISO 8601)"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+                },
                 "applicationCount": {
                   "type": "integer",
                   "minimum": 0,
@@ -1290,12 +1552,12 @@
                 "minYearsExperience",
                 "level",
                 "status",
-                "interviewQuestionCount",
-                "createdAt",
-                "updatedAt",
                 "cvPassThreshold",
+                "interviewQuestionCount",
                 "rubricWeights",
                 "createdById",
+                "createdAt",
+                "updatedAt",
                 "applicationCount",
                 "isAnalyzed"
               ],
@@ -1346,7 +1608,7 @@
         ],
         "additionalProperties": false
       },
-      "PublicJobDto_Output": {
+      "GetJobResDto_Output": {
         "type": "object",
         "properties": {
           "id": {
@@ -1443,7 +1705,7 @@
         ],
         "additionalProperties": false
       },
-      "CreateJobDto": {
+      "CreateJobBodyDto": {
         "type": "object",
         "properties": {
           "title": {
@@ -1569,7 +1831,7 @@
         ],
         "additionalProperties": false
       },
-      "HrJobDto_Output": {
+      "CreateJobResDto_Output": {
         "type": "object",
         "properties": {
           "id": {
@@ -1635,25 +1897,17 @@
             ],
             "description": "Trạng thái tin tuyển dụng (OPEN hoặc CLOSED)"
           },
-          "interviewQuestionCount": {
-            "type": "integer",
-            "minimum": 3,
-            "maximum": 5,
-            "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Thời điểm đăng tin (ISO 8601)"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
-          },
           "cvPassThreshold": {
             "type": "integer",
             "minimum": 0,
             "maximum": 100,
             "description": "Điểm sàn qua vòng CV (0-100)"
+          },
+          "interviewQuestionCount": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 5,
+            "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
           },
           "rubricWeights": {
             "type": "object",
@@ -1698,6 +1952,14 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "description": "ID người tạo (HR)"
           },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm đăng tin (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+          },
           "applicationCount": {
             "type": "integer",
             "minimum": 0,
@@ -1719,18 +1981,18 @@
           "minYearsExperience",
           "level",
           "status",
-          "interviewQuestionCount",
-          "createdAt",
-          "updatedAt",
           "cvPassThreshold",
+          "interviewQuestionCount",
           "rubricWeights",
           "createdById",
+          "createdAt",
+          "updatedAt",
           "applicationCount",
           "isAnalyzed"
         ],
         "additionalProperties": false
       },
-      "UpdateJobDto": {
+      "UpdateJobBodyDto": {
         "type": "object",
         "properties": {
           "title": {
@@ -1840,6 +2102,328 @@
             "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn (tổng phải bằng 100)"
           }
         },
+        "additionalProperties": false
+      },
+      "UpdateJobResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh công việc (UUID)"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Tiêu đề tuyển dụng"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nội dung chi tiết của JD"
+          },
+          "requirements": {
+            "description": "Yêu cầu ứng viên",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng bắt buộc"
+          },
+          "preferredSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng ưu tiên"
+          },
+          "minYearsExperience": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Số năm kinh nghiệm tối thiểu"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "INTERN",
+              "JUNIOR",
+              "MIDDLE",
+              "SENIOR",
+              null
+            ],
+            "description": "Cấp độ vị trí tuyển dụng",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLOSED"
+            ],
+            "description": "Trạng thái tin tuyển dụng (OPEN hoặc CLOSED)"
+          },
+          "cvPassThreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Điểm sàn qua vòng CV (0-100)"
+          },
+          "interviewQuestionCount": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 5,
+            "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
+          },
+          "rubricWeights": {
+            "type": "object",
+            "properties": {
+              "technical": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số chuyên môn (%)"
+              },
+              "communication": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số giao tiếp (%)"
+              },
+              "relevance": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số độ phù hợp (%)"
+              },
+              "evidence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số minh chứng (%)"
+              }
+            },
+            "required": [
+              "technical",
+              "communication",
+              "relevance",
+              "evidence"
+            ],
+            "additionalProperties": false,
+            "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn"
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "ID người tạo (HR)"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm đăng tin (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+          },
+          "applicationCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Tổng số hồ sơ đã nộp vào tin tuyển dụng"
+          },
+          "isAnalyzed": {
+            "type": "boolean",
+            "description": "Đã được AI phân tích và tạo vector JD hay chưa"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "requirements",
+          "requiredSkills",
+          "preferredSkills",
+          "minYearsExperience",
+          "level",
+          "status",
+          "cvPassThreshold",
+          "interviewQuestionCount",
+          "rubricWeights",
+          "createdById",
+          "createdAt",
+          "updatedAt",
+          "applicationCount",
+          "isAnalyzed"
+        ],
+        "additionalProperties": false
+      },
+      "CloseJobResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh công việc (UUID)"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Tiêu đề tuyển dụng"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nội dung chi tiết của JD"
+          },
+          "requirements": {
+            "description": "Yêu cầu ứng viên",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng bắt buộc"
+          },
+          "preferredSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng ưu tiên"
+          },
+          "minYearsExperience": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Số năm kinh nghiệm tối thiểu"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "INTERN",
+              "JUNIOR",
+              "MIDDLE",
+              "SENIOR",
+              null
+            ],
+            "description": "Cấp độ vị trí tuyển dụng",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLOSED"
+            ],
+            "description": "Trạng thái tin tuyển dụng (OPEN hoặc CLOSED)"
+          },
+          "cvPassThreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Điểm sàn qua vòng CV (0-100)"
+          },
+          "interviewQuestionCount": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 5,
+            "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
+          },
+          "rubricWeights": {
+            "type": "object",
+            "properties": {
+              "technical": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số chuyên môn (%)"
+              },
+              "communication": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số giao tiếp (%)"
+              },
+              "relevance": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số độ phù hợp (%)"
+              },
+              "evidence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số minh chứng (%)"
+              }
+            },
+            "required": [
+              "technical",
+              "communication",
+              "relevance",
+              "evidence"
+            ],
+            "additionalProperties": false,
+            "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn"
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "ID người tạo (HR)"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm đăng tin (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+          },
+          "applicationCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Tổng số hồ sơ đã nộp vào tin tuyển dụng"
+          },
+          "isAnalyzed": {
+            "type": "boolean",
+            "description": "Đã được AI phân tích và tạo vector JD hay chưa"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "requirements",
+          "requiredSkills",
+          "preferredSkills",
+          "minYearsExperience",
+          "level",
+          "status",
+          "cvPassThreshold",
+          "interviewQuestionCount",
+          "rubricWeights",
+          "createdById",
+          "createdAt",
+          "updatedAt",
+          "applicationCount",
+          "isAnalyzed"
+        ],
         "additionalProperties": false
       },
       "ApplicationDto_Output": {
