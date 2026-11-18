@@ -9,17 +9,19 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HttpExceptionFilter } from '../../shared/filters/http-exception.filter.js';
 import { CV_MAX_SIZE_BYTES } from './applications.constant.js';
 import { ApplicationsController } from './applications.controller.js';
+import { CvTextExtractor } from './cv-text.extractor.js';
 
 /**
- * Gửi multipart thật qua Multer → CvUploadInterceptor → assertValidCvFile.
+ * Gửi multipart thật qua Multer → CvUploadInterceptor → assertValidCvFile → CvTextExtractor
+ * (unpdf thật) → HttpExceptionFilter.
  * Không bật JwtAuthGuard/RolesGuard (đã có test riêng ở module auth).
  */
-const REAL_PDF = readFileSync(
-  path.resolve(
-    import.meta.dirname,
-    '../../../../../packages/ai/fixtures/cvs/cv_be_01.pdf',
-  ),
+const FIXTURES = path.resolve(
+  import.meta.dirname,
+  '../../../../../packages/ai/fixtures/cvs',
 );
+const REAL_PDF = readFileSync(path.join(FIXTURES, 'cv_be_01.pdf'));
+const SCANNED_PDF = readFileSync(path.join(FIXTURES, 'scans/cv_scan_01.pdf'));
 const JOB_ID = 'd19e9185-1715-46a2-94b2-e1e779a1d123';
 const URL = `/jobs/${JOB_ID}/applications`;
 
@@ -30,6 +32,7 @@ describe('POST /jobs/:id/applications: nhận file CV', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [ApplicationsController],
       providers: [
+        CvTextExtractor,
         { provide: APP_PIPE, useClass: ZodValidationPipe },
         { provide: APP_FILTER, useClass: HttpExceptionFilter },
       ],
@@ -70,7 +73,10 @@ describe('POST /jobs/:id/applications: nhận file CV', () => {
       });
 
     expect(res.status).toBe(413);
-    expect(res.body.message).toBe('CV có dung lượng tối đa 5MB');
+    expect(res.body).toMatchObject({
+      message: 'CV có dung lượng tối đa 5MB',
+      code: 'CV_FILE_TOO_LARGE',
+    });
   });
 
   it('file .docx đổi đuôi .pdf → 400', async () => {
@@ -86,7 +92,10 @@ describe('POST /jobs/:id/applications: nhận file CV', () => {
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe('CV phải là file PDF');
+    expect(res.body).toMatchObject({
+      message: 'CV phải là file PDF',
+      code: 'CV_INVALID_FILE_TYPE',
+    });
   });
 
   it('không gửi file → 400', async () => {
@@ -95,7 +104,39 @@ describe('POST /jobs/:id/applications: nhận file CV', () => {
       .field('note', 'không có file');
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe('Vui lòng chọn file CV để nộp');
+    expect(res.body).toMatchObject({
+      message: 'Vui lòng chọn file CV để nộp',
+      code: 'CV_FILE_REQUIRED',
+    });
+  });
+
+  it('CV ảnh scan → 422 SCANNED', async () => {
+    const res = await request(app.getHttpServer())
+      .post(URL)
+      .attach('file', SCANNED_PDF, {
+        filename: 'cv_scan_01.pdf',
+        contentType: 'application/pdf',
+      });
+
+    expect(res.status).toBe(422);
+    expect(res.body.code).toBe('SCANNED');
+    expect(res.body.message).toMatch(/ảnh scan/);
+  });
+
+  it('PDF hỏng (có %PDF nhưng nội dung rác) → 422 CORRUPTED', async () => {
+    const broken = Buffer.concat([
+      Buffer.from('%PDF-1.7\n'),
+      Buffer.alloc(500, 0x41),
+    ]);
+    const res = await request(app.getHttpServer())
+      .post(URL)
+      .attach('file', broken, {
+        filename: 'broken.pdf',
+        contentType: 'application/pdf',
+      });
+
+    expect(res.status).toBe(422);
+    expect(res.body.code).toBe('CORRUPTED');
   });
 
   it('gửi file sai tên field → 400', async () => {

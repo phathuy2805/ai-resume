@@ -22,11 +22,14 @@ import {
 } from './applications.docs.js';
 import { ApplicationDto } from './applications.dto.js';
 import { assertValidCvFile } from './cv-file.validator.js';
+import { CvTextExtractor } from './cv-text.extractor.js';
 import { CvUploadInterceptor } from './cv-upload.interceptor.js';
 
 @ApiApplicationsController()
 @Controller()
 export class ApplicationsController {
+  constructor(private readonly cvTextExtractor: CvTextExtractor) {}
+
   @Roles(Role.CANDIDATE)
   @Post('jobs/:id/applications')
   @UseInterceptors(CvUploadInterceptor)
@@ -38,7 +41,10 @@ export class ApplicationsController {
   ): Promise<ApplicationDto> {
     assertValidCvFile(file);
 
-    // TODO(W1-BE-05 giai đoạn 4): thay dữ liệu mock bằng ApplicationsService.apply.
+    // TODO(W1-BE-05 giai đoạn 4): chuyển bước trích text vào ApplicationsService.apply
+    // (trước khi upload S3) và thay dữ liệu mock bên dưới.
+    await this.cvTextExtractor.extract(file.buffer);
+
     return {
       id: '7c9e6679-7425-40de-944b-e07fc1f90ae7',
       status: ApplicationStatus.SUBMITTED,

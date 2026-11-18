@@ -1,8 +1,10 @@
+import type { CvExtractionError } from '@hireflow/ai';
 import {
   BadRequestException,
   ConflictException,
   NotFoundException,
   PayloadTooLargeException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 
 /**
@@ -47,3 +49,17 @@ export const AlreadyAppliedException = new ConflictException({
   message: 'Bạn đã nộp CV vào tin tuyển dụng này',
   code: ApplicationErrorCode.ALREADY_APPLIED,
 });
+
+/**
+ * Lỗi do chính file CV (không đọc được chữ) → 422 để ứng viên sửa file rồi nộp lại.
+ * `code` là một trong EMPTY | SCANNED | ENCRYPTED | CORRUPTED | TOO_MANY_PAGES;
+ * thông báo lấy từ CV_EXTRACTION_MESSAGES_VI của @hireflow/ai để BE và FE thống nhất.
+ */
+export function toCvExtractionHttpException(
+  error: CvExtractionError,
+): UnprocessableEntityException {
+  return new UnprocessableEntityException({
+    message: error.messageVi,
+    code: error.code,
+  });
+}
