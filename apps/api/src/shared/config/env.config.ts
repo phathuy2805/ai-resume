@@ -15,30 +15,48 @@ if (existEnvPath) {
   process.exit(1);
 }
 
-export const envSchema = z.object({
-  NODE_ENV: z
-    .enum(['development', 'production', 'test'])
-    .default('development'),
-  PORT: z.coerce.number().default(3000),
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL là bắt buộc'),
-  DATABASE_URL_TEST: z.string().optional(),
-  POSTGRES_PORT: z.coerce.number().default(5432),
-  ACCESS_TOKEN_SECRET: z
-    .string()
-    .min(1, 'ACCESS_TOKEN_SECRET là bắt buộc')
-    .default('dev-access-secret'),
-  ACCESS_TOKEN_EXPIRES_IN: z.string().default('15m'),
-  REFRESH_TOKEN_SECRET: z
-    .string()
-    .min(1, 'REFRESH_TOKEN_SECRET là bắt buộc')
-    .default('dev-refresh-secret'),
-  REFRESH_TOKEN_EXPIRES_IN: z.string().default('7d'),
-  COOKIE_SECURE: z
-    .enum(['true', 'false'])
-    .default('false')
-    .transform((v) => v === 'true'),
-  FRONTEND_ORIGIN: z.string().default('http://localhost:5173'),
-});
+/** Biến tùy chọn: để trống trong .env (`KEY=`) coi như không khai báo. */
+const optionalString = z
+  .string()
+  .optional()
+  .transform((v) => v || undefined);
+
+export const envSchema = z
+  .object({
+    NODE_ENV: z
+      .enum(['development', 'production', 'test'])
+      .default('development'),
+    PORT: z.coerce.number().default(3000),
+    DATABASE_URL: z.string().min(1, 'DATABASE_URL là bắt buộc'),
+    DATABASE_URL_TEST: z.string().optional(),
+    POSTGRES_PORT: z.coerce.number().default(5432),
+    ACCESS_TOKEN_SECRET: z
+      .string()
+      .min(1, 'ACCESS_TOKEN_SECRET là bắt buộc')
+      .default('dev-access-secret'),
+    ACCESS_TOKEN_EXPIRES_IN: z.string().default('15m'),
+    REFRESH_TOKEN_SECRET: z
+      .string()
+      .min(1, 'REFRESH_TOKEN_SECRET là bắt buộc')
+      .default('dev-refresh-secret'),
+    REFRESH_TOKEN_EXPIRES_IN: z.string().default('7d'),
+    COOKIE_SECURE: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((v) => v === 'true'),
+    FRONTEND_ORIGIN: z.string().default('http://localhost:5173'),
+    // Amazon S3 (CV, audio, transcript). Dev: bucket hireflow-uploads-dev + key IAM user.
+    // Production: chỉ khai báo S3_BUCKET, S3_REGION; EC2 dùng IAM Role, không đặt key.
+    S3_BUCKET: z.string().min(1, 'S3_BUCKET là bắt buộc'),
+    S3_REGION: z.string().min(1, 'S3_REGION là bắt buộc'),
+    S3_ACCESS_KEY: optionalString,
+    S3_SECRET_KEY: optionalString,
+  })
+  .refine((env) => !env.S3_ACCESS_KEY === !env.S3_SECRET_KEY, {
+    message:
+      'Phải khai báo cả S3_ACCESS_KEY và S3_SECRET_KEY, hoặc bỏ trống cả hai',
+    path: ['S3_SECRET_KEY'],
+  });
 
 export type EnvConfig = z.infer<typeof envSchema>;
 

@@ -610,6 +610,7 @@
     },
     "/api/jobs/{id}/applications": {
       "post": {
+        "description": "Multipart form-data, field `file`: 1 file PDF, tối đa 5MB.\n\nCV được trích chữ ngay khi nộp; CV không đọc được (ảnh scan, có mật khẩu, hỏng...) bị từ chối với mã 422 để ứng viên nộp lại.\n\nLỗi có trường `code` để FE hiển thị thông báo theo mã.",
         "operationId": "ApplicationsController_apply",
         "parameters": [
           {
@@ -618,6 +619,8 @@
             "in": "path",
             "description": "Mã định danh công việc (Job UUID)",
             "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
               "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
               "type": "string"
             }
@@ -646,7 +649,7 @@
         },
         "responses": {
           "201": {
-            "description": "Nộp hồ sơ thành công, đưa vào hàng đợi AI Screening",
+            "description": "Nộp hồ sơ thành công, trạng thái SUBMITTED (không trả cvText, cvS3Key)",
             "content": {
               "application/json": {
                 "schema": {
@@ -662,6 +665,156 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Thiếu file, file không phải PDF, hoặc job id không đúng định dạng UUID",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "CV_FILE_REQUIRED": {
+                    "summary": "Vui lòng chọn file CV để nộp",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "Vui lòng chọn file CV để nộp",
+                      "code": "CV_FILE_REQUIRED",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  },
+                  "CV_INVALID_FILE_TYPE": {
+                    "summary": "CV phải là file PDF",
+                    "value": {
+                      "statusCode": 400,
+                      "message": "CV phải là file PDF",
+                      "code": "CV_INVALID_FILE_TYPE",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
+          },
+          "403": {
+            "description": "Chỉ tài khoản ứng viên (CANDIDATE) mới được gọi"
+          },
+          "404": {
+            "description": "Không tìm thấy tin tuyển dụng",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "JOB_NOT_FOUND": {
+                    "summary": "Không tìm thấy tin tuyển dụng",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy tin tuyển dụng",
+                      "code": "JOB_NOT_FOUND",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Tin tuyển dụng đã đóng, hoặc ứng viên đã nộp vào tin này",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "JOB_CLOSED": {
+                    "summary": "Tin tuyển dụng đã đóng, không thể nộp CV",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Tin tuyển dụng đã đóng, không thể nộp CV",
+                      "code": "JOB_CLOSED",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  },
+                  "ALREADY_APPLIED": {
+                    "summary": "Bạn đã nộp CV vào tin tuyển dụng này",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Bạn đã nộp CV vào tin tuyển dụng này",
+                      "code": "ALREADY_APPLIED",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "File lớn hơn 5MB",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "CV_FILE_TOO_LARGE": {
+                    "summary": "CV có dung lượng tối đa 5MB",
+                    "value": {
+                      "statusCode": 413,
+                      "message": "CV có dung lượng tối đa 5MB",
+                      "code": "CV_FILE_TOO_LARGE",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Không đọc được chữ trong CV. `code`: EMPTY | SCANNED | ENCRYPTED | CORRUPTED | TOO_MANY_PAGES",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "EMPTY": {
+                    "summary": "File CV không có nội dung. Vui lòng kiểm tra lại file.",
+                    "value": {
+                      "statusCode": 422,
+                      "message": "File CV không có nội dung. Vui lòng kiểm tra lại file.",
+                      "code": "EMPTY",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  },
+                  "SCANNED": {
+                    "summary": "CV có vẻ là ảnh scan hoặc ảnh chụp nên hệ thống không đọc được chữ. Vui lòng nộp file PDF xuất trực tiếp từ Word, Google Docs hoặc Canva.",
+                    "value": {
+                      "statusCode": 422,
+                      "message": "CV có vẻ là ảnh scan hoặc ảnh chụp nên hệ thống không đọc được chữ. Vui lòng nộp file PDF xuất trực tiếp từ Word, Google Docs hoặc Canva.",
+                      "code": "SCANNED",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  },
+                  "ENCRYPTED": {
+                    "summary": "File CV đang được đặt mật khẩu. Vui lòng gỡ mật khẩu rồi nộp lại.",
+                    "value": {
+                      "statusCode": 422,
+                      "message": "File CV đang được đặt mật khẩu. Vui lòng gỡ mật khẩu rồi nộp lại.",
+                      "code": "ENCRYPTED",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  },
+                  "CORRUPTED": {
+                    "summary": "File CV bị hỏng hoặc không phải PDF hợp lệ. Vui lòng xuất lại file rồi nộp lại.",
+                    "value": {
+                      "statusCode": 422,
+                      "message": "File CV bị hỏng hoặc không phải PDF hợp lệ. Vui lòng xuất lại file rồi nộp lại.",
+                      "code": "CORRUPTED",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  },
+                  "TOO_MANY_PAGES": {
+                    "summary": "CV dài quá số trang cho phép (tối đa 10 trang). Vui lòng rút gọn rồi nộp lại.",
+                    "value": {
+                      "statusCode": 422,
+                      "message": "CV dài quá số trang cho phép (tối đa 10 trang). Vui lòng rút gọn rồi nộp lại.",
+                      "code": "TOO_MANY_PAGES",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -669,7 +822,7 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Nộp CV ứng tuyển công việc (Multipart form-data, field: file)",
+        "summary": "Ứng viên nộp CV vào một tin tuyển dụng",
         "tags": [
           "Applications"
         ]
@@ -677,11 +830,12 @@
     },
     "/api/me/applications": {
       "get": {
+        "description": "Mới nhất trước, không phân trang. FE dùng để đánh dấu \"Đã nộp\" ở danh sách và chi tiết job.",
         "operationId": "ApplicationsController_getMyApplications",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Danh sách hồ sơ ứng tuyển của ứng viên (không trả cvText, cvKey)",
+            "description": "Danh sách hồ sơ (job, trạng thái, ngày nộp); không trả cvText, cvS3Key, link CV",
             "content": {
               "application/json": {
                 "schema": {
@@ -700,6 +854,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
+          },
+          "403": {
+            "description": "Chỉ tài khoản ứng viên (CANDIDATE) mới được gọi"
           }
         },
         "security": [
@@ -707,7 +867,7 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Lấy danh sách các đơn ứng tuyển của chính ứng viên đăng nhập",
+        "summary": "Danh sách hồ sơ ứng tuyển của chính ứng viên đăng nhập",
         "tags": [
           "Applications"
         ]
