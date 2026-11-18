@@ -41,6 +41,18 @@ describe('assertValidCvFile', () => {
     expect(() => assertValidCvFile(makeFile(REAL_PDF))).not.toThrow();
   });
 
+  it('có byte thừa trước %PDF (VD: xuống dòng ở đầu file) → hợp lệ', () => {
+    const withLeadingNewline = Buffer.concat([Buffer.from('\n'), REAL_PDF]);
+    expect(() => assertValidCvFile(makeFile(withLeadingNewline))).not.toThrow();
+  });
+
+  it('%PDF nằm sau 1024 byte đầu → CV_INVALID_FILE_TYPE', () => {
+    const late = Buffer.concat([Buffer.alloc(1024, 0x20), Buffer.from('%PDF')]);
+    expect(codeOf(() => assertValidCvFile(makeFile(late)))).toBe(
+      ApplicationErrorCode.CV_INVALID_FILE_TYPE,
+    );
+  });
+
   it('không có file → CV_FILE_REQUIRED', () => {
     expect(codeOf(() => assertValidCvFile(undefined))).toBe(
       ApplicationErrorCode.CV_FILE_REQUIRED,
