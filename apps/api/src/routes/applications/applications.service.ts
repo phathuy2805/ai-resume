@@ -73,6 +73,13 @@ export class ApplicationsService {
     }
   }
 
+  /** Hồ sơ của chính ứng viên (job, trạng thái, ngày nộp); không trả cvText, cvS3Key, link CV. */
+  async findMine(candidateId: string): Promise<ApplicationModel[]> {
+    const applications =
+      await this.applicationsRepo.findByCandidate(candidateId);
+    return applications.map(toApplicationDto);
+  }
+
   /** Lưu DB lỗi thì xóa file vừa upload; xóa lỗi chỉ ghi log để không che mất lỗi gốc. */
   private async deleteOrphanCv(key: string): Promise<void> {
     try {

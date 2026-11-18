@@ -10,7 +10,7 @@ import type { StorageService } from '../../shared/services/storage.service.js';
 import { ApplicationErrorCode } from './applications.error.js';
 import type {
   ApplicationsRepository,
-  ApplicationWithJob,
+  ApplicationSummary,
   CreateApplicationData,
 } from './applications.repository.js';
 import { ApplicationsService } from './applications.service.js';
@@ -31,22 +31,21 @@ const file = {
   mimetype: 'application/pdf',
 } as Express.Multer.File;
 
-function savedApplication(data: CreateApplicationData): ApplicationWithJob {
+/**
+ * Cố tình kèm cvText, cvS3Key (như khi lỡ đổi select thành include) để kiểm tra mapper
+ * không bao giờ trả chúng ra ngoài.
+ */
+function savedApplication(data: CreateApplicationData): ApplicationSummary {
   const now = new Date('2026-11-18T03:00:00.000Z');
   return {
     id: '33333333-3333-4333-8333-333333333333',
     ...data,
-    parsedCv: null,
     status: 'SUBMITTED',
-    screeningError: null,
     aiRecommendation: null,
-    hrDecisionById: null,
-    hrDecisionAt: null,
-    hrNote: null,
     createdAt: now,
     updatedAt: now,
     job: { id: OPEN_JOB.id, title: OPEN_JOB.title },
-  };
+  } as ApplicationSummary;
 }
 
 function uniqueViolation() {
@@ -61,11 +60,12 @@ function codeOf(error: unknown): string | undefined {
     ?.code;
 }
 
-describe('ApplicationsService.apply', () => {
+describe('ApplicationsService', () => {
   const repo = {
     findJobForApply: vi.fn(),
     existsByJobAndCandidate: vi.fn(),
     createWithHistory: vi.fn(),
+    findByCandidate: vi.fn(),
   };
   const storage = { putObject: vi.fn(), deleteObject: vi.fn() };
   const extractor = { extract: vi.fn() };
@@ -227,5 +227,48 @@ describe('ApplicationsService.apply', () => {
     await expect(service.apply(CANDIDATE_ID, JOB_ID, file)).rejects.toBe(
       dbError,
     );
+  });
+
+  describe('findMine', () => {
+    it('trả hồ sơ của đúng ứng viên, giữ thứ tự, không lộ cvText/cvS3Key', async () => {
+      const older = savedApplication({
+        jobId: JOB_ID,
+        candidateId: CANDIDATE_ID,
+        cvS3Key: 'cvs/a.pdf',
+        cvFileName: 'a.pdf',
+        cvSizeBytes: 1,
+        cvMimeType: 'application/pdf',
+        cvText: 'bí mật',
+      });
+      const newer = {
+        ...older,
+        id: '44444444-4444-4444-8444-444444444444',
+        status: 'SCREENED',
+        aiRecommendation: 'PASS',
+      } as ApplicationSummary;
+      repo.findByCandidate.mockResolvedValue([newer, older]);
+
+      const result = await service.findMine(CANDIDATE_ID);
+
+      expect(repo.findByCandidate).toHaveBeenCalledWith(CANDIDATE_ID);
+      expect(result.map((a) => a.id)).toEqual([newer.id, older.id]);
+      expect(result[0]).toMatchObject({
+        status: 'SCREENED',
+        aiRecommendation: 'PASS',
+        job: { id: JOB_ID, title: 'Backend NestJS' },
+        createdAt: '2026-11-18T03:00:00.000Z',
+      });
+      for (const item of result) {
+        expect(item).not.toHaveProperty('cvText');
+        expect(item).not.toHaveProperty('cvS3Key');
+        expect(item).not.toHaveProperty('cvUrl');
+      }
+    });
+
+    it('chưa nộp hồ sơ nào → mảng rỗng', async () => {
+      repo.findByCandidate.mockResolvedValue([]);
+
+      await expect(service.findMine(CANDIDATE_ID)).resolves.toEqual([]);
+    });
   });
 });

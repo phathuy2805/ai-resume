@@ -3,13 +3,25 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import { ApplicationStatus } from '../../shared/constants/application-status.enum.js';
 import { PrismaService } from '../../shared/services/prisma.service.js';
 
-/** Kèm thông tin tối thiểu của job để trả về cho ứng viên. */
-export const applicationWithJobInclude = {
+/**
+ * Các trường trả cho ứng viên, kèm thông tin tối thiểu của job.
+ * Dùng select (không include) để không đọc cvText (tới 20.000 ký tự), parsedCv, embedding
+ * khi chỉ cần hiển thị danh sách.
+ */
+export const applicationSummarySelect = {
+  id: true,
+  status: true,
+  cvFileName: true,
+  cvSizeBytes: true,
+  cvMimeType: true,
+  aiRecommendation: true,
+  createdAt: true,
+  updatedAt: true,
   job: { select: { id: true, title: true } },
-} satisfies Prisma.ApplicationInclude;
+} satisfies Prisma.ApplicationSelect;
 
-export type ApplicationWithJob = Prisma.ApplicationGetPayload<{
-  include: typeof applicationWithJobInclude;
+export type ApplicationSummary = Prisma.ApplicationGetPayload<{
+  select: typeof applicationSummarySelect;
 }>;
 
 export interface CreateApplicationData {
@@ -45,12 +57,21 @@ export class ApplicationsRepository {
     return found !== null;
   }
 
+  /** Hồ sơ của một ứng viên, mới nhất trước. */
+  findByCandidate(candidateId: string): Promise<ApplicationSummary[]> {
+    return this.prisma.application.findMany({
+      where: { candidateId },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: applicationSummarySelect,
+    });
+  }
+
   /** Tạo hồ sơ SUBMITTED và 1 dòng lịch sử trạng thái trong cùng transaction. */
-  createWithHistory(data: CreateApplicationData): Promise<ApplicationWithJob> {
+  createWithHistory(data: CreateApplicationData): Promise<ApplicationSummary> {
     return this.prisma.$transaction(async (tx) => {
       const application = await tx.application.create({
         data: { ...data, status: ApplicationStatus.SUBMITTED },
-        include: applicationWithJobInclude,
+        select: applicationSummarySelect,
       });
       await tx.applicationStatusHistory.create({
         data: {

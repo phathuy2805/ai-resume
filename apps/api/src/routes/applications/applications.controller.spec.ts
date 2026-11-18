@@ -40,7 +40,24 @@ const fakeRepo = {
     updatedAt: new Date(),
     job: { id: data.jobId, title: 'Backend NestJS' },
   }),
+  findByCandidate: async (candidateId: string) => [
+    {
+      id: '33333333-3333-4333-8333-333333333333',
+      candidateId,
+      status: 'SUBMITTED',
+      cvFileName: 'cv.pdf',
+      cvSizeBytes: 100,
+      cvMimeType: 'application/pdf',
+      cvText: 'không được trả ra',
+      cvS3Key: 'cvs/x.pdf',
+      aiRecommendation: null,
+      createdAt: new Date('2026-11-18T03:00:00.000Z'),
+      updatedAt: new Date('2026-11-18T03:00:00.000Z'),
+      job: { id: JOB_ID, title: 'Backend NestJS' },
+    },
+  ],
 };
+const CANDIDATE_ID = '11111111-1111-4111-8111-111111111111';
 const fakeStorage = {
   putObject: async () => undefined,
   deleteObject: async () => undefined,
@@ -54,7 +71,7 @@ const SCANNED_PDF = readFileSync(path.join(FIXTURES, 'scans/cv_scan_01.pdf'));
 const JOB_ID = 'd19e9185-1715-46a2-94b2-e1e779a1d123';
 const URL = `/jobs/${JOB_ID}/applications`;
 
-describe('POST /jobs/:id/applications: nhận file CV', () => {
+describe('ApplicationsController (HTTP)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -70,7 +87,31 @@ describe('POST /jobs/:id/applications: nhận file CV', () => {
       ],
     }).compile();
     app = moduleRef.createNestApplication();
+    // Thay JwtAuthGuard: gắn sẵn ứng viên đăng nhập cho @CurrentUser().
+    app.use((req: { user?: unknown }, _res: unknown, next: () => void) => {
+      req.user = { id: CANDIDATE_ID, email: 'c@x.vn', role: 'CANDIDATE' };
+      next();
+    });
     await app.init();
+  });
+
+  it('GET /me/applications → danh sách hồ sơ, không lộ cvText/cvS3Key', async () => {
+    const res = await request(app.getHttpServer()).get('/me/applications');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([
+      {
+        id: '33333333-3333-4333-8333-333333333333',
+        status: 'SUBMITTED',
+        job: { id: JOB_ID, title: 'Backend NestJS' },
+        cvFileName: 'cv.pdf',
+        cvSizeBytes: 100,
+        cvMimeType: 'application/pdf',
+        aiRecommendation: null,
+        createdAt: '2026-11-18T03:00:00.000Z',
+        updatedAt: '2026-11-18T03:00:00.000Z',
+      },
+    ]);
   });
 
   afterAll(async () => {
