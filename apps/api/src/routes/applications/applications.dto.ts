@@ -1,9 +1,5 @@
 import { createZodDto } from 'nestjs-zod';
-import {
-  ApplicationSchema,
-  JobSummarySchema,
-  UploadCvFileSchema,
-} from './applications.schema.js';
+import { ApplicationSchema, JobSummarySchema, UploadCvFileSchema } from './applications.schema.js';
 
 export class JobSummaryDto extends createZodDto(JobSummarySchema) {}
 

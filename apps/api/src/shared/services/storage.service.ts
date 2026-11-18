@@ -39,11 +39,7 @@ export class StorageService {
     });
   }
 
-  async putObject(
-    key: string,
-    body: Buffer,
-    contentType: string,
-  ): Promise<void> {
+  async putObject(key: string, body: Buffer, contentType: string): Promise<void> {
     await this.client.send(
       new PutObjectCommand({
         Bucket: this.bucket,
@@ -52,27 +48,18 @@ export class StorageService {
         ContentType: contentType,
       }),
     );
-    this.logger.log(
-      `Uploaded s3://${this.bucket}/${key} (${body.length} bytes)`,
-    );
+    this.logger.log(`Uploaded s3://${this.bucket}/${key} (${body.length} bytes)`);
   }
 
   async deleteObject(key: string): Promise<void> {
-    await this.client.send(
-      new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
-    );
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
     this.logger.log(`Deleted s3://${this.bucket}/${key}`);
   }
 
   /** Link xem file tạm thời (mặc định 10 phút). Bucket private nên đây là cách duy nhất để xem file. */
-  getSignedUrl(
-    key: string,
-    expiresInSec: number = SIGNED_URL_EXPIRES_SEC,
-  ): Promise<string> {
-    return getSignedUrl(
-      this.client,
-      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
-      { expiresIn: expiresInSec },
-    );
+  getSignedUrl(key: string, expiresInSec: number = SIGNED_URL_EXPIRES_SEC): Promise<string> {
+    return getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key }), {
+      expiresIn: expiresInSec,
+    });
   }
 }

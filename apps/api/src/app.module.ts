@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
@@ -21,6 +22,7 @@ import { SharedModule } from './shared/shared.module.js';
       validate: validateEnv,
       isGlobal: true,
     }),
+    EventEmitterModule.forRoot(),
     SharedModule,
     UsersModule,
     AuthModule,

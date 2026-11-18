@@ -5,7 +5,7 @@ import {
 } from '@hireflow/ai';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CvTextExtractor } from './cv-text.extractor.js';
+import { CvTextExtractor } from '../cv-text.extractor.js';
 
 const mocks = vi.hoisted(() => ({ extractCvText: vi.fn() }));
 
