@@ -14,8 +14,13 @@ export async function getJob(id: string, signal?: AbortSignal): Promise<Job> {
     (await apiClient.get<ApiResponse<Job>>(`/jobs/${encodeURIComponent(id)}`, { signal })).data,
   );
 }
-export async function getMyJobs(signal?: AbortSignal): Promise<Job[]> {
-  return unwrap((await apiClient.get<ApiResponse<Job[]>>('/jobs/mine', { signal })).data);
+export async function getMyJobs(
+  params: JobsParams = {},
+  signal?: AbortSignal,
+): Promise<PaginatedResponse<Job>> {
+  return paginated(
+    (await apiClient.get<PaginatedResponse<Job>>('/jobs/mine', { params, signal })).data,
+  );
 }
 export async function createJob(body: CreateJobRequest): Promise<Job> {
   return unwrap((await apiClient.post<ApiResponse<Job>>('/jobs', body)).data);

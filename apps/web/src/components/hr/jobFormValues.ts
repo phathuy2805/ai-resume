@@ -10,6 +10,9 @@ export type JobFormValues = Required<
     | 'minYearsExperience'
     | 'cvPassThreshold'
     | 'interviewQuestionCount'
+    | 'requirements'
+    | 'level'
+    | 'rubricWeights'
   >
 > & { status: JobStatus };
 
@@ -22,4 +25,7 @@ export const emptyJobForm: JobFormValues = {
   cvPassThreshold: 70,
   interviewQuestionCount: 3,
   status: 'OPEN',
+  requirements: null,
+  level: null,
+  rubricWeights: { technical: 40, communication: 20, relevance: 20, evidence: 20 },
 };

@@ -1,6 +1,8 @@
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Bot, Check, ClipboardList, Filter, Info } from 'lucide-react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Field } from '@/components/common/FormField';
@@ -10,6 +12,44 @@ import { emptyJobForm, type JobFormValues } from '@/components/hr/jobFormValues'
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input, Textarea } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { handleFormError } from '@/lib/errorUtils';
+
+const rubricWeightsSchema = z
+  .object({
+    technical: z.number().int().min(0).max(100),
+    communication: z.number().int().min(0).max(100),
+    relevance: z.number().int().min(0).max(100),
+    evidence: z.number().int().min(0).max(100),
+  })
+  .superRefine((weights, ctx) => {
+    if (weights.technical + weights.communication + weights.relevance + weights.evidence !== 100) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Tổng trọng số rubric phải bằng 100',
+        path: ['rubricWeights'],
+      });
+    }
+  });
+const jobSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().min(1).max(20000),
+  requirements: z.string().trim().max(10000).nullable(),
+  requiredSkills: z.array(z.string()).min(1).max(30),
+  preferredSkills: z.array(z.string()).max(30),
+  minYearsExperience: z.number().int().min(0).max(50),
+  level: z.enum(['INTERN', 'JUNIOR', 'MIDDLE', 'SENIOR']).nullable(),
+  cvPassThreshold: z.number().int().min(0).max(100),
+  interviewQuestionCount: z.number().int().min(3).max(5),
+  rubricWeights: rubricWeightsSchema,
+  status: z.enum(['OPEN', 'CLOSED']),
+});
 
 function Section({
   icon: Icon,
@@ -55,12 +95,40 @@ export default function JobForm({
     register,
     control,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
-  } = useForm<JobFormValues>({ defaultValues });
+  } = useForm<JobFormValues>({ defaultValues, resolver: zodResolver(jobSchema) });
   const threshold = useWatch({ control, name: 'cvPassThreshold' });
+  const rubric = useWatch({ control, name: 'rubricWeights' });
+  const rubricTotal =
+    (rubric?.technical ?? 0) +
+    (rubric?.communication ?? 0) +
+    (rubric?.relevance ?? 0) +
+    (rubric?.evidence ?? 0);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6 pb-24">
+    <form
+      onSubmit={handleSubmit(async (values) => {
+        try {
+          await onSubmit(values);
+        } catch (error) {
+          handleFormError(error, setError, [
+            'title',
+            'description',
+            'requirements',
+            'requiredSkills',
+            'preferredSkills',
+            'minYearsExperience',
+            'level',
+            'cvPassThreshold',
+            'interviewQuestionCount',
+            'rubricWeights',
+          ]);
+        }
+      })}
+      noValidate
+      className="flex flex-col gap-6 pb-24"
+    >
       <Section icon={ClipboardList} title="Thông tin chung" step="Phần 1/3">
         <Field
           id="title"
@@ -94,6 +162,36 @@ export default function JobForm({
             placeholder="Trách nhiệm công việc, yêu cầu kỹ thuật, môi trường làm việc..."
             aria-invalid={!!errors.description}
             {...register('description', { required: 'Vui lòng nhập mô tả công việc' })}
+          />
+        </Field>
+        <Field id="requirements" label="Yêu cầu ứng viên" error={errors.requirements?.message}>
+          <Textarea
+            id="requirements"
+            rows={4}
+            placeholder="Trình độ, bằng cấp, portfolio hoặc yêu cầu khác..."
+            {...register('requirements', { setValueAs: (value) => value?.trim() || null })}
+          />
+        </Field>
+        <Field id="level" label="Cấp độ">
+          <Controller
+            name="level"
+            control={control}
+            render={({ field }) => (
+              <Select
+                value={field.value ?? ''}
+                onValueChange={(value) => field.onChange(value || null)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn cấp độ" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="INTERN">Intern</SelectItem>
+                  <SelectItem value="JUNIOR">Junior</SelectItem>
+                  <SelectItem value="MIDDLE">Middle</SelectItem>
+                  <SelectItem value="SENIOR">Senior</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           />
         </Field>
       </Section>
@@ -148,7 +246,7 @@ export default function JobForm({
                 id="minYearsExperience"
                 type="number"
                 min={0}
-                max={30}
+                max={50}
                 className="h-[38px] pr-12"
                 {...register('minYearsExperience', {
                   valueAsNumber: true,
@@ -214,6 +312,46 @@ export default function JobForm({
             viên khi họ bắt đầu phỏng vấn.
           </p>
         </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {(
+            [
+              ['technical', 'Chuyên môn'],
+              ['communication', 'Giao tiếp'],
+              ['relevance', 'Mức độ phù hợp'],
+              ['evidence', 'Bằng chứng'],
+            ] as const
+          ).map(([name, label]) => (
+            <Field
+              key={name}
+              id={`rubricWeights.${name}`}
+              label={label}
+              error={errors.rubricWeights?.[name]?.message}
+            >
+              <Input
+                id={`rubricWeights.${name}`}
+                type="number"
+                min={0}
+                max={100}
+                {...register(`rubricWeights.${name}` as const, { valueAsNumber: true })}
+              />
+              <p className="text-xs text-muted-foreground">Trọng số {label.toLowerCase()} (%)</p>
+            </Field>
+          ))}
+        </div>
+        <div
+          className={
+            rubricTotal === 100
+              ? 'rounded-lg bg-emerald-50 p-3 text-sm font-medium text-emerald-700'
+              : 'rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700'
+          }
+        >
+          Tổng trọng số: {rubricTotal}% {rubricTotal === 100 ? '— Hợp lệ' : '— Cần bằng 100%'}
+        </div>
+        {errors.rubricWeights && (
+          <p className="text-xs text-destructive">
+            {errors.rubricWeights.message ?? 'Tổng trọng số rubric phải bằng 100'}
+          </p>
+        )}
       </Section>
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur md:left-60">
