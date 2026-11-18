@@ -35,11 +35,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useCloseJob, useMyJobs } from '@/hooks/useJobs';
 import { formatDate } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import type { Job, JobStatus } from '@/types/jobs';
 
 type StatusFilter = 'all' | JobStatus;
+
+const PAGE_SIZE = 10;
 
 export default function HRJobsPage() {
   const navigate = useNavigate();
@@ -47,16 +51,20 @@ export default function HRJobsPage() {
   const [status, setStatus] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
   const [closingJob, setClosingJob] = useState<Job | null>(null);
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
   const jobsQuery = useMyJobs({
     page,
-    limit: 10,
-    search: search.trim() || undefined,
+    limit: PAGE_SIZE,
+    search: debouncedSearch || undefined,
     status: status === 'all' ? undefined : status,
   });
   const closeJob = useCloseJob();
 
   const jobs = jobsQuery.data?.data ?? [];
   const meta = jobsQuery.data?.meta;
+  const totalPages = meta ? Math.max(1, Math.ceil(meta.total / meta.limit)) : 1;
+  // Filters active → keep the toolbar so the HR can clear them instead of seeing the empty state.
+  const hasFilters = search.trim() !== '' || status !== 'all';
 
   const createLink = (
     <Link to="/hr/jobs/new" className={buttonVariants()}>
@@ -81,7 +89,7 @@ export default function HRJobsPage() {
         <Card className="p-8 text-center text-sm text-destructive">
           Không thể tải danh sách tin tuyển dụng.
         </Card>
-      ) : jobs.length === 0 ? (
+      ) : jobs.length === 0 && !hasFilters ? (
         <EmptyState
           icon={BriefcaseBusiness}
           title="Chưa có tin tuyển dụng nào"
@@ -115,7 +123,10 @@ export default function HRJobsPage() {
               ]}
             />
           </Card>
-          <Card>
+          <Card
+            aria-busy={jobsQuery.isPlaceholderData}
+            className={cn('transition-opacity', jobsQuery.isPlaceholderData && 'opacity-60')}
+          >
             <Table>
               <TableHeader>
                 <tr>
@@ -153,25 +164,27 @@ export default function HRJobsPage() {
                       {formatDate(job.createdAt)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {job.status === 'OPEN' && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            aria-label="Thao tác"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-slate-100"
-                          >
-                            <MoreHorizontal className="h-[18px] w-[18px]" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          aria-label="Thao tác"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-slate-100"
+                        >
+                          <MoreHorizontal className="h-[18px] w-[18px]" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          {job.status === 'OPEN' && (
                             <DropdownMenuItem onClick={() => navigate(`/hr/jobs/${job.id}/edit`)}>
                               <Pencil />
                               Sửa
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => navigate(`/hr/candidates?jobId=${job.id}`)}
-                            >
-                              <Users />
-                              Xem ứng viên
-                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => navigate(`/hr/candidates?jobId=${job.id}`)}
+                          >
+                            <Users />
+                            Xem ứng viên
+                          </DropdownMenuItem>
+                          {job.status === 'OPEN' && (
                             <DropdownMenuItem
                               className="text-red-600"
                               onClick={() => setClosingJob(job)}
@@ -179,33 +192,42 @@ export default function HRJobsPage() {
                               <Ban />
                               Đóng tin
                             </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
+                {jobs.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-10 text-center text-muted-foreground">
+                      Không có tin tuyển dụng nào phù hợp với bộ lọc.
+                    </td>
+                  </tr>
+                )}
               </TableBody>
             </Table>
-            {meta && (
+            {meta && meta.total > 0 && (
               <div className="flex items-center justify-between border-t px-5 py-3 text-sm text-muted-foreground">
-                <span>Trang {meta.page}</span>
+                <span>
+                  Trang {meta.page} / {totalPages} · {meta.total} tin
+                </span>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     className="rounded-md border px-3 py-1.5 disabled:opacity-40"
-                    disabled={meta.page <= 1}
-                    onClick={() => setPage((value) => value - 1)}
+                    disabled={meta.page <= 1 || jobsQuery.isPlaceholderData}
+                    onClick={() => setPage((value) => Math.max(1, value - 1))}
                   >
-                    Previous
+                    Trước
                   </button>
                   <button
                     type="button"
                     className="rounded-md border px-3 py-1.5 disabled:opacity-40"
-                    disabled={meta.page * meta.limit >= meta.total}
+                    disabled={meta.page >= totalPages || jobsQuery.isPlaceholderData}
                     onClick={() => setPage((value) => value + 1)}
                   >
-                    Next
+                    Sau
                   </button>
                 </div>
               </div>

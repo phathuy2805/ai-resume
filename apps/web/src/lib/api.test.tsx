@@ -181,11 +181,13 @@ describe('transport and contracts', () => {
   });
   it('routes mine, updates, closes and applications to the documented endpoints', async () => {
     const calls: string[] = [];
+    const emptyPage = { data: [], meta: { page: 1, limit: 10, total: 0 } };
     apiClient.defaults.adapter = async (config) => {
       calls.push(`${config.method} ${config.url}`);
+      if (config.url === '/jobs/mine') return response(config, emptyPage);
       return response(config, { data: config.method === 'get' ? [] : job });
     };
-    expect(await getMyJobs()).toEqual([]);
+    expect(await getMyJobs()).toEqual(emptyPage);
     expect(await getMyApplications()).toEqual([]);
     await updateJob('job-1', { title: 'Updated' });
     await closeJob('job-1');

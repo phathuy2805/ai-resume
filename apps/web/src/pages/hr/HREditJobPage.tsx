@@ -1,5 +1,5 @@
 import { FileQuestion } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import EmptyState from '@/components/common/EmptyState';
 import PageHeader from '@/components/common/PageHeader';
@@ -40,8 +40,7 @@ export default function HREditJobPage() {
     );
   }
   if (job.status === 'CLOSED') {
-    navigate('/hr/jobs', { replace: true });
-    return null;
+    return <Navigate to="/hr/jobs" replace />;
   }
 
   const handleSubmit = async (values: JobFormValues) => {

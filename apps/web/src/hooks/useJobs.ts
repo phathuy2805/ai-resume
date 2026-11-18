@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -32,6 +33,8 @@ export function useMyJobs(params: JobsParams = {}) {
   return useQuery({
     queryKey: [...queryKeys.jobs.mine(), params] as const,
     queryFn: ({ signal }) => getMyJobs(params, signal),
+    // Keep the current page on screen while the next search/filter/page loads.
+    placeholderData: keepPreviousData,
   });
 }
 export function useJob(id: string) {
