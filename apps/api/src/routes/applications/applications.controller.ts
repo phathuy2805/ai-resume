@@ -21,44 +21,26 @@ import {
   ApiGetMyApplicationsDoc,
 } from './applications.docs.js';
 import { ApplicationDto } from './applications.dto.js';
+import { ApplicationsService } from './applications.service.js';
 import { assertValidCvFile } from './cv-file.validator.js';
-import { CvTextExtractor } from './cv-text.extractor.js';
 import { CvUploadInterceptor } from './cv-upload.interceptor.js';
 
 @ApiApplicationsController()
 @Controller()
 export class ApplicationsController {
-  constructor(private readonly cvTextExtractor: CvTextExtractor) {}
+  constructor(private readonly applicationsService: ApplicationsService) {}
 
   @Roles(Role.CANDIDATE)
   @Post('jobs/:id/applications')
   @UseInterceptors(CvUploadInterceptor)
   @ApiApplyJobDoc()
   async apply(
-    @CurrentUser('id') _candidateId: string,
+    @CurrentUser('id') candidateId: string,
     @Param() params: JobIdParamDto,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ApplicationDto> {
     assertValidCvFile(file);
-
-    // TODO(W1-BE-05 giai đoạn 4): chuyển bước trích text vào ApplicationsService.apply
-    // (trước khi upload S3) và thay dữ liệu mock bên dưới.
-    await this.cvTextExtractor.extract(file.buffer);
-
-    return {
-      id: '7c9e6679-7425-40de-944b-e07fc1f90ae7',
-      status: ApplicationStatus.SUBMITTED,
-      job: {
-        id: params.id,
-        title: 'Senior Backend NodeJS / NestJS Developer',
-      },
-      cvFileName: file.originalname,
-      cvSizeBytes: file.size,
-      cvMimeType: file.mimetype,
-      aiRecommendation: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    return this.applicationsService.apply(candidateId, params.id, file);
   }
 
   @Roles(Role.CANDIDATE)

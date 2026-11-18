@@ -13,9 +13,12 @@ import { CvFileTooLargeException } from './applications.error.js';
 /**
  * Multer giữ file trong bộ nhớ (không khai báo storage/dest), chỉ nhận 1 file ở field "file".
  * Giới hạn dung lượng ngay khi đọc request để file quá lớn không bị đọc hết vào RAM.
+ * defParamCharset utf8: trình duyệt gửi tên file UTF-8; mặc định latin1 của Multer làm hỏng
+ * tên tiếng Việt (VD: "CV_Nguyễn_Văn_A.pdf").
  */
 const MulterCvInterceptor = FileInterceptor(CV_FILE_FIELD, {
   limits: { fileSize: CV_MAX_SIZE_BYTES, files: 1 },
+  defParamCharset: 'utf8',
 });
 
 /**

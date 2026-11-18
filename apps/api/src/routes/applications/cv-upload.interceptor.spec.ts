@@ -7,15 +7,44 @@ import path from 'node:path';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HttpExceptionFilter } from '../../shared/filters/http-exception.filter.js';
+import { JobStatus } from '../../shared/constants/job.constant.js';
+import { StorageService } from '../../shared/services/storage.service.js';
 import { CV_MAX_SIZE_BYTES } from './applications.constant.js';
 import { ApplicationsController } from './applications.controller.js';
+import {
+  ApplicationsRepository,
+  type CreateApplicationData,
+} from './applications.repository.js';
+import { ApplicationsService } from './applications.service.js';
 import { CvTextExtractor } from './cv-text.extractor.js';
 
 /**
- * Gửi multipart thật qua Multer → CvUploadInterceptor → assertValidCvFile → CvTextExtractor
- * (unpdf thật) → HttpExceptionFilter.
+ * Gửi multipart thật qua Multer → CvUploadInterceptor → assertValidCvFile → ApplicationsService
+ * → CvTextExtractor (unpdf thật) → HttpExceptionFilter.
+ * DB và S3 là bản giả (logic lưu hồ sơ đã có test ở applications.service.spec.ts).
  * Không bật JwtAuthGuard/RolesGuard (đã có test riêng ở module auth).
  */
+const fakeRepo = {
+  findJobForApply: async (id: string) => ({
+    id,
+    title: 'Backend NestJS',
+    status: JobStatus.OPEN,
+  }),
+  existsByJobAndCandidate: async () => false,
+  createWithHistory: async (data: CreateApplicationData) => ({
+    id: '33333333-3333-4333-8333-333333333333',
+    ...data,
+    status: 'SUBMITTED',
+    aiRecommendation: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    job: { id: data.jobId, title: 'Backend NestJS' },
+  }),
+};
+const fakeStorage = {
+  putObject: async () => undefined,
+  deleteObject: async () => undefined,
+};
 const FIXTURES = path.resolve(
   import.meta.dirname,
   '../../../../../packages/ai/fixtures/cvs',
@@ -32,7 +61,10 @@ describe('POST /jobs/:id/applications: nhận file CV', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [ApplicationsController],
       providers: [
+        ApplicationsService,
         CvTextExtractor,
+        { provide: ApplicationsRepository, useValue: fakeRepo },
+        { provide: StorageService, useValue: fakeStorage },
         { provide: APP_PIPE, useClass: ZodValidationPipe },
         { provide: APP_FILTER, useClass: HttpExceptionFilter },
       ],
@@ -55,9 +87,25 @@ describe('POST /jobs/:id/applications: nhận file CV', () => {
 
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({
+      status: 'SUBMITTED',
+      job: { id: JOB_ID, title: 'Backend NestJS' },
       cvFileName: 'cv_be_01.pdf',
       cvSizeBytes: REAL_PDF.length,
     });
+    expect(res.body).not.toHaveProperty('cvText');
+    expect(res.body).not.toHaveProperty('cvS3Key');
+  });
+
+  it('tên file tiếng Việt giữ nguyên dấu', async () => {
+    const res = await request(app.getHttpServer())
+      .post(URL)
+      .attach('file', REAL_PDF, {
+        filename: 'CV_Nguyễn_Văn_Ánh.pdf',
+        contentType: 'application/pdf',
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.cvFileName).toBe('CV_Nguyễn_Văn_Ánh.pdf');
   });
 
   it('file > 5MB → 413 với thông báo tiếng Việt', async () => {
