@@ -23,9 +23,7 @@ const optionalString = z
 
 export const envSchema = z
   .object({
-    NODE_ENV: z
-      .enum(['development', 'production', 'test'])
-      .default('development'),
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     PORT: z.coerce.number().default(3000),
     DATABASE_URL: z.string().min(1, 'DATABASE_URL là bắt buộc'),
     DATABASE_URL_TEST: z.string().optional(),
@@ -53,8 +51,7 @@ export const envSchema = z
     S3_SECRET_KEY: optionalString,
   })
   .refine((env) => !env.S3_ACCESS_KEY === !env.S3_SECRET_KEY, {
-    message:
-      'Phải khai báo cả S3_ACCESS_KEY và S3_SECRET_KEY, hoặc bỏ trống cả hai',
+    message: 'Phải khai báo cả S3_ACCESS_KEY và S3_SECRET_KEY, hoặc bỏ trống cả hai',
     path: ['S3_SECRET_KEY'],
   });
 

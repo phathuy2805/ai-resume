@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { ApplicationStatus } from '../../shared/constants/application-status.enum.js';
 import { JobStatus } from '../../shared/constants/job.constant.js';
 import { isUniqueConstraintPrismaError } from '../../shared/helper.js';
 import type { ApplicationModel } from '../../shared/models/application.model.js';
+import { ApplicationStateService } from '../../shared/services/application-state.service.js';
 import { StorageService } from '../../shared/services/storage.service.js';
 import { CV_MIME_TYPE } from './applications.constant.js';
 import {
@@ -22,6 +24,7 @@ export class ApplicationsService {
     private readonly applicationsRepo: ApplicationsRepository,
     private readonly storage: StorageService,
     private readonly cvTextExtractor: CvTextExtractor,
+    private readonly applicationStateService: ApplicationStateService,
   ) {}
 
   /**
@@ -41,9 +44,7 @@ export class ApplicationsService {
     if (job.status !== JobStatus.OPEN) {
       throw JobClosedException;
     }
-    if (
-      await this.applicationsRepo.existsByJobAndCandidate(jobId, candidateId)
-    ) {
+    if (await this.applicationsRepo.existsByJobAndCandidate(jobId, candidateId)) {
       throw AlreadyAppliedException;
     }
 
@@ -62,6 +63,15 @@ export class ApplicationsService {
         cvMimeType: CV_MIME_TYPE,
         cvText,
       });
+
+      this.applicationStateService.emitStatusChanged({
+        applicationId: application.id,
+        jobId,
+        fromStatus: null,
+        toStatus: ApplicationStatus.SUBMITTED,
+        actorId: candidateId,
+      });
+
       return toApplicationDto(application);
     } catch (error) {
       await this.deleteOrphanCv(cvS3Key);
@@ -75,8 +85,7 @@ export class ApplicationsService {
 
   /** Hồ sơ của chính ứng viên (job, trạng thái, ngày nộp); không trả cvText, cvS3Key, link CV. */
   async findMine(candidateId: string): Promise<ApplicationModel[]> {
-    const applications =
-      await this.applicationsRepo.findByCandidate(candidateId);
+    const applications = await this.applicationsRepo.findByCandidate(candidateId);
     return applications.map(toApplicationDto);
   }
 
