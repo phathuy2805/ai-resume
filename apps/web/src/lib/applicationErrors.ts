@@ -1,5 +1,9 @@
 import { toApiError } from './apiError';
 const messages: Record<string, string> = {
+  CV_FILE_REQUIRED: 'Vui lòng chọn file CV để nộp.',
+  CV_INVALID_FILE_TYPE: 'CV phải là file PDF. Hãy xuất lại CV sang PDF rồi nộp lại.',
+  CV_FILE_TOO_LARGE: 'CV có dung lượng tối đa 5MB. Hãy giảm dung lượng rồi nộp lại.',
+  JOB_NOT_FOUND: 'Tin tuyển dụng không còn tồn tại.',
   SCANNED:
     'CV là bản scan. Hãy xuất lại PDF từ Word hoặc Google Docs để có thể chọn và sao chép chữ.',
   ENCRYPTED: 'PDF đang được bảo vệ bằng mật khẩu. Hãy bỏ mật khẩu rồi nộp lại.',

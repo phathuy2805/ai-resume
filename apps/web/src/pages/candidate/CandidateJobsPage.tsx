@@ -18,7 +18,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { getJobs } from '@/api/jobs';
 import { queryKeys } from '@/api/queryKeys';
 import type { Application } from '@/types/applications';
-import type { Job } from '@/types/jobs';
+import type { PublicJob as Job } from '@/types/jobs';
 
 const toneBadge: Record<CandidateTone, BadgeVariant> = {
   neutral: 'secondary',
@@ -193,12 +193,13 @@ function MyApplicationsCard({ applications }: { applications: Application[] }) {
 const LIMIT = 6;
 export default function CandidateJobsPage() {
   const [url, setUrl] = useSearchParams();
-  const search = url.get('search') ?? '';
+  const search = (url.get('search') ?? '').slice(0, 200);
   const debounced = useDebouncedValue(search, 300);
   const rawPage = Number(url.get('page') ?? 1);
   const page = Number.isSafeInteger(rawPage) && rawPage >= 1 ? rawPage : 1;
   const pendingSearch = search !== debounced;
-  const params = { status: 'OPEN' as const, search: debounced.trim(), page, limit: LIMIT };
+  // BE-04's public endpoint returns OPEN jobs; status is only an HR filter.
+  const params = { search: debounced.trim(), page, limit: LIMIT };
   const jobs = useQuery({
     queryKey: queryKeys.jobs.list(params),
     queryFn: ({ signal }) => getJobs(params, signal),
@@ -228,6 +229,7 @@ export default function CandidateJobsPage() {
         <SearchInput
           aria-label="Tìm việc theo tên"
           placeholder="Tìm theo tên công việc…"
+          maxLength={200}
           value={search}
           onChange={(event) => {
             const next = new URLSearchParams(url);

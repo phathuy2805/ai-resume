@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { logout } from '@/api/auth';
+import { useAuth } from '@/providers/auth-context';
 import { notifyError } from '@/lib/errorUtils';
 import { candidateLoginUrl } from '@/lib/loginRedirect';
 
@@ -18,6 +18,7 @@ export default function UserMenu({ showDetails = true }: { showDetails?: boolean
   const navigate = useNavigate();
   const location = useLocation();
   const session = useCurrentUser();
+  const { logout } = useAuth();
   const [leaving, setLeaving] = useState(false);
   const user = session.user;
   if (session.isLoading) return <span className="text-sm">Đang tải tài khoản…</span>;

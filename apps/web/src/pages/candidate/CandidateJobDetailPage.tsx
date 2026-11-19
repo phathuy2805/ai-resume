@@ -30,13 +30,15 @@ export default function CandidateJobDetailPage() {
     meta: { errorMode: 'local' },
   });
   const job = query.data;
+  // BE-04 rejects malformed UUIDs with 400 and missing/closed jobs with 404.
+  const notFound = query.error instanceof ApiError && [400, 404].includes(query.error.status ?? 0);
   if (query.isPending && id) return <p role="status">Đang tải thông tin việc làm…</p>;
-  if (query.isError && !(query.error instanceof ApiError && query.error.status === 404)) {
+  if (query.isError && !notFound) {
     return (
       <QueryError message="Không tải được thông tin việc làm." retry={() => void query.refetch()} />
     );
   }
-  if (!job || (query.error instanceof ApiError && query.error.status === 404)) {
+  if (!job || notFound) {
     return (
       <EmptyState
         icon={FileQuestion}
@@ -99,6 +101,13 @@ export default function CandidateJobDetailPage() {
               ))}
             </ul>
           </Card>
+
+          {job.requirements && (
+            <Card className="p-6">
+              <h2 className="mb-3 text-card-title">Yêu cầu ứng viên</h2>
+              <p className="whitespace-pre-line leading-relaxed">{job.requirements}</p>
+            </Card>
+          )}
 
           <Card className="flex flex-col gap-4 p-6">
             <h2 className="flex items-center gap-1.5 text-card-title text-foreground">

@@ -16,7 +16,7 @@ import { applicationFailure } from '@/lib/applicationErrors';
 import { candidateLoginUrl } from '@/lib/loginRedirect';
 import { formatFileSize } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import type { Job } from '@/types/jobs';
+import type { PublicJob as Job } from '@/types/jobs';
 
 export default function ApplyCard({ job }: { job: Job }) {
   const session = useCurrentUser();

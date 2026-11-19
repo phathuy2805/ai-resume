@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/build
+**/.next
+**/.turbo
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+README.md
+docs
+specs
+docker

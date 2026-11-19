@@ -5,19 +5,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
-import envConfig from '../config/env.config.js';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
-import type {
-  AuthenticatedUser,
-  JwtAccessPayload,
-} from '../types/auth.type.js';
+import { TokenService } from '../services/token.service.js';
+import type { AuthenticatedUser } from '../types/auth.type.js';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
-    private readonly jwtService: JwtService,
+    private readonly tokenService: TokenService,
     private readonly reflector: Reflector,
   ) {}
 
@@ -30,19 +26,14 @@ export class JwtAuthGuard implements CanActivate {
       return true;
     }
 
-    const request = context
-      .switchToHttp()
-      .getRequest<Request & { user?: AuthenticatedUser }>();
+    const request = context.switchToHttp().getRequest<Request & { user?: AuthenticatedUser }>();
     const token = this.extractBearerToken(request);
     if (!token) {
       throw new UnauthorizedException('Vui lòng đăng nhập để tiếp tục');
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync<JwtAccessPayload>(
-        token,
-        { secret: envConfig.ACCESS_TOKEN_SECRET },
-      );
+      const payload = await this.tokenService.verifyAccessToken(token);
       request.user = {
         id: payload.sub,
         email: payload.email,

@@ -1,0 +1,72 @@
+services:
+  # 1. Database PostgreSQL + pgvector
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: hireflow_db
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-ai_resume}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hireflow_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 2. Backend NestJS
+  api:
+    image: ghcr.io/${GH_OWNER}/hireflow-api:latest
+    container_name: hireflow_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - hireflow_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 3. Frontend Web + Caddy (Tự động HTTPS)
+  web:
+    image: ghcr.io/${GH_OWNER}/hireflow-web:latest
+    container_name: hireflow_web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    networks:
+      - hireflow_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  hireflow_net:
+    driver: bridge

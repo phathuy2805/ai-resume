@@ -1,6 +1,6 @@
 # W1-FE-03 — Tầng API dùng chung
 
-Luồng ứng viên W1-FE-06: xem [W1-FE-06.md](./W1-FE-06.md) để chạy mock riêng, kiểm tra tìm kiếm/nộp CV và xem các phụ thuộc BE-04/05 còn chờ.
+Luồng ứng viên W1-FE-06: xem [W1-FE-06.md](./W1-FE-06.md) để chạy BE-04/05 thật, kiểm tra tìm kiếm/nộp CV với S3 và xem checklist đã nghiệm thu ngày 19/11/2026. Mock chỉ là tùy chọn.
 
 Phần nền cho W1-FE-04/05/06: transport, types, Query, helpers và hook mẫu. Không xây UI nghiệp vụ hay backend. Đã tích hợp refresh cookie với contract W1-BE-03; AuthProvider và UI đăng nhập nghiệp vụ thuộc W1-FE-04.
 
@@ -37,17 +37,17 @@ Chưa được cung cấp URL/tài khoản/quyền truy cập Apidog. Prefix có
 Đối chiếu OpenAPI, DTO/controller, `TransformInterceptor` và `HttpExceptionFilter` của BE:
 
 - Axios giữ `AxiosResponse<ApiResponse<T>>`; API module unwrap đúng **một** envelope thành `T`.
-- `getJobs(params)` trả `{ data: Job[], meta: { page, limit, total, totalPages? } }`.
-- `getMyJobs()` và `getMyApplications()` trả mảng đã unwrap, chưa có phân trang trong DTO.
+- `getJobs(params)` trả `{ data: PublicJob[], meta: { page, limit, total, totalPages? } }`.
+- `getMyApplications()` trả mảng đã unwrap. BE-04 bổ sung phân trang cho GET /jobs/mine; helper `getMyJobs()` hiện giữ mảng data của trang mặc định và bỏ meta. FE-06 không dùng endpoint HR này.
 - Lỗi chuyển thành `ApiError`: `status` lấy từ HTTP response, `message` ưu tiên BE, `errors` là `string[]`, `kind` phân biệt http/network/cancelled/unknown/contract. Exception JavaScript không được coi là mất mạng.
 - Response thiếu envelope hoặc pagination meta báo lỗi contract; không fallback nhận cả dữ liệu trần và `{ data }`.
-- Types ở `src/types/{api,auth,jobs,applications}.ts`. `rubricWeights` đầu vào cho phép thiếu thành phần vì DTO Zod có default từng trọng số; output đủ thành phần nếu trường này có mặt.
+- Types ở `src/types/{api,auth,jobs,applications}.ts`. BE-04 cho bỏ toàn bộ rubricWeights để dùng mặc định; nếu gửi thì phải có đủ bốn thành phần và tổng 100.
 
-### Chênh lệch cần Huy xử lý
+### Cập nhật contract trên main 824a8fb
 
-Swagger mô tả auth register/login/me, job detail/create/update/close và upload application là DTO trần; jobs/mine và me/applications là mảng trần; logout là `{ message }`. Thực tế interceptor bọc tất cả trong `{ data }`. GET jobs đã có `{ data, meta }` nên được giữ nguyên. Huy cần cập nhật Swagger để import mock không sinh response sai.
+BE đã cập nhật Swagger envelope để khớp TransformInterceptor: response đơn/mảng được bọc data; response phân trang giữ data và meta. Khi import Apidog dùng openapi.json mới.
 
-Error filter trả `{ statusCode, message, errors?: string[], timestamp? }`, validation thường là `field: message`; Swagger chưa mô tả đầy đủ response lỗi. Cần schema lỗi và ví dụ field lồng nhau.
+Error filter trả `{ statusCode, message, errors?: string[], code?: string, timestamp? }`, validation thường là `field: message`. FE-06 đọc code cho lỗi nghiệp vụ upload; xem bảng mã trong W1-FE-06.md.
 
 RegisterSchema và RegisterRequest chỉ cho đăng ký HR/CANDIDATE. Role của UserProfile vẫn có ADMIN để đọc tài khoản quản trị đã được cấp.
 
@@ -59,7 +59,7 @@ W1-BE-03 dùng JWT và cookie HttpOnly `refresh_token`, path `/api/auth`, SameSi
 
 `tokenStore` giữ accessToken trong bộ nhớ; không localStorage/sessionStorage/persisted cache. Bearer tính lại cho từng request. Login/logout đổi phiên và làm vô hiệu request cũ; rotation chỉ thay accessToken trong cùng phiên.
 
-`main.tsx` cài lifecycle handler rồi khôi phục phiên một lần trước khi render App (ngoài StrictMode). `refreshSession()`/`refresh()` từ `@/api/auth` gửi POST `/auth/refresh` với body `{}` qua transport riêng không có interceptor refresh. Promise dùng chung cho các lời gọi đồng thời. Kết quả chỉ chứa accessToken và user.
+`main.tsx` cài lifecycle handler; AuthProvider của FE-04 sở hữu khôi phục phiên và getMe. Provider dùng chung promise trong StrictMode. `refreshSession()`/`refresh()` từ `@/api/auth` gửi POST `/auth/refresh` với body `{}` qua transport riêng không có interceptor refresh. Promise dùng chung cho các lời gọi đồng thời. Kết quả chỉ chứa accessToken và user.
 
 ```ts
 import { refreshSession } from '@/api/auth';
@@ -67,7 +67,7 @@ import { refreshSession } from '@/api/auth';
 const { user } = await refreshSession();
 ```
 
-Khi tích hợp AuthProvider, chuyển quyền khôi phục phiên từ bootstrap hiện tại sang provider; không giữ cả hai lần gọi tuần tự vì mỗi lần sẽ rotate cookie. Subscribe `onSessionExpired()` để xóa user trong provider; nhớ unsubscribe. UI đăng nhập hiện còn là placeholder, chưa kết nối API.
+AuthProvider đã tích hợp; không gọi initializeSession thêm ở main. Provider theo dõi tokenStore để xóa danh tính khi hết phiên. UI login/register/logout đã nối API của FE-04, giữ returnTo cho luồng nộp CV.
 
 - Request có Bearer nhận 401: đợi một refresh chung rồi gửi lại tối đa một lần, giữ body/params/FormData/signal.
 - Request mới đợi refresh đang chạy. 401 trả về trễ của token cũ dùng token mới, không rotate thêm.
@@ -88,7 +88,7 @@ Local HTTP dùng `COOKIE_SECURE=false`; production HTTPS dùng `true`. Proxy gi�
 import { getJobs, getJob } from '@/api/jobs';
 import { notifyError } from '@/lib/errorUtils';
 try {
-  const { data: jobs, meta } = await getJobs({ page: 1, limit: 10, search: 'SQL', status: 'OPEN' });
+  const { data: jobs, meta } = await getJobs({ page: 1, limit: 10, search: 'SQL' });
   console.log(jobs, meta.total);
   const detail = await getJob('job-uuid');
   console.log(detail.title); // không cần .data.data
@@ -173,7 +173,7 @@ FormData dùng field `file`, không tự đặt Content-Type/boundary. Upload 10
 Kiểm tra thủ công với BE local và trình duyệt:
 
 1. Chạy PostgreSQL và BE W1-BE-03; chạy `npm run dev -w apps/web`.
-2. Trong console của Vite dev, dùng `const auth = await import('/src/api/auth.ts')`, rồi `await auth.login({ email: 'tài-khoản-test', password: 'mật-khẩu-test' })`. Không dùng form placeholder để kết luận API đã gọi.
+2. Đăng nhập bằng form FE-04 để cập nhật AuthProvider. Trong console Vite dev, dùng `const auth = await import('/src/api/auth.ts')` cho các bước gọi getMe tiếp theo.
 3. DevTools Application/Cookies: `refresh_token` là HttpOnly, path `/api/auth`; FE storage không chứa token.
 4. Với tài khoản test, cấu hình BE access token TTL ngắn, restart và login lại. Sau khi token hết hạn, gọi đồng thời `Promise.all([auth.getMe(), auth.getMe(), auth.getMe()])`. Network phải có một refresh và các request replay thành công.
 5. Reload: bootstrap refresh thành công; gọi getMe nhận được user. Không in token lên log hoặc đưa token vào ảnh chụp.

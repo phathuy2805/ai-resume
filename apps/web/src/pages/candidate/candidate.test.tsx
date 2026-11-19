@@ -21,6 +21,11 @@ import { safeCandidateReturnTo } from '@/lib/loginRedirect';
 import type { Job } from '@/types/jobs';
 import type { Application } from '@/types/applications';
 import type { UserProfile } from '@/types/auth';
+import AuthProvider from '@/providers/AuthProvider';
+import { StrictMode } from 'react';
+import { expireSession } from '@/lib/session';
+import { getSessionVersion } from '@/lib/tokenStore';
+import { GuestRoute } from '@/routes/guards';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 const originalAdapter = apiClient.defaults.adapter;
@@ -93,6 +98,10 @@ beforeEach(() => {
   uploadError = undefined;
   appsFail = false;
   uploadGate = undefined;
+  authTransport.defaults.adapter = async (config) => {
+    if (config.url === '/auth/refresh') reject(config, 401);
+    return reply(config, { data: { accessToken: 'logged-in', user } });
+  };
   client = createQueryClient();
   client.setDefaultOptions({
     queries: { retry: false, staleTime: 30_000 },
@@ -147,14 +156,20 @@ function Location() {
 function mount(path = '/candidate/jobs/job-1') {
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route path="/candidate/jobs" element={<CandidateJobsPage />} />
-          <Route path="/candidate/jobs/:id" element={<CandidateJobDetailPage />} />
-          <Route path="/login" element={<LoginPage />} />
-        </Routes>
-        <Location />
-      </MemoryRouter>
+      <StrictMode>
+        <AuthProvider>
+          <MemoryRouter initialEntries={[path]}>
+            <Routes>
+              <Route path="/candidate/jobs" element={<CandidateJobsPage />} />
+              <Route path="/candidate/jobs/:id" element={<CandidateJobDetailPage />} />
+              <Route element={<GuestRoute />}>
+                <Route path="/login" element={<LoginPage />} />
+              </Route>
+            </Routes>
+            <Location />
+          </MemoryRouter>
+        </AuthProvider>
+      </StrictMode>
     </QueryClientProvider>,
   );
 }
@@ -170,6 +185,32 @@ function choose(file = new File(['%PDF-1.4 test'], 'cv.pdf', { type: 'applicatio
 const posts = () => calls.filter((call) => call.method === 'post');
 
 describe('candidate jobs', () => {
+  it('renders BE-04 requirements and level without requiring private HR fields', async () => {
+    rows[0] = {
+      ...template,
+      requirements: 'Build reliable APIs and review code.',
+      level: 'SENIOR',
+    };
+    mount();
+    await screen.findByText('Cấp độ: SENIOR');
+    expect(screen.getByText('Build reliable APIs and review code.')).toBeTruthy();
+  });
+  it('restores one refresh rotation in StrictMode and removes identity on expiration', async () => {
+    let rotations = 0;
+    authTransport.defaults.adapter = async (config) => {
+      rotations++;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return reply(config, { data: { accessToken: 'restored', user: profile } });
+    };
+    mount();
+    await screen.findByRole('button', { name: 'Nộp CV' });
+    expect(rotations).toBe(1);
+    act(() => {
+      expireSession(getSessionVersion());
+    });
+    await screen.findByRole('link', { name: 'Đăng nhập để nộp CV' });
+    expect(screen.queryByRole('button', { name: 'Nộp CV' })).toBeNull();
+  });
   it('debounces search for 300ms and resets pagination using the URL', async () => {
     rows = Array.from({ length: 7 }, (_, index) => ({
       ...template,
@@ -191,7 +232,6 @@ describe('candidate jobs', () => {
     expect(requests[1].params).toMatchObject({
       page: 1,
       search: 'Backend 1',
-      status: 'OPEN',
       limit: 6,
     });
     expect(screen.getByTestId('location').textContent).toContain('page=1');
@@ -223,6 +263,12 @@ describe('candidate jobs', () => {
     await screen.findByText('Không tìm thấy việc làm');
     expect(screen.queryByRole('button', { name: 'Nộp CV' })).toBeNull();
   });
+  it('treats a malformed UUID rejected by BE-04 as an invalid job link', async () => {
+    apiClient.defaults.adapter = async (config) => reject(config, 400);
+    mount('/candidate/jobs/not-a-uuid');
+    await screen.findByText('Không tìm thấy việc làm');
+    expect(screen.queryByRole('button', { name: 'Thử lại' })).toBeNull();
+  });
   it('shows loading and recoverable request errors instead of an empty success', async () => {
     const gate = deferred();
     apiClient.defaults.adapter = async (config) => {
@@ -230,7 +276,7 @@ describe('candidate jobs', () => {
       reject(config, 500);
     };
     mount('/candidate/jobs');
-    expect(screen.getByRole('status').textContent).toContain('Đang tìm');
+    await screen.findByText(/Đang tìm/);
     gate.resolve();
     await screen.findByRole('alert');
     expect(screen.queryByText('Không tìm thấy việc làm phù hợp')).toBeNull();
@@ -244,9 +290,8 @@ describe('candidate jobs', () => {
     expect(calls.some((call) => call.url === '/me/applications')).toBe(false);
   });
   it('uses real login and returns a candidate to the requested job', async () => {
-    authTransport.defaults.adapter = async (config) =>
-      reply(config, { data: { accessToken: 'real-test-access', user: profile } });
     mount('/login?returnTo=%2Fcandidate%2Fjobs%2Fjob-1');
+    await screen.findByLabelText('Email');
     fireEvent.change(screen.getByLabelText('Email'), {
       target: { value: 'candidate@example.com' },
     });
@@ -295,6 +340,10 @@ describe('candidate upload', () => {
     expect(posts()).toHaveLength(1);
   });
   it.each([
+    ['CV_FILE_REQUIRED', 'chọn file CV'],
+    ['CV_INVALID_FILE_TYPE', 'phải là file PDF'],
+    ['CV_FILE_TOO_LARGE', 'tối đa 5MB'],
+    ['JOB_NOT_FOUND', 'không còn tồn tại'],
     ['SCANNED', 'chọn và sao chép chữ'],
     ['ENCRYPTED', 'bỏ mật khẩu'],
     ['CORRUPTED', 'không đọc được'],

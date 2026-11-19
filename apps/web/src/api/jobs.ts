@@ -1,17 +1,20 @@
 import { apiClient } from '@/lib/axios';
 import type { ApiResponse, PaginatedResponse } from '@/types/api';
-import type { Job, JobsParams, CreateJobRequest, UpdateJobRequest } from '@/types/jobs';
+import type { Job, PublicJob, JobsParams, CreateJobRequest, UpdateJobRequest } from '@/types/jobs';
 import { paginated, unwrap } from './response';
 
 export async function getJobs(
   params: JobsParams = {},
   signal?: AbortSignal,
-): Promise<PaginatedResponse<Job>> {
-  return paginated((await apiClient.get<PaginatedResponse<Job>>('/jobs', { params, signal })).data);
+): Promise<PaginatedResponse<PublicJob>> {
+  return paginated(
+    (await apiClient.get<PaginatedResponse<PublicJob>>('/jobs', { params, signal })).data,
+  );
 }
-export async function getJob(id: string, signal?: AbortSignal): Promise<Job> {
+export async function getJob(id: string, signal?: AbortSignal): Promise<PublicJob> {
   return unwrap(
-    (await apiClient.get<ApiResponse<Job>>(`/jobs/${encodeURIComponent(id)}`, { signal })).data,
+    (await apiClient.get<ApiResponse<PublicJob>>(`/jobs/${encodeURIComponent(id)}`, { signal }))
+      .data,
   );
 }
 export async function getMyJobs(signal?: AbortSignal): Promise<Job[]> {

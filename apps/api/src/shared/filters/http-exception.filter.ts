@@ -18,6 +18,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let errors: unknown = undefined;
+    // Mã lỗi nghiệp vụ (VD: SCANNED, ALREADY_APPLIED) để FE hiển thị thông báo theo mã.
+    let code: string | undefined = undefined;
 
     if (exception instanceof ZodValidationException) {
       status = HttpStatus.BAD_REQUEST;
@@ -55,6 +57,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         } else if (resObj.errors) {
           errors = resObj.errors;
         }
+        if (typeof resObj.code === 'string') {
+          code = resObj.code;
+        }
       } else {
         message = res;
       }
@@ -63,6 +68,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     response.status(status).json({
       statusCode: status,
       message,
+      ...(code ? { code } : {}),
       ...(errors ? { errors } : {}),
       timestamp: new Date().toISOString(),
     });

@@ -1,3 +1,5 @@
+import envConfig from '../config/env.config.js';
+
 const DURATION_UNITS_MS: Record<string, number> = {
   ms: 1,
   s: 1000,
@@ -14,4 +16,12 @@ export function parseDurationMs(duration: string): number {
   const amount = Number(match[1]);
   const unit = match[2].toLowerCase();
   return amount * DURATION_UNITS_MS[unit];
+}
+
+export function parseDurationSec(duration: string): number {
+  return Math.floor(parseDurationMs(duration) / 1000);
+}
+
+export function getRefreshTokenExpiresInMs(): number {
+  return parseDurationMs(envConfig.REFRESH_TOKEN_EXPIRES_IN);
 }

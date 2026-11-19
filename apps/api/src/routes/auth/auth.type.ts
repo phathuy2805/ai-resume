@@ -1,10 +1,23 @@
-import type { AuthResponseDto } from './auth.dto.js';
+import type {
+  LoginResType,
+  RefreshTokenResType,
+  RegisterResType,
+} from './auth.schema.js';
 
-export type AuthTokensResult = AuthResponseDto & {
+export interface SessionContext {
+  userAgent?: string;
+  ip?: string;
+}
+
+export type RegisterResult = {
+  user: RegisterResType;
   refreshToken: string;
 };
 
-export interface JwtRefreshPayload {
-  sub: string;
-  jti: string;
-}
+export type LoginResult = LoginResType & {
+  refreshToken: string;
+};
+
+export type RefreshTokenResult = RefreshTokenResType & {
+  refreshToken: string;
+};

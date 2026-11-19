@@ -23,6 +23,13 @@ enum JobStatus {
   CLOSED
 }
 
+enum JobLevel {
+  INTERN
+  JUNIOR
+  MIDDLE
+  SENIOR
+}
+
 enum ApplicationStatus {
   SUBMITTED
   SCREENING
@@ -78,6 +85,7 @@ model RefreshToken {
   expiresAt DateTime  @map("expires_at")
   revokedAt DateTime? @map("revoked_at")
   userAgent String?   @map("user_agent")
+  ipAddress String?   @map("ip_address")
   createdAt DateTime  @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -90,13 +98,15 @@ model Job {
   id                     String                      @id @default(uuid())
   title                  String
   description            String                      @db.Text
+  requirements           String?                     @db.Text
   requiredSkills         String[]                    @map("required_skills")
   preferredSkills        String[]                    @default([]) @map("preferred_skills")
   minYearsExperience     Int                         @default(0) @map("min_years_experience")
+  level                  JobLevel?
   status                 JobStatus                   @default(OPEN)
   cvPassThreshold        Int                         @default(70) @map("cv_pass_threshold")
   interviewQuestionCount Int                         @default(3) @map("interview_question_count")
-  rubricWeights          Json?                       @map("rubric_weights")
+  rubricWeights          Json                        @default("{\"technical\":40,\"communication\":20,\"relevance\":20,\"evidence\":20}") @map("rubric_weights")
   parsedJd               Json?                       @map("parsed_jd")
   embedding              Unsupported("vector(768)")?
   createdById            String                      @map("created_by_id")
@@ -106,8 +116,8 @@ model Job {
   recruiter    User          @relation("CreatedJobs", fields: [createdById], references: [id], onDelete: Restrict)
   applications Application[]
 
-  @@index([status])
-  @@index([createdById])
+  @@index([status, createdAt])
+  @@index([createdById, createdAt])
   @@map("jobs")
 }
 
