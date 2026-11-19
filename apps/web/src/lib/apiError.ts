@@ -31,6 +31,7 @@ export function toApiError(error: unknown): ApiError {
     return new ApiError(
       typeof body.message === 'string' && body.message.trim() ? body.message : fallback,
       {
+        code: typeof body.code === 'string' ? body.code : undefined,
         status,
         kind: status ? 'http' : network ? 'network' : 'unknown',
         errors: Array.isArray(body.errors)

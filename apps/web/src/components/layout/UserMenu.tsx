@@ -1,4 +1,6 @@
 import { LogOut, User } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,12 +8,42 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuth } from '@/providers/auth-context';
+import { notifyError } from '@/lib/errorUtils';
+import { candidateLoginUrl } from '@/lib/loginRedirect';
 
 /** Avatar + name trigger with a sign-out item, shared by both portals. */
 export default function UserMenu({ showDetails = true }: { showDetails?: boolean }) {
-  const { user, logout } = useAuth();
-  if (!user) return null;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const session = useCurrentUser();
+  const { logout } = useAuth();
+  const [leaving, setLeaving] = useState(false);
+  const user = session.user;
+  if (session.isLoading) return <span className="text-sm">Đang tải tài khoản…</span>;
+  if (session.error) return <button onClick={() => void session.retry()}>Thử lại tài khoản</button>;
+  if (!user)
+    return (
+      <Link
+        className="font-medium text-primary"
+        to={candidateLoginUrl(location.pathname + location.search)}
+      >
+        Đăng nhập
+      </Link>
+    );
+  const signOut = async () => {
+    if (leaving) return;
+    setLeaving(true);
+    try {
+      await logout();
+    } catch (error) {
+      notifyError(error);
+    } finally {
+      navigate('/login', { replace: true });
+      setLeaving(false);
+    }
+  };
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -38,7 +70,7 @@ export default function UserMenu({ showDetails = true }: { showDetails?: boolean
           </div>
           <DropdownMenuSeparator />
         </div>
-        <DropdownMenuItem onClick={() => void logout()}>
+        <DropdownMenuItem onClick={() => void signOut()}>
           <LogOut />
           Đăng xuất
         </DropdownMenuItem>

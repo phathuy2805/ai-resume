@@ -22,7 +22,10 @@ import { buttonVariants } from '@/components/ui/button-variants';
 import { Card } from '@/components/ui/card';
 import { getCandidateProgress, type CandidateTone } from '@/lib/applicationStatus';
 import { formatDate } from '@/lib/format';
-import { mockJobs, mockMyApplications } from '@/lib/mockData';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useMyApplications } from '@/hooks/useMyApplications';
+import QueryError from '@/components/common/QueryError';
+import { candidateLoginUrl } from '@/lib/loginRedirect';
 import { cn } from '@/lib/utils';
 import type { Application } from '@/types/applications';
 
@@ -59,7 +62,6 @@ const toneStyle: Record<CandidateTone, { pill: string; banner: string; icon: str
 };
 
 function statusMessage(app: Application): { icon: typeof Info; text: string; action?: ReactNode } {
-  const questions = mockJobs.find((job) => job.id === app.job.id)?.interviewQuestionCount ?? 3;
   // TODO(W3-FE-01/W3-FE-04): link to the interview room and result pages once they exist.
   const comingSoon = () => toast.info('Tính năng sẽ có ở Tuần 3');
   switch (app.status) {
@@ -73,7 +75,7 @@ function statusMessage(app: Application): { icon: typeof Info; text: string; act
     case 'INTERVIEW_INVITED':
       return {
         icon: Sparkles,
-        text: `Chúc mừng! Bạn được mời phỏng vấn với AI (${questions} câu hỏi, khoảng 10 phút).`,
+        text: 'Chúc mừng! Bạn được mời phỏng vấn với AI. Hãy xem hướng dẫn trong lời mời.',
         action: (
           <Button size="sm" className="h-9" onClick={comingSoon}>
             <Play />
@@ -194,8 +196,23 @@ function ApplicationCard({ app }: { app: Application }) {
 
 export default function CandidateApplicationsPage() {
   const [filter, setFilter] = useState<Filter>('all');
-  // TODO(W2-FE-03): load with getMyApplications().
-  const applications = mockMyApplications;
+  const session = useCurrentUser();
+  const query = useMyApplications(session.user?.role === 'CANDIDATE' ? session.user.id : undefined);
+  if (session.isLoading) return <p role="status">Đang xác minh tài khoản…</p>;
+  if (session.error)
+    return <QueryError message="Không tải được tài khoản." retry={() => void session.retry()} />;
+  if (!session.user)
+    return (
+      <Link className="text-primary underline" to={candidateLoginUrl('/candidate/applications')}>
+        Đăng nhập để xem hồ sơ
+      </Link>
+    );
+  if (session.user.role !== 'CANDIDATE') return <p>Trang hồ sơ dành cho ứng viên.</p>;
+  if (query.isPending) return <p role="status">Đang tải hồ sơ…</p>;
+  if (query.isError)
+    return <QueryError message="Không tải được hồ sơ đã nộp." retry={() => void query.refetch()} />;
+  const applications = query.data;
+
   const completed = applications.filter(isCompleted);
   const visible =
     filter === 'all'

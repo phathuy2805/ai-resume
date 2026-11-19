@@ -10,6 +10,7 @@ import CandidateJobDetailPage from '@/pages/candidate/CandidateJobDetailPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import HRCreateJobPage from '@/pages/hr/HRCreateJobPage';
 import HREditJobPage from '@/pages/hr/HREditJobPage';
+import HRJobDetailPage from '@/pages/hr/HRJobDetailPage';
 import HRCandidatesPage from '@/pages/hr/HRCandidatesPage';
 import HRJobsPage from '@/pages/hr/HRJobsPage';
 import HRStatsPage from '@/pages/hr/HRStatsPage';
@@ -41,23 +42,22 @@ export const router = createBrowserRouter([
           { path: 'candidates', element: <HRCandidatesPage /> },
           { path: 'stats', element: <HRStatsPage /> },
           { path: 'jobs/new', element: <HRCreateJobPage /> },
+          { path: 'jobs/:id', element: <HRJobDetailPage /> },
           { path: 'jobs/:id/edit', element: <HREditJobPage /> },
         ],
       },
     ],
   },
   {
-    element: <ProtectedRoute allowedRoles={['CANDIDATE']} />,
+    path: 'candidate',
+    element: <CandidateLayout />,
     children: [
+      { index: true, element: <Navigate to="jobs" replace /> },
+      { path: 'jobs', element: <CandidateJobsPage /> },
+      { path: 'jobs/:id', element: <CandidateJobDetailPage /> },
       {
-        path: 'candidate',
-        element: <CandidateLayout />,
-        children: [
-          { index: true, element: <Navigate to="jobs" replace /> },
-          { path: 'jobs', element: <CandidateJobsPage /> },
-          { path: 'jobs/:id', element: <CandidateJobDetailPage /> },
-          { path: 'applications', element: <CandidateApplicationsPage /> },
-        ],
+        element: <ProtectedRoute allowedRoles={['CANDIDATE']} />,
+        children: [{ path: 'applications', element: <CandidateApplicationsPage /> }],
       },
     ],
   },

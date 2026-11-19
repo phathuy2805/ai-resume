@@ -9,10 +9,14 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "smoke:api": "node scripts/smoke-api.mjs"
+    "smoke:api": "node scripts/smoke-api.mjs",
+    "mock:candidate": "node scripts/mock-candidate-api.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.3",
+    "@radix-ui/react-alert-dialog": "^1.2.1",
+    "@radix-ui/react-progress": "^1.2.1",
+    "@radix-ui/react-select": "^2.4.1",
     "@tanstack/react-query": "^5.107.1",
     "@tanstack/react-query-devtools": "^5.107.1",
     "axios": "^1.21.0",

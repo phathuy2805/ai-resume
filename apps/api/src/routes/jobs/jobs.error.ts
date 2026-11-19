@@ -14,6 +14,14 @@ export const JobCloseForbiddenException = new ForbiddenException(
   'Bạn không có quyền đóng tin tuyển dụng này',
 );
 
+export const JobViewForbiddenException = new ForbiddenException(
+  'Bạn không có quyền xem tin tuyển dụng này',
+);
+
+export const JobReopenForbiddenException = new ForbiddenException(
+  'Bạn không có quyền mở lại tin tuyển dụng này',
+);
+
 export const JobAlreadyClosedException = new ConflictException(
   'Không thể chỉnh sửa tin tuyển dụng đã đóng',
 );
