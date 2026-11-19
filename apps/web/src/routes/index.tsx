@@ -49,17 +49,15 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    element: <ProtectedRoute allowedRoles={['CANDIDATE']} />,
+    path: 'candidate',
+    element: <CandidateLayout />,
     children: [
+      { index: true, element: <Navigate to="jobs" replace /> },
+      { path: 'jobs', element: <CandidateJobsPage /> },
+      { path: 'jobs/:id', element: <CandidateJobDetailPage /> },
       {
-        path: 'candidate',
-        element: <CandidateLayout />,
-        children: [
-          { index: true, element: <Navigate to="jobs" replace /> },
-          { path: 'jobs', element: <CandidateJobsPage /> },
-          { path: 'jobs/:id', element: <CandidateJobDetailPage /> },
-          { path: 'applications', element: <CandidateApplicationsPage /> },
-        ],
+        element: <ProtectedRoute allowedRoles={['CANDIDATE']} />,
+        children: [{ path: 'applications', element: <CandidateApplicationsPage /> }],
       },
     ],
   },

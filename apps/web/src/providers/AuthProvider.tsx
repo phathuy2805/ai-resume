@@ -1,43 +1,48 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getMe, logout as logoutApi, refreshSession } from '@/api/auth';
-import { clearAccessToken, setAccessToken } from '@/lib/tokenStore';
-import { router } from '@/routes';
+import {
+  getAccessToken,
+  getSessionVersion,
+  setAccessToken,
+  subscribeAccessToken,
+} from '@/lib/tokenStore';
+import { parseUserProfile } from '@/lib/session';
+import { toApiError } from '@/lib/apiError';
 import type { UserProfile } from '@/types/auth';
 import { AuthContext, type AuthContextValue } from './auth-context';
 
-function LoadingScreen() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-background">
-      <div className="flex items-center gap-3 text-sm text-muted-foreground" role="status">
-        <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        Đang khôi phục phiên đăng nhập…
-      </div>
-    </main>
-  );
+async function restoreProfile() {
+  if (!getAccessToken()) await refreshSession();
+  return parseUserProfile(await getMe());
 }
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const token = useSyncExternalStore(subscribeAccessToken, getAccessToken, () => null);
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [userSession, setUserSession] = useState(-1);
+  const restoration = useRef<Promise<UserProfile> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let active = true;
-    void (async () => {
-      try {
-        await refreshSession();
-        const profile = await getMe();
-        if (active) setUser(profile);
-      } catch {
+    restoration.current ??= restoreProfile();
+    void restoration.current
+      .then((profile) => {
         if (active) {
-          clearAccessToken();
-          setUser(null);
+          setUser(profile);
+          setUserSession(getSessionVersion());
         }
-      } finally {
+      })
+      .catch((cause: unknown) => {
+        const failure = toApiError(cause);
+        if (active && failure.status !== 401) setError(failure);
+      })
+      .finally(() => {
         if (active) setIsLoading(false);
-      }
-    })();
+      });
     return () => {
       active = false;
     };
@@ -45,26 +50,56 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      user,
+      // Token clear from FE-03 expiration/logout immediately removes the identity.
+      user: token && userSession === getSessionVersion() ? user : null,
       isLoading,
+      error,
+      retry: async () => {
+        setError(null);
+        setIsLoading(true);
+        try {
+          setUser(await restoreProfile());
+          setUserSession(getSessionVersion());
+        } catch (cause) {
+          const failure = toApiError(cause);
+          if (failure.status !== 401) setError(failure);
+        } finally {
+          setIsLoading(false);
+        }
+      },
       login: (nextUser, accessToken) => {
-        setAccessToken(accessToken);
+        // loginApi already publishes the token; don't invalidate its session twice.
+        if (getAccessToken() !== accessToken) setAccessToken(accessToken);
         setUser(nextUser);
+        setUserSession(getSessionVersion());
+        setError(null);
       },
       logout: async () => {
         try {
           await logoutApi();
         } finally {
-          clearAccessToken();
           queryClient.clear();
           setUser(null);
-          await router.navigate('/login', { replace: true });
         }
       },
     }),
-    [isLoading, queryClient, user],
+    [token, user, userSession, isLoading, error, queryClient],
   );
 
-  if (isLoading) return <LoadingScreen />;
+  if (isLoading)
+    return (
+      <main className="flex min-h-screen items-center justify-center" role="status">
+        Đang khôi phục phiên đăng nhập…
+      </main>
+    );
+  if (error)
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <p role="alert">Không thể tải phiên đăng nhập. Vui lòng kiểm tra kết nối và thử lại.</p>
+        <button className="text-primary underline" onClick={() => void value.retry()}>
+          Thử lại
+        </button>
+      </main>
+    );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

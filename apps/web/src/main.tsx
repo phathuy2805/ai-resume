@@ -11,7 +11,9 @@ const disposeSession = installSessionLifecycle(
   () => {
     if (window.location.pathname !== '/login') void router.navigate('/login', { replace: true });
   },
-  () => ['/', '/login', '/register', '/candidate/jobs'].includes(window.location.pathname),
+  () =>
+    ['/', '/login', '/register'].includes(window.location.pathname) ||
+    /^\/candidate\/jobs(?:\/[^/]+)?\/?$/.test(window.location.pathname),
 );
 if (import.meta.hot) import.meta.hot.dispose(disposeSession);
 

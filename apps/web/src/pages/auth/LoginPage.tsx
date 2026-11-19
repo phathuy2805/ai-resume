@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { login as loginApi } from '@/api/auth';
 import { Field, PasswordInput } from '@/components/common/FormField';
@@ -13,10 +13,12 @@ import { loginSchema, type LoginFormValues } from '@/lib/schemas/auth.schema';
 import { roleHome } from '@/providers/auth-context';
 import { useAuth } from '@/providers/auth-context';
 import { toApiError } from '@/lib/apiError';
+import { safeCandidateReturnTo } from '@/lib/loginRedirect';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [search] = useSearchParams();
   const { login } = useAuth();
   const registeredEmail =
     typeof location.state?.registeredEmail === 'string' ? location.state.registeredEmail : '';
@@ -34,14 +36,17 @@ export default function LoginPage() {
     onSuccess: ({ user: nextUser, accessToken }) => {
       login(nextUser, accessToken);
       const from = location.state?.from;
+      const candidateReturn =
+        nextUser.role === 'CANDIDATE' ? safeCandidateReturnTo(search.get('returnTo')) : null;
       const destination =
-        from &&
+        candidateReturn ??
+        (from &&
         typeof from.pathname === 'string' &&
         from.pathname !== '/login' &&
         ((nextUser.role === 'HR' && from.pathname.startsWith('/hr')) ||
           (nextUser.role === 'CANDIDATE' && from.pathname.startsWith('/candidate')))
           ? `${from.pathname}${from.search ?? ''}${from.hash ?? ''}`
-          : roleHome(nextUser.role);
+          : roleHome(nextUser.role));
       toast.success('Đăng nhập thành công');
       void navigate(destination, { replace: true });
     },

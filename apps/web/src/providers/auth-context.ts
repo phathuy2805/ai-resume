@@ -4,6 +4,8 @@ import type { Role, UserProfile } from '@/types/auth';
 export interface AuthContextValue {
   user: UserProfile | null;
   isLoading: boolean;
+  error: Error | null;
+  retry: () => Promise<unknown>;
   login: (user: UserProfile, accessToken: string) => void;
   logout: () => Promise<void>;
 }
