@@ -3,13 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
 import { ApplicationsModule } from './routes/applications/applications.module.js';
 import { AuthModule } from './routes/auth/auth.module.js';
 import { DraftsModule } from './routes/drafts/drafts.module.js';
 import { JobsModule } from './routes/jobs/jobs.module.js';
-import { UsersModule } from './routes/users/users.module.js';
 import { validateEnv } from './shared/config/env.config.js';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter.js';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard.js';
@@ -24,15 +21,12 @@ import { SharedModule } from './shared/shared.module.js';
     }),
     EventEmitterModule.forRoot(),
     SharedModule,
-    UsersModule,
     AuthModule,
     JobsModule,
     ApplicationsModule,
     DraftsModule,
   ],
-  controllers: [AppController],
   providers: [
-    AppService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
