@@ -16,7 +16,7 @@ import { clearAccessToken, getAccessToken, setAccessToken } from './tokenStore';
 import { applyFieldErrors, handleFormError, notifyError } from './errorUtils';
 import { createQueryClient, queryClient } from './queryClient';
 import { ApiError } from '@/types/api';
-import { getJob, getJobs, getMyJobs, updateJob, closeJob } from '@/api/jobs';
+import { getJob, getJobs, getMyJob, getMyJobs, updateJob, closeJob, reopenJob } from '@/api/jobs';
 import { login, register, logout, getMe } from '@/api/auth';
 import { applyJob, getMyApplications } from '@/api/applications';
 import { queryKeys } from '@/api/queryKeys';
@@ -179,21 +179,28 @@ describe('transport and contracts', () => {
     expect(getAccessToken()).toBeNull();
     expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
   });
-  it('routes mine, updates, closes and applications to the documented endpoints', async () => {
+  it('routes mine, updates, closes, reopens and applications to the documented endpoints', async () => {
     const calls: string[] = [];
+    const emptyPage = { data: [], meta: { page: 1, limit: 10, total: 0 } };
     apiClient.defaults.adapter = async (config) => {
       calls.push(`${config.method} ${config.url}`);
+      if (config.url === '/jobs/mine') return response(config, emptyPage);
+      if (config.url === '/jobs/mine/job-1') return response(config, { data: job });
       return response(config, { data: config.method === 'get' ? [] : job });
     };
-    expect(await getMyJobs()).toEqual([]);
+    expect(await getMyJobs()).toEqual(emptyPage);
+    expect(await getMyJob('job-1')).toEqual(job);
     expect(await getMyApplications()).toEqual([]);
     await updateJob('job-1', { title: 'Updated' });
     await closeJob('job-1');
+    await reopenJob('job-1');
     expect(calls).toEqual([
       'get /jobs/mine',
+      'get /jobs/mine/job-1',
       'get /me/applications',
       'patch /jobs/job-1',
       'patch /jobs/job-1/close',
+      'patch /jobs/job-1/reopen',
     ]);
   });
 });

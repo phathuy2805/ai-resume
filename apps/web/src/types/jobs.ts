@@ -41,6 +41,8 @@ export interface Job {
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  applicationCount?: number;
+  isAnalyzed?: boolean;
 }
 /** BE-04 omits HR scoring configuration from public responses. */
-export type PublicJob = Omit<Job, 'cvPassThreshold' | 'rubricWeights' | 'createdById'>;
+export type PublicJob = Omit<Job, 'cvPassThreshold' | 'rubricWeights' | 'createdById' | 'applicationCount' | 'isAnalyzed'>;

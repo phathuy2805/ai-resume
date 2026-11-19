@@ -428,6 +428,66 @@
         ]
       }
     },
+    "/api/jobs/mine/{id}": {
+      "get": {
+        "operationId": "JobsController_findMineById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Job UUID",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chi tiết tin tuyển dụng kèm cvPassThreshold, rubricWeights, applicationCount",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GetMyJobResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID tin tuyển dụng không đúng định dạng UUID"
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
+          },
+          "403": {
+            "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR"
+          },
+          "404": {
+            "description": "Không tìm thấy tin tuyển dụng"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Xem chi tiết một tin tuyển dụng của HR (cả OPEN và CLOSED, kèm cấu hình AI)",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
     "/api/jobs/{id}": {
       "get": {
         "operationId": "JobsController_findOne",
@@ -603,6 +663,66 @@
           }
         ],
         "summary": "Đóng tin tuyển dụng (chuyển status sang CLOSED, idempotent)",
+        "tags": [
+          "Jobs"
+        ]
+      }
+    },
+    "/api/jobs/{id}/reopen": {
+      "patch": {
+        "operationId": "JobsController_reopen",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Job UUID",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mở lại tin tuyển dụng thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ReopenJobResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID tin tuyển dụng không đúng định dạng UUID"
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
+          },
+          "403": {
+            "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR"
+          },
+          "404": {
+            "description": "Không tìm thấy tin tuyển dụng"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Mở lại tin tuyển dụng đã đóng (chuyển status sang OPEN, idempotent)",
         "tags": [
           "Jobs"
         ]
@@ -1768,6 +1888,167 @@
         ],
         "additionalProperties": false
       },
+      "GetMyJobResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh công việc (UUID)"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Tiêu đề tuyển dụng"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nội dung chi tiết của JD"
+          },
+          "requirements": {
+            "description": "Yêu cầu ứng viên",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng bắt buộc"
+          },
+          "preferredSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng ưu tiên"
+          },
+          "minYearsExperience": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Số năm kinh nghiệm tối thiểu"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "INTERN",
+              "JUNIOR",
+              "MIDDLE",
+              "SENIOR",
+              null
+            ],
+            "description": "Cấp độ vị trí tuyển dụng",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLOSED"
+            ],
+            "description": "Trạng thái tin tuyển dụng (OPEN hoặc CLOSED)"
+          },
+          "cvPassThreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Điểm sàn qua vòng CV (0-100)"
+          },
+          "interviewQuestionCount": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 5,
+            "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
+          },
+          "rubricWeights": {
+            "type": "object",
+            "properties": {
+              "technical": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số chuyên môn (%)"
+              },
+              "communication": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số giao tiếp (%)"
+              },
+              "relevance": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số độ phù hợp (%)"
+              },
+              "evidence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số minh chứng (%)"
+              }
+            },
+            "required": [
+              "technical",
+              "communication",
+              "relevance",
+              "evidence"
+            ],
+            "additionalProperties": false,
+            "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn"
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "ID người tạo (HR)"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm đăng tin (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+          },
+          "applicationCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Tổng số hồ sơ đã nộp vào tin tuyển dụng"
+          },
+          "isAnalyzed": {
+            "type": "boolean",
+            "description": "Đã được AI phân tích và tạo vector JD hay chưa"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "requirements",
+          "requiredSkills",
+          "preferredSkills",
+          "minYearsExperience",
+          "level",
+          "status",
+          "cvPassThreshold",
+          "interviewQuestionCount",
+          "rubricWeights",
+          "createdById",
+          "createdAt",
+          "updatedAt",
+          "applicationCount",
+          "isAnalyzed"
+        ],
+        "additionalProperties": false
+      },
       "GetJobResDto_Output": {
         "type": "object",
         "properties": {
@@ -2426,6 +2707,167 @@
         "additionalProperties": false
       },
       "CloseJobResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh công việc (UUID)"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Tiêu đề tuyển dụng"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nội dung chi tiết của JD"
+          },
+          "requirements": {
+            "description": "Yêu cầu ứng viên",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng bắt buộc"
+          },
+          "preferredSkills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách kỹ năng ưu tiên"
+          },
+          "minYearsExperience": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Số năm kinh nghiệm tối thiểu"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "INTERN",
+              "JUNIOR",
+              "MIDDLE",
+              "SENIOR",
+              null
+            ],
+            "description": "Cấp độ vị trí tuyển dụng",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "CLOSED"
+            ],
+            "description": "Trạng thái tin tuyển dụng (OPEN hoặc CLOSED)"
+          },
+          "cvPassThreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Điểm sàn qua vòng CV (0-100)"
+          },
+          "interviewQuestionCount": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 5,
+            "description": "Số câu hỏi phỏng vấn Voice AI (3-5)"
+          },
+          "rubricWeights": {
+            "type": "object",
+            "properties": {
+              "technical": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số chuyên môn (%)"
+              },
+              "communication": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số giao tiếp (%)"
+              },
+              "relevance": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số độ phù hợp (%)"
+              },
+              "evidence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số minh chứng (%)"
+              }
+            },
+            "required": [
+              "technical",
+              "communication",
+              "relevance",
+              "evidence"
+            ],
+            "additionalProperties": false,
+            "description": "Trọng số 4 tiêu chí chấm điểm phỏng vấn"
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "ID người tạo (HR)"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm đăng tin (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+          },
+          "applicationCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Tổng số hồ sơ đã nộp vào tin tuyển dụng"
+          },
+          "isAnalyzed": {
+            "type": "boolean",
+            "description": "Đã được AI phân tích và tạo vector JD hay chưa"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "requirements",
+          "requiredSkills",
+          "preferredSkills",
+          "minYearsExperience",
+          "level",
+          "status",
+          "cvPassThreshold",
+          "interviewQuestionCount",
+          "rubricWeights",
+          "createdById",
+          "createdAt",
+          "updatedAt",
+          "applicationCount",
+          "isAnalyzed"
+        ],
+        "additionalProperties": false
+      },
+      "ReopenJobResDto_Output": {
         "type": "object",
         "properties": {
           "id": {

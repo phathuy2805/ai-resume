@@ -16,7 +16,9 @@ import {
   CreateJobResDto,
   GetJobResDto,
   GetJobsResDto,
+  GetMyJobResDto,
   GetMyJobsResDto,
+  ReopenJobResDto,
   UpdateJobResDto,
 } from './jobs.dto.js';
 
@@ -53,6 +55,26 @@ export const ApiFindMyJobsDoc = () =>
     ApiBadRequestResponse({ description: 'Tham số phân trang hoặc lọc trạng thái không hợp lệ' }),
     ApiUnauthorizedResponse({ description: 'Thiếu access token hoặc token không hợp lệ' }),
     ApiForbiddenResponse({ description: 'Chỉ tài khoản HR mới được truy cập' }),
+  );
+
+export const ApiFindMyJobDoc = () =>
+  applyDecorators(
+    ApiBearerAuth('JWT-auth'),
+    ApiOperation({
+      summary: 'Xem chi tiết một tin tuyển dụng của HR (cả OPEN và CLOSED, kèm cấu hình AI)',
+    }),
+    JOB_ID_PARAM,
+    ZodResponse({
+      status: HttpStatus.OK,
+      description: 'Chi tiết tin tuyển dụng kèm cvPassThreshold, rubricWeights, applicationCount',
+      type: GetMyJobResDto,
+    }) as MethodDecorator,
+    ApiBadRequestResponse({ description: 'ID tin tuyển dụng không đúng định dạng UUID' }),
+    ApiUnauthorizedResponse({ description: 'Thiếu access token hoặc token không hợp lệ' }),
+    ApiForbiddenResponse({
+      description: 'Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR',
+    }),
+    ApiNotFoundResponse({ description: 'Không tìm thấy tin tuyển dụng' }),
   );
 
 export const ApiFindOneJobDoc = () =>
@@ -120,6 +142,26 @@ export const ApiCloseJobDoc = () =>
       status: HttpStatus.OK,
       description: 'Đóng tin tuyển dụng thành công',
       type: CloseJobResDto,
+    }) as MethodDecorator,
+    ApiBadRequestResponse({ description: 'ID tin tuyển dụng không đúng định dạng UUID' }),
+    ApiUnauthorizedResponse({ description: 'Thiếu access token hoặc token không hợp lệ' }),
+    ApiForbiddenResponse({
+      description: 'Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR',
+    }),
+    ApiNotFoundResponse({ description: 'Không tìm thấy tin tuyển dụng' }),
+  );
+
+export const ApiReopenJobDoc = () =>
+  applyDecorators(
+    ApiBearerAuth('JWT-auth'),
+    ApiOperation({
+      summary: 'Mở lại tin tuyển dụng đã đóng (chuyển status sang OPEN, idempotent)',
+    }),
+    JOB_ID_PARAM,
+    ZodResponse({
+      status: HttpStatus.OK,
+      description: 'Mở lại tin tuyển dụng thành công',
+      type: ReopenJobResDto,
     }) as MethodDecorator,
     ApiBadRequestResponse({ description: 'ID tin tuyển dụng không đúng định dạng UUID' }),
     ApiUnauthorizedResponse({ description: 'Thiếu access token hoặc token không hợp lệ' }),

@@ -1,7 +1,22 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
-type DropdownContextValue = { open: boolean; setOpen: (open: boolean) => void };
+type DropdownContextValue = {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  triggerRef: RefObject<HTMLButtonElement | null>;
+  contentRef: RefObject<HTMLDivElement | null>;
+};
 const DropdownContext = createContext<DropdownContextValue | null>(null);
 
 function useDropdown(component: string) {
@@ -10,13 +25,21 @@ function useDropdown(component: string) {
   return context;
 }
 
+const GAP = 4;
+const VIEWPORT_MARGIN = 8;
+
 export function DropdownMenu({ children, className }: { children: ReactNode; className?: string }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
     const handlePointerDown = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      // The menu is portalled to <body>, so it is not inside rootRef.
+      if (rootRef.current?.contains(target) || contentRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
@@ -29,7 +52,7 @@ export function DropdownMenu({ children, className }: { children: ReactNode; cla
     };
   }, [open]);
   return (
-    <DropdownContext.Provider value={{ open, setOpen }}>
+    <DropdownContext.Provider value={{ open, setOpen, triggerRef, contentRef }}>
       <div ref={rootRef} className={cn('relative inline-block', className)}>
         {children}
       </div>
@@ -46,21 +69,26 @@ export function DropdownMenuTrigger({
   className?: string;
   'aria-label'?: string;
 }) {
-  const context = useDropdown('DropdownMenuTrigger');
+  const { open, setOpen, triggerRef } = useDropdown('DropdownMenuTrigger');
   return (
     <button
+      ref={triggerRef}
       type="button"
       aria-label={ariaLabel}
       aria-haspopup="menu"
-      aria-expanded={context.open}
+      aria-expanded={open}
       className={className}
-      onClick={() => context.setOpen(!context.open)}
+      onClick={() => setOpen(!open)}
     >
       {children}
     </button>
   );
 }
 
+/**
+ * Rendered in a portal with fixed positioning so it floats above scroll/overflow containers
+ * (e.g. tables). Opens below the trigger, or above it when there is not enough room below.
+ */
 export function DropdownMenuContent({
   children,
   className,
@@ -70,19 +98,48 @@ export function DropdownMenuContent({
   className?: string;
   align?: 'start' | 'end';
 }) {
-  const context = useDropdown('DropdownMenuContent');
-  if (!context.open) return null;
-  return (
+  const { open, triggerRef, contentRef } = useDropdown('DropdownMenuContent');
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const trigger = triggerRef.current;
+      const content = contentRef.current;
+      if (!trigger || !content) return;
+      const rect = trigger.getBoundingClientRect();
+      const { offsetWidth: width, offsetHeight: height } = content;
+      const fitsBelow = rect.bottom + GAP + height <= window.innerHeight - VIEWPORT_MARGIN;
+      const fitsAbove = rect.top - GAP - height >= VIEWPORT_MARGIN;
+      const top = !fitsBelow && fitsAbove ? rect.top - GAP - height : rect.bottom + GAP;
+      const rawLeft = align === 'end' ? rect.right - width : rect.left;
+      const maxLeft = window.innerWidth - width - VIEWPORT_MARGIN;
+      content.style.top = `${top}px`;
+      content.style.left = `${Math.max(VIEWPORT_MARGIN, Math.min(rawLeft, maxLeft))}px`;
+      content.style.visibility = 'visible';
+    };
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [open, align, triggerRef, contentRef]);
+
+  if (!open) return null;
+  return createPortal(
     <div
+      ref={contentRef}
       role="menu"
+      style={{ position: 'fixed', top: 0, left: 0, visibility: 'hidden' }}
       className={cn(
-        'absolute top-full z-50 mt-1 min-w-44 rounded-lg border border-border bg-popover py-1.5 text-popover-foreground shadow-md',
-        align === 'end' ? 'right-0' : 'left-0',
+        'z-50 min-w-44 rounded-lg border border-border bg-popover py-1.5 text-popover-foreground shadow-md',
         className,
       )}
     >
       {children}
-    </div>
+    </div>,
+    document.body,
   );
 }
 

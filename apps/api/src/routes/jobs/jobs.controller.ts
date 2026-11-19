@@ -7,9 +7,11 @@ import {
   ApiCloseJobDoc,
   ApiCreateJobDoc,
   ApiFindAllJobsDoc,
+  ApiFindMyJobDoc,
   ApiFindMyJobsDoc,
   ApiFindOneJobDoc,
   ApiJobsController,
+  ApiReopenJobDoc,
   ApiUpdateJobDoc,
 } from './jobs.docs.js';
 import {
@@ -19,9 +21,11 @@ import {
   GetJobResDto,
   GetJobsQueryDto,
   GetJobsResDto,
+  GetMyJobResDto,
   GetMyJobsQueryDto,
   GetMyJobsResDto,
   JobIdParamDto,
+  ReopenJobResDto,
   UpdateJobBodyDto,
   UpdateJobResDto,
 } from './jobs.dto.js';
@@ -47,6 +51,16 @@ export class JobsController {
     @Query() query: GetMyJobsQueryDto,
   ): Promise<GetMyJobsResDto> {
     return this.jobsService.findMine(userId, query);
+  }
+
+  @Roles(Role.HR)
+  @Get('mine/:id')
+  @ApiFindMyJobDoc()
+  async findMineById(
+    @CurrentUser('id') userId: string,
+    @Param() params: JobIdParamDto,
+  ): Promise<GetMyJobResDto> {
+    return this.jobsService.findMineById(userId, params.id);
   }
 
   @Public()
@@ -85,5 +99,15 @@ export class JobsController {
     @Param() params: JobIdParamDto,
   ): Promise<CloseJobResDto> {
     return this.jobsService.close(userId, params.id);
+  }
+
+  @Roles(Role.HR)
+  @Patch(':id/reopen')
+  @ApiReopenJobDoc()
+  async reopen(
+    @CurrentUser('id') userId: string,
+    @Param() params: JobIdParamDto,
+  ): Promise<ReopenJobResDto> {
+    return this.jobsService.reopen(userId, params.id);
   }
 }
