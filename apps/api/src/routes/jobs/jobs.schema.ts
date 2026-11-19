@@ -137,9 +137,11 @@ export const GetMyJobsResSchema = z.object({
   meta: PaginationMetaSchema.describe('Thông tin phân trang'),
 });
 
+export const GetMyJobResSchema = HrJobSchema;
 export const CreateJobResSchema = HrJobSchema;
 export const UpdateJobResSchema = HrJobSchema;
 export const CloseJobResSchema = HrJobSchema;
+export const ReopenJobResSchema = HrJobSchema;
 
 // ==================== Inferred Types ====================
 
@@ -151,6 +153,8 @@ export type JobIdParamType = z.infer<typeof JobIdParamSchema>;
 export type GetJobsResType = z.infer<typeof GetJobsResSchema>;
 export type GetJobResType = z.infer<typeof GetJobResSchema>;
 export type GetMyJobsResType = z.infer<typeof GetMyJobsResSchema>;
+export type GetMyJobResType = z.infer<typeof GetMyJobResSchema>;
 export type CreateJobResType = z.infer<typeof CreateJobResSchema>;
 export type UpdateJobResType = z.infer<typeof UpdateJobResSchema>;
 export type CloseJobResType = z.infer<typeof CloseJobResSchema>;
+export type ReopenJobResType = z.infer<typeof ReopenJobResSchema>;

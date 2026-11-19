@@ -112,9 +112,17 @@ export class JobsRepository {
   }
 
   closeJob(id: string): Promise<PrismaJobWithCount> {
+    return this.setStatus(id, JobStatus.CLOSED);
+  }
+
+  reopenJob(id: string): Promise<PrismaJobWithCount> {
+    return this.setStatus(id, JobStatus.OPEN);
+  }
+
+  private setStatus(id: string, status: JobStatus): Promise<PrismaJobWithCount> {
     return this.prisma.job.update({
       where: { id },
-      data: { status: JobStatus.CLOSED },
+      data: { status },
       include: { _count: { select: { applications: true } } },
     });
   }
