@@ -1,18 +1,30 @@
 import { FileQuestion } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import EmptyState from '@/components/common/EmptyState';
 import PageHeader from '@/components/common/PageHeader';
 import JobForm from '@/components/hr/JobForm';
-import type { JobFormValues } from '@/components/hr/jobFormValues';
+import { emptyJobForm, type JobFormValues } from '@/components/hr/jobFormValues';
 import { buttonVariants } from '@/components/ui/button-variants';
-import { mockJobs } from '@/lib/mockData';
+import { useMyJob, useUpdateJob } from '@/hooks/useJobs';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function HREditJobPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  // TODO(W1-FE-04): load with getJob(id) and save with updateJob()/closeJob().
-  const job = mockJobs.find((item) => item.id === id);
+  // HR endpoint: returns cvPassThreshold/rubricWeights (the public GET /jobs/:id omits them).
+  const jobQuery = useMyJob(id ?? '');
+  const updateJob = useUpdateJob();
+
+  if (jobQuery.isLoading) {
+    return (
+      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+  const job = jobQuery.data;
 
   if (!job) {
     return (
@@ -28,8 +40,27 @@ export default function HREditJobPage() {
       />
     );
   }
+  if (job.status === 'CLOSED') {
+    // Closed jobs are read-only; the detail page offers "Mở lại tin".
+    return <Navigate to={`/hr/jobs/${job.id}`} replace />;
+  }
 
-  const handleSubmit = (values: JobFormValues) => {
+  const handleSubmit = async (values: JobFormValues) => {
+    await updateJob.mutateAsync({
+      id: job.id,
+      body: {
+        title: values.title,
+        description: values.description,
+        requirements: values.requirements,
+        requiredSkills: values.requiredSkills,
+        preferredSkills: values.preferredSkills,
+        minYearsExperience: values.minYearsExperience,
+        level: values.level,
+        cvPassThreshold: values.cvPassThreshold,
+        interviewQuestionCount: values.interviewQuestionCount,
+        rubricWeights: values.rubricWeights,
+      },
+    });
     toast.success(`Đã lưu thay đổi cho "${values.title}"`);
     navigate('/hr/jobs');
   };
@@ -50,8 +81,11 @@ export default function HREditJobPage() {
           requiredSkills: job.requiredSkills,
           preferredSkills: job.preferredSkills,
           minYearsExperience: job.minYearsExperience,
+          requirements: job.requirements ?? null,
+          level: job.level ?? null,
           cvPassThreshold: job.cvPassThreshold,
           interviewQuestionCount: job.interviewQuestionCount,
+          rubricWeights: job.rubricWeights ?? emptyJobForm.rubricWeights,
           status: job.status,
         }}
       />

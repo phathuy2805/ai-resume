@@ -6,6 +6,8 @@ export const queryKeys = {
     public: () => ['jobs', 'public'] as const,
     list: (params: JobsParams = {}) => ['jobs', 'public', { ...params }] as const,
     mine: () => ['jobs', 'mine'] as const,
+    /** Under `mine()` so invalidating the HR list also refreshes HR detail views. */
+    mineDetail: (id: string) => ['jobs', 'mine', 'detail', id] as const,
     detail: (id: string) => ['jobs', 'detail', id] as const,
   },
   applications: { all: ['applications'] as const, mine: () => ['applications', 'mine'] as const },

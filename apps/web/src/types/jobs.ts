@@ -1,4 +1,5 @@
 export type JobStatus = 'OPEN' | 'CLOSED';
+export type JobLevel = 'INTERN' | 'JUNIOR' | 'MIDDLE' | 'SENIOR';
 export interface RubricWeights {
   technical: number;
   communication: number;
@@ -17,9 +18,11 @@ export interface CreateJobRequest {
   requiredSkills: string[];
   preferredSkills?: string[];
   minYearsExperience: number;
+  requirements?: string | null;
+  level?: JobLevel | null;
   cvPassThreshold?: number;
   interviewQuestionCount?: number;
-  rubricWeights?: Partial<RubricWeights>;
+  rubricWeights?: RubricWeights;
 }
 export type UpdateJobRequest = Partial<CreateJobRequest>;
 export interface Job {
@@ -29,6 +32,8 @@ export interface Job {
   requiredSkills: string[];
   preferredSkills: string[];
   minYearsExperience: number;
+  requirements?: string | null;
+  level?: JobLevel | null;
   status: JobStatus;
   cvPassThreshold: number;
   interviewQuestionCount: number;
@@ -36,4 +41,6 @@ export interface Job {
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  applicationCount?: number;
+  isAnalyzed?: boolean;
 }

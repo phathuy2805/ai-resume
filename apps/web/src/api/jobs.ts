@@ -14,8 +14,20 @@ export async function getJob(id: string, signal?: AbortSignal): Promise<Job> {
     (await apiClient.get<ApiResponse<Job>>(`/jobs/${encodeURIComponent(id)}`, { signal })).data,
   );
 }
-export async function getMyJobs(signal?: AbortSignal): Promise<Job[]> {
-  return unwrap((await apiClient.get<ApiResponse<Job[]>>('/jobs/mine', { signal })).data);
+export async function getMyJobs(
+  params: JobsParams = {},
+  signal?: AbortSignal,
+): Promise<PaginatedResponse<Job>> {
+  return paginated(
+    (await apiClient.get<PaginatedResponse<Job>>('/jobs/mine', { params, signal })).data,
+  );
+}
+/** HR view of one of their own jobs (OPEN or CLOSED), including AI config. */
+export async function getMyJob(id: string, signal?: AbortSignal): Promise<Job> {
+  return unwrap(
+    (await apiClient.get<ApiResponse<Job>>(`/jobs/mine/${encodeURIComponent(id)}`, { signal }))
+      .data,
+  );
 }
 export async function createJob(body: CreateJobRequest): Promise<Job> {
   return unwrap((await apiClient.post<ApiResponse<Job>>('/jobs', body)).data);
@@ -28,5 +40,10 @@ export async function updateJob(id: string, body: UpdateJobRequest): Promise<Job
 export async function closeJob(id: string): Promise<Job> {
   return unwrap(
     (await apiClient.patch<ApiResponse<Job>>(`/jobs/${encodeURIComponent(id)}/close`)).data,
+  );
+}
+export async function reopenJob(id: string): Promise<Job> {
+  return unwrap(
+    (await apiClient.patch<ApiResponse<Job>>(`/jobs/${encodeURIComponent(id)}/reopen`)).data,
   );
 }

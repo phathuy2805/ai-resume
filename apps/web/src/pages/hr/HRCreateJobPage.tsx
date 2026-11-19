@@ -3,12 +3,25 @@ import { toast } from 'sonner';
 import PageHeader from '@/components/common/PageHeader';
 import JobForm from '@/components/hr/JobForm';
 import type { JobFormValues } from '@/components/hr/jobFormValues';
+import { useCreateJob } from '@/hooks/useJobs';
 
 export default function HRCreateJobPage() {
   const navigate = useNavigate();
 
-  // TODO(W1-FE-04): submit through useCreateJob() from '@/hooks/useJobs'.
-  const handleSubmit = (values: JobFormValues) => {
+  const createJob = useCreateJob();
+  const handleSubmit = async (values: JobFormValues) => {
+    await createJob.mutateAsync({
+      title: values.title,
+      description: values.description,
+      requirements: values.requirements,
+      requiredSkills: values.requiredSkills,
+      preferredSkills: values.preferredSkills,
+      minYearsExperience: values.minYearsExperience,
+      level: values.level,
+      cvPassThreshold: values.cvPassThreshold,
+      interviewQuestionCount: values.interviewQuestionCount,
+      rubricWeights: values.rubricWeights,
+    });
     toast.success(`Đã tạo tin "${values.title}"`);
     navigate('/hr/jobs');
   };

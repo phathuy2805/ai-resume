@@ -6,7 +6,9 @@ import {
   JobAlreadyClosedException,
   JobCloseForbiddenException,
   JobNotFoundException,
+  JobReopenForbiddenException,
   JobUpdateForbiddenException,
+  JobViewForbiddenException,
   OpenJobNotFoundException,
 } from './jobs.error.js';
 import {
@@ -24,8 +26,10 @@ import type {
   GetJobResType,
   GetJobsQueryType,
   GetJobsResType,
+  GetMyJobResType,
   GetMyJobsQueryType,
   GetMyJobsResType,
+  ReopenJobResType,
   UpdateJobBodyType,
   UpdateJobResType,
 } from './jobs.schema.js';
@@ -79,6 +83,18 @@ export class JobsService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  /** HR view of one of their own jobs (any status), including AI config and applicationCount. */
+  async findMineById(userId: string, id: string): Promise<GetMyJobResType> {
+    const job = await this.jobsRepo.findJobByIdWithCount(id);
+    if (!job) {
+      throw JobNotFoundException;
+    }
+    if (job.createdById !== userId) {
+      throw JobViewForbiddenException;
+    }
+    return toHrJob(job);
   }
 
   async create(userId: string, body: CreateJobBodyType): Promise<CreateJobResType> {
@@ -201,6 +217,23 @@ export class JobsService {
     }
 
     const updated = await this.jobsRepo.closeJob(id);
+    return toHrJob(updated);
+  }
+
+  /** Reopens a closed job (idempotent, mirrors close). Applications already submitted are kept. */
+  async reopen(userId: string, id: string): Promise<ReopenJobResType> {
+    const existing = await this.jobsRepo.findJobByIdWithCount(id);
+    if (!existing) {
+      throw JobNotFoundException;
+    }
+    if (existing.createdById !== userId) {
+      throw JobReopenForbiddenException;
+    }
+    if (existing.status === JobStatus.OPEN) {
+      return toHrJob(existing);
+    }
+
+    const updated = await this.jobsRepo.reopenJob(id);
     return toHrJob(updated);
   }
 }
