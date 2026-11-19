@@ -5,7 +5,16 @@ import {
   useQueryClient,
   type UseMutationOptions,
 } from '@tanstack/react-query';
-import { closeJob, createJob, getJob, getJobs, getMyJobs, updateJob } from '@/api/jobs';
+import {
+  closeJob,
+  createJob,
+  getJob,
+  getJobs,
+  getMyJob,
+  getMyJobs,
+  reopenJob,
+  updateJob,
+} from '@/api/jobs';
 import { queryKeys } from '@/api/queryKeys';
 import type { Job, JobsParams, CreateJobRequest, UpdateJobRequest } from '@/types/jobs';
 
@@ -44,6 +53,16 @@ export function useJob(id: string) {
     enabled: !!id,
   });
 }
+/** HR detail (any status, with AI config). Use this for HR pages, not `useJob` (public, OPEN only). */
+export function useMyJob(id: string) {
+  return useQuery({
+    queryKey: queryKeys.jobs.mineDetail(id),
+    queryFn: ({ signal }) => getMyJob(id, signal),
+    enabled: !!id,
+  });
+}
+// Mutations invalidate every `jobs` query: HR list/detail and the public candidate list
+// (closing or reopening changes what candidates can see).
 export function useUpdateJob(
   options: Omit<
     UseMutationOptions<Job, Error, { id: string; body: UpdateJobRequest }>,
@@ -55,8 +74,7 @@ export function useUpdateJob(
     ...options,
     mutationFn: ({ id, body }) => updateJob(id, body),
     onSuccess: async (job, variables, onMutateResult, mutationContext) => {
-      await client.invalidateQueries({ queryKey: queryKeys.jobs.mine() });
-      await client.invalidateQueries({ queryKey: queryKeys.jobs.detail(job.id) });
+      await client.invalidateQueries({ queryKey: queryKeys.jobs.all });
       await options.onSuccess?.(job, variables, onMutateResult, mutationContext);
     },
   });
@@ -69,8 +87,20 @@ export function useCloseJob(
     ...options,
     mutationFn: closeJob,
     onSuccess: async (job, id, onMutateResult, mutationContext) => {
-      await client.invalidateQueries({ queryKey: queryKeys.jobs.mine() });
-      await client.invalidateQueries({ queryKey: queryKeys.jobs.detail(job.id) });
+      await client.invalidateQueries({ queryKey: queryKeys.jobs.all });
+      await options.onSuccess?.(job, id, onMutateResult, mutationContext);
+    },
+  });
+}
+export function useReopenJob(
+  options: Omit<UseMutationOptions<Job, Error, string>, 'mutationFn'> = {},
+) {
+  const client = useQueryClient();
+  return useMutation({
+    ...options,
+    mutationFn: reopenJob,
+    onSuccess: async (job, id, onMutateResult, mutationContext) => {
+      await client.invalidateQueries({ queryKey: queryKeys.jobs.all });
       await options.onSuccess?.(job, id, onMutateResult, mutationContext);
     },
   });

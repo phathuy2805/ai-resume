@@ -1,23 +1,22 @@
 import { useState } from 'react';
-import { Ban, BriefcaseBusiness, MoreHorizontal, Pencil, Plus, Users } from 'lucide-react';
+import {
+  Ban,
+  BriefcaseBusiness,
+  Eye,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Users,
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import EmptyState from '@/components/common/EmptyState';
 import PageHeader from '@/components/common/PageHeader';
 import SearchInput from '@/components/common/SearchInput';
 import SegmentedControl from '@/components/common/SegmentedControl';
 import SkillChip from '@/components/common/SkillChip';
 import { JobStatusBadge } from '@/components/common/StatusBadges';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import JobStatusDialog from '@/components/hr/JobStatusDialog';
 import { buttonVariants } from '@/components/ui/button-variants';
 import { Card } from '@/components/ui/card';
 import {
@@ -36,7 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useCloseJob, useMyJobs } from '@/hooks/useJobs';
+import { useMyJobs } from '@/hooks/useJobs';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { Job, JobStatus } from '@/types/jobs';
@@ -50,7 +49,8 @@ export default function HRJobsPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
-  const [closingJob, setClosingJob] = useState<Job | null>(null);
+  // Job whose close/reopen confirmation is open (action follows its status).
+  const [statusJob, setStatusJob] = useState<Job | null>(null);
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
   const jobsQuery = useMyJobs({
     page,
@@ -58,7 +58,6 @@ export default function HRJobsPage() {
     search: debouncedSearch || undefined,
     status: status === 'all' ? undefined : status,
   });
-  const closeJob = useCloseJob();
 
   const jobs = jobsQuery.data?.data ?? [];
   const meta = jobsQuery.data?.meta;
@@ -142,7 +141,7 @@ export default function HRJobsPage() {
                   <TableRow key={job.id}>
                     <TableCell className="py-4 pl-5">
                       <Link
-                        to={`/hr/candidates?jobId=${job.id}`}
+                        to={`/hr/jobs/${job.id}`}
                         className="font-semibold text-foreground hover:text-primary"
                       >
                         {job.title}
@@ -172,6 +171,10 @@ export default function HRJobsPage() {
                           <MoreHorizontal className="h-[18px] w-[18px]" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => navigate(`/hr/jobs/${job.id}`)}>
+                            <Eye />
+                            Xem chi tiết
+                          </DropdownMenuItem>
                           {job.status === 'OPEN' && (
                             <DropdownMenuItem onClick={() => navigate(`/hr/jobs/${job.id}/edit`)}>
                               <Pencil />
@@ -184,13 +187,18 @@ export default function HRJobsPage() {
                             <Users />
                             Xem ứng viên
                           </DropdownMenuItem>
-                          {job.status === 'OPEN' && (
+                          {job.status === 'OPEN' ? (
                             <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => setClosingJob(job)}
+                              className="text-red-600 [&_svg]:text-red-600"
+                              onClick={() => setStatusJob(job)}
                             >
                               <Ban />
                               Đóng tin
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => setStatusJob(job)}>
+                              <RotateCcw />
+                              Mở lại tin
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -235,37 +243,12 @@ export default function HRJobsPage() {
           </Card>
         </>
       )}
-      <AlertDialog
-        open={!!closingJob}
+      <JobStatusDialog
+        job={statusJob}
         onOpenChange={(open) => {
-          if (!open) setClosingJob(null);
+          if (!open) setStatusJob(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Đóng tin tuyển dụng?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn đóng tin tuyển dụng này?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Huỷ</AlertDialogCancel>
-            <AlertDialogAction
-              className="inline-flex h-10 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-medium text-white"
-              onClick={() => {
-                if (!closingJob) return;
-                closeJob.mutate(closingJob.id, {
-                  onSuccess: () => toast.success(`Đã đóng tin "${closingJob.title}"`),
-                  onError: () => undefined,
-                });
-                setClosingJob(null);
-              }}
-            >
-              Đóng tin
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
     </div>
   );
 }

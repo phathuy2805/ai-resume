@@ -4,15 +4,16 @@ import { toast } from 'sonner';
 import EmptyState from '@/components/common/EmptyState';
 import PageHeader from '@/components/common/PageHeader';
 import JobForm from '@/components/hr/JobForm';
-import type { JobFormValues } from '@/components/hr/jobFormValues';
+import { emptyJobForm, type JobFormValues } from '@/components/hr/jobFormValues';
 import { buttonVariants } from '@/components/ui/button-variants';
-import { useJob, useUpdateJob } from '@/hooks/useJobs';
+import { useMyJob, useUpdateJob } from '@/hooks/useJobs';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function HREditJobPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const jobQuery = useJob(id ?? '');
+  // HR endpoint: returns cvPassThreshold/rubricWeights (the public GET /jobs/:id omits them).
+  const jobQuery = useMyJob(id ?? '');
   const updateJob = useUpdateJob();
 
   if (jobQuery.isLoading) {
@@ -40,7 +41,8 @@ export default function HREditJobPage() {
     );
   }
   if (job.status === 'CLOSED') {
-    return <Navigate to="/hr/jobs" replace />;
+    // Closed jobs are read-only; the detail page offers "Mở lại tin".
+    return <Navigate to={`/hr/jobs/${job.id}`} replace />;
   }
 
   const handleSubmit = async (values: JobFormValues) => {
@@ -83,12 +85,7 @@ export default function HREditJobPage() {
           level: job.level ?? null,
           cvPassThreshold: job.cvPassThreshold,
           interviewQuestionCount: job.interviewQuestionCount,
-          rubricWeights: job.rubricWeights ?? {
-            technical: 40,
-            communication: 20,
-            relevance: 20,
-            evidence: 20,
-          },
+          rubricWeights: job.rubricWeights ?? emptyJobForm.rubricWeights,
           status: job.status,
         }}
       />
