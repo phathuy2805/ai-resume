@@ -9,7 +9,7 @@ import { Badge, type BadgeVariant } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button-variants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { getCandidateProgress, type CandidateTone } from '@/lib/applicationStatus';
+import { getCandidateProgress, type CandidateTone } from '@/lib/candidateStatus';
 import { formatExperience, formatRelativeDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -143,7 +143,7 @@ function MyApplicationsCard({ applications }: { applications: Application[] }) {
     (app) => !['PASSED', 'FAILED', 'REJECTED'].includes(app.status),
   ).length;
   const invited = applications.filter((app) =>
-    ['SHORTLISTED', 'INTERVIEW_INVITED', 'INTERVIEWING'].includes(app.status),
+    ['INTERVIEW_INVITED', 'INTERVIEWING'].includes(app.status),
   ).length;
   return (
     <Card className="p-5">

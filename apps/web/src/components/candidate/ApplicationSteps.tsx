@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { Check, Loader2, Sparkles, X } from 'lucide-react';
-import { CANDIDATE_STEPS, type CandidateProgress } from '@/lib/applicationStatus';
+import { CANDIDATE_STEPS, type CandidateProgress } from '@/lib/candidateStatus';
 import { cn } from '@/lib/utils';
 
 const lineColor = {
@@ -11,7 +11,7 @@ const lineColor = {
   failed: 'bg-rose-300',
 };
 
-/** Horizontal 5-step tracker: Đã nộp → Đánh giá CV → Phỏng vấn AI → Chờ kết quả → Kết quả. */
+/** Horizontal 4-step tracker: Đã nộp → Xét duyệt CV → Phỏng vấn → Kết quả. */
 export default function ApplicationSteps({ progress }: { progress: CandidateProgress }) {
   const { step: current, tone } = progress;
   return (
