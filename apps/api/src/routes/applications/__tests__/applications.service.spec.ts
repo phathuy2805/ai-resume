@@ -4,17 +4,18 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Prisma } from '../../generated/prisma/client.js';
-import { JobStatus } from '../../shared/constants/job.constant.js';
-import type { StorageService } from '../../shared/services/storage.service.js';
-import { ApplicationErrorCode } from './applications.error.js';
+import { Prisma } from '../../../generated/prisma/client.js';
+import { JobStatus } from '../../../shared/constants/job.constant.js';
+import type { ApplicationStateService } from '../../../shared/services/application-state.service.js';
+import type { StorageService } from '../../../shared/services/storage.service.js';
+import { ApplicationErrorCode } from '../applications.error.js';
 import type {
   ApplicationsRepository,
   ApplicationSummary,
   CreateApplicationData,
-} from './applications.repository.js';
-import { ApplicationsService } from './applications.service.js';
-import type { CvTextExtractor } from './cv-text.extractor.js';
+} from '../applications.repository.js';
+import { ApplicationsService } from '../applications.service.js';
+import type { CvTextExtractor } from '../cv-text.extractor.js';
 
 const CANDIDATE_ID = '11111111-1111-4111-8111-111111111111';
 const JOB_ID = '22222222-2222-4222-8222-222222222222';
@@ -69,10 +70,12 @@ describe('ApplicationsService', () => {
   };
   const storage = { putObject: vi.fn(), deleteObject: vi.fn() };
   const extractor = { extract: vi.fn() };
+  const applicationStateService = { emitStatusChanged: vi.fn() };
   const service = new ApplicationsService(
     repo as unknown as ApplicationsRepository,
     storage as unknown as StorageService,
     extractor as unknown as CvTextExtractor,
+    applicationStateService as unknown as ApplicationStateService,
   );
 
   beforeEach(() => {

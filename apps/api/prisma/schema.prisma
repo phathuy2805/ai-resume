@@ -162,15 +162,13 @@ model Application {
 model ScreeningResult {
   id                   String   @id @default(uuid())
   applicationId        String   @unique @map("application_id")
-  totalScore           Float    @map("total_score")
-  codeScore            Float    @map("code_score")
-  geminiScore          Float    @map("gemini_score")
-  similarityScore      Float    @map("similarity_score")
-  strengths            Json
-  missingSkills        Json     @map("missing_skills")
-  verifiedQuotes       Json     @map("verified_quotes")
+  totalScore           Int      @map("total_score")
+  breakdown            Json
+  explanation          Json
+  timings              Json
   processingDurationMs Int      @map("processing_duration_ms")
   createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 

@@ -2,13 +2,13 @@ import { BadRequestException } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ApplicationErrorCode } from './applications.error.js';
-import { assertValidCvFile } from './cv-file.validator.js';
+import { ApplicationErrorCode } from '../applications.error.js';
+import { assertValidCvFile } from '../cv-file.validator.js';
 
 const REAL_PDF = readFileSync(
   path.resolve(
     import.meta.dirname,
-    '../../../../../packages/ai/fixtures/cvs/cv_be_01.pdf',
+    '../../../../../../packages/ai/fixtures/cvs/cv_be_01.pdf',
   ),
 );
 

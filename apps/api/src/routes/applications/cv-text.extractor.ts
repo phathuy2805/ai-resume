@@ -1,8 +1,4 @@
-import {
-  type CvExtractionResult,
-  extractCvText,
-  isCvExtractionError,
-} from '@hireflow/ai';
+import { type CvExtractionResult, extractCvText, isCvExtractionError } from '@hireflow/ai';
 import { Injectable, Logger } from '@nestjs/common';
 import { toCvExtractionHttpException } from './applications.error.js';
 

@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Get, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import 'multer';
 import { Role } from '../../shared/constants/auth.constant.js';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator.js';
@@ -42,9 +35,7 @@ export class ApplicationsController {
   @Roles(Role.CANDIDATE)
   @Get('me/applications')
   @ApiGetMyApplicationsDoc()
-  async getMyApplications(
-    @CurrentUser('id') candidateId: string,
-  ): Promise<ApplicationDto[]> {
+  async getMyApplications(@CurrentUser('id') candidateId: string): Promise<ApplicationDto[]> {
     return this.applicationsService.findMine(candidateId);
   }
 }

@@ -1,1 +1,0 @@
-CREATE DATABASE ai_resume_test;

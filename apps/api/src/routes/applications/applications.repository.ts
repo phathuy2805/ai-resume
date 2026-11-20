@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { ApplicationStatus } from '../../shared/constants/application-status.enum.js';
+import { ApplicationStateService } from '../../shared/services/application-state.service.js';
 import { PrismaService } from '../../shared/services/prisma.service.js';
 
 /**
@@ -36,7 +37,10 @@ export interface CreateApplicationData {
 
 @Injectable()
 export class ApplicationsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly applicationStateService: ApplicationStateService,
+  ) {}
 
   /** Lấy cả job đã đóng để phân biệt 404 (không tồn tại) với 409 (đã đóng). */
   findJobForApply(jobId: string) {
@@ -46,10 +50,7 @@ export class ApplicationsRepository {
     });
   }
 
-  async existsByJobAndCandidate(
-    jobId: string,
-    candidateId: string,
-  ): Promise<boolean> {
+  async existsByJobAndCandidate(jobId: string, candidateId: string): Promise<boolean> {
     const found = await this.prisma.application.findUnique({
       where: { unique_application_per_job: { jobId, candidateId } },
       select: { id: true },
@@ -73,14 +74,7 @@ export class ApplicationsRepository {
         data: { ...data, status: ApplicationStatus.SUBMITTED },
         select: applicationSummarySelect,
       });
-      await tx.applicationStatusHistory.create({
-        data: {
-          applicationId: application.id,
-          fromStatus: null,
-          toStatus: ApplicationStatus.SUBMITTED,
-          changedById: data.candidateId,
-        },
-      });
+      await this.applicationStateService.recordInitial(tx, application.id, data.candidateId);
       return application;
     });
   }

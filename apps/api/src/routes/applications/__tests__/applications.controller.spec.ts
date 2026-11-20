@@ -6,17 +6,18 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { HttpExceptionFilter } from '../../shared/filters/http-exception.filter.js';
-import { JobStatus } from '../../shared/constants/job.constant.js';
-import { StorageService } from '../../shared/services/storage.service.js';
-import { CV_MAX_SIZE_BYTES } from './applications.constant.js';
-import { ApplicationsController } from './applications.controller.js';
+import { HttpExceptionFilter } from '../../../shared/filters/http-exception.filter.js';
+import { JobStatus } from '../../../shared/constants/job.constant.js';
+import { ApplicationStateService } from '../../../shared/services/application-state.service.js';
+import { StorageService } from '../../../shared/services/storage.service.js';
+import { CV_MAX_SIZE_BYTES } from '../applications.constant.js';
+import { ApplicationsController } from '../applications.controller.js';
 import {
   ApplicationsRepository,
   type CreateApplicationData,
-} from './applications.repository.js';
-import { ApplicationsService } from './applications.service.js';
-import { CvTextExtractor } from './cv-text.extractor.js';
+} from '../applications.repository.js';
+import { ApplicationsService } from '../applications.service.js';
+import { CvTextExtractor } from '../cv-text.extractor.js';
 
 /**
  * Gửi multipart thật qua Multer → CvUploadInterceptor → assertValidCvFile → ApplicationsService
@@ -64,7 +65,7 @@ const fakeStorage = {
 };
 const FIXTURES = path.resolve(
   import.meta.dirname,
-  '../../../../../packages/ai/fixtures/cvs',
+  '../../../../../../packages/ai/fixtures/cvs',
 );
 const REAL_PDF = readFileSync(path.join(FIXTURES, 'cv_be_01.pdf'));
 const SCANNED_PDF = readFileSync(path.join(FIXTURES, 'scans/cv_scan_01.pdf'));
@@ -82,6 +83,10 @@ describe('ApplicationsController (HTTP)', () => {
         CvTextExtractor,
         { provide: ApplicationsRepository, useValue: fakeRepo },
         { provide: StorageService, useValue: fakeStorage },
+        {
+          provide: ApplicationStateService,
+          useValue: { recordInitial: () => Promise.resolve(), emitStatusChanged: () => undefined },
+        },
         { provide: APP_PIPE, useClass: ZodValidationPipe },
         { provide: APP_FILTER, useClass: HttpExceptionFilter },
       ],

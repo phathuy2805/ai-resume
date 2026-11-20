@@ -29,10 +29,7 @@ const MulterCvInterceptor = FileInterceptor(CV_FILE_FIELD, {
 export class CvUploadInterceptor implements NestInterceptor {
   private readonly multer: NestInterceptor = new MulterCvInterceptor();
 
-  async intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Promise<Observable<unknown>> {
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
     try {
       return await this.multer.intercept(context, next);
     } catch (error) {
