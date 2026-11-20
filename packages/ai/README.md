@@ -185,16 +185,16 @@ const stored = ParsedCvSchema.safeParse(application.parsedCv);
 
 Kết quả (`ParsedCv`, `schemaVersion: 1`). Mảng mặc định `[]`, trường đơn có thể `null`:
 
-| Trường                 | Nội dung                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------- |
-| `summary`              | Tóm tắt 1–2 câu, theo ngôn ngữ của CV, không nêu tên                                              |
-| `skills`               | Kỹ năng đã chuẩn hóa (cùng bảng alias với JD), **gồm cả** công nghệ trong `experiences`, `projects` |
+| Trường                 | Nội dung                                                                                                                         |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `summary`              | Tóm tắt 1–2 câu, theo ngôn ngữ của CV, không nêu tên                                                                             |
+| `skills`               | Kỹ năng đã chuẩn hóa (cùng bảng alias với JD), **gồm cả** công nghệ trong `experiences`, `projects`                              |
 | `experiences`          | `company`, `title`, `startDate`, `endDate` (`YYYY-MM`; `endDate: null` là đang làm hoặc không rõ), `description`, `technologies` |
-| `education`            | `school`, `major`, `degree`, `graduationYear`                                                     |
-| `projects`             | `name`, `role`, `technologies`, `description`                                                     |
-| `certifications`       | Tên chứng chỉ, kèm điểm nếu có (vd. `IELTS 7.0`)                                                  |
-| `languages`            | Ngoại ngữ, kèm trình độ nếu có                                                                    |
-| `totalYearsExperience` | Tổng số năm kinh nghiệm, **tính bằng code**, làm tròn 1 chữ số thập phân                          |
+| `education`            | `school`, `major`, `degree`, `graduationYear`                                                                                    |
+| `projects`             | `name`, `role`, `technologies`, `description`                                                                                    |
+| `certifications`       | Tên chứng chỉ, kèm điểm nếu có (vd. `IELTS 7.0`)                                                                                 |
+| `languages`            | Ngoại ngữ, kèm trình độ nếu có                                                                                                   |
+| `totalYearsExperience` | Tổng số năm kinh nghiệm, **tính bằng code**, làm tròn 1 chữ số thập phân                                                         |
 
 - **Không bịa, không lấy thông tin cá nhân:** prompt cấm trích họ tên, email, SĐT, địa chỉ, ngày sinh, giới tính,
   ảnh, link cá nhân. Thông tin không có trong CV thì để `null` / `[]`.
@@ -213,15 +213,15 @@ Kết quả (`ParsedCv`, `schemaVersion: 1`). Mảng mặc định `[]`, trườ
 Chạy bằng `npm run try -w packages/ai -- parse-cv [all]`, model `gemini-3.5-flash-lite`, ngày tham chiếu 01/11/2026.
 Prompt chỉ được chỉnh dựa trên 11 CV **tập dev**; tập test chỉ chạy để xác nhận.
 
-| Kiểm tra (30 CV)                                                        | Kết quả                                   |
-| ----------------------------------------------------------------------- | ----------------------------------------- |
-| Hợp lệ theo `ParsedCvSchema`, không phải gọi lại do sai schema          | 30/30                                     |
-| Không chứa họ tên, email, SĐT, địa chỉ, link GitHub                     | 30/30                                     |
-| `totalYearsExperience` đúng với mốc thời gian gốc của fixtures          | 30/30                                     |
-| Số công việc trích được đúng                                            | 30/30                                     |
-| Kỹ năng bắt buộc của JD mục tiêu không thấy trong CV = `missing_skills` của `labels.csv` | 30/30                    |
-| Thời gian trung bình                                                    | ~1,6 giây/CV (1,2–2,3 giây)               |
-| Token mỗi CV                                                            | ~650–850 vào, ~300–500 ra                 |
+| Kiểm tra (30 CV)                                                                         | Kết quả                     |
+| ---------------------------------------------------------------------------------------- | --------------------------- |
+| Hợp lệ theo `ParsedCvSchema`, không phải gọi lại do sai schema                           | 30/30                       |
+| Không chứa họ tên, email, SĐT, địa chỉ, link GitHub                                      | 30/30                       |
+| `totalYearsExperience` đúng với mốc thời gian gốc của fixtures                           | 30/30                       |
+| Số công việc trích được đúng                                                             | 30/30                       |
+| Kỹ năng bắt buộc của JD mục tiêu không thấy trong CV = `missing_skills` của `labels.csv` | 30/30                       |
+| Thời gian trung bình                                                                     | ~1,6 giây/CV (1,2–2,3 giây) |
+| Token mỗi CV                                                                             | ~650–850 vào, ~300–500 ra   |
 
 Ghi nhận khi chạy:
 
@@ -232,22 +232,95 @@ Ghi nhận khi chạy:
   nhưng nếu JD mới có kỹ năng tiếng Việt thì nên thêm alias vào `skills.ts`.
 - Kỹ năng ghép như "CRM (HubSpot)" có thể bị tách thành `HubSpot` + "Client Relationship Management".
 
+## Embedding (`embedCv`, `embedJd`, `cosineSimilarity`)
+
+Biểu diễn CV và JD thành vector để đo độ tương đồng nội dung (thành phần `similarity`, 15% điểm ở W2-AI-02).
+
+```ts
+import { embedCv, embedJd, cosineSimilarity } from '@hireflow/ai';
+
+const jdVector = await embedJd(ai, job.parsedJd); // number[768], độ dài 1
+const cvVector = await embedCv(ai, application.parsedCv);
+const cosine = cosineSimilarity(cvVector, jdVector); // 0–1
+
+// Lưu vào cột vector(768): Prisma chưa hỗ trợ kiểu vector nên dùng $executeRaw
+await prisma.$executeRaw`UPDATE applications SET embedding = ${JSON.stringify(cvVector)}::vector WHERE id = ${id}`;
+```
+
+- **Model:** `models.embedding` của `createAiClient` (biến môi trường `GEMINI_MODEL_EMBEDDING`, gợi ý `gemini-embedding-001`).
+- **Cố định:** `taskType = SEMANTIC_SIMILARITY` cho cả CV và JD, `outputDimensionality = 768` (khớp cột `vector(768)`).
+  Vector được chuẩn hóa về độ dài 1, nên cosine = tích vô hướng (pgvector: `1 - (a <=> b)`).
+- **Văn bản đầu vào** (không dùng text CV thô), cùng bộ nhãn để hai vector so sánh được:
+  - CV (`buildCvEmbeddingText`): `Lĩnh vực` (tóm tắt), `Kỹ năng`, `Công việc` (vị trí + công nghệ + mô tả ngắn, tối đa 5), `Dự án` (tối đa 5).
+  - JD (`buildJdEmbeddingText`): `Lĩnh vực` (domain), `Kỹ năng` (bắt buộc), `Kỹ năng ưu tiên`, `Công việc` (trách nhiệm).
+  - Không đưa tên công ty, trường học, chứng chỉ, ngoại ngữ; không đưa số năm / cấp độ (đã có điểm riêng tính bằng code).
+- **Lỗi:** Gemini trả sai số chiều, vector rỗng / toàn 0 → `AiInvalidResponseError`. Text rỗng → `RangeError` (không gọi Gemini).
+- Client ghi log thời gian, số chiều, độ dài text; Gemini Developer API không trả số token cho embedding (`tokens=n/a`).
+
+### Kết quả chạy thử (W2-AI-01)
+
+Chạy bằng `npm run try -w packages/ai -- embed [all]`, model `gemini-embedding-001` (văn bản đầu vào lấy từ
+`parseCv` / `parseJd` với `gemini-3.5-flash-lite`). Mốc quy đổi chọn **chỉ trên 11 CV tập dev**; cả 30 CV chỉ chạy để xác nhận.
+
+Cosine (min / trung bình / max):
+
+| Nhóm                         | Tập dev (11 CV)            | Cả 30 CV                   |
+| ---------------------------- | -------------------------- | -------------------------- |
+| QUALIFIED ↔ JD mục tiêu      | 0,898 / 0,907 / 0,922 (4)  | 0,890 / 0,908 / 0,921 (12) |
+| BORDERLINE ↔ JD mục tiêu     | 0,880 / 0,894 / 0,913 (4)  | 0,831 / 0,886 / 0,919 (9)  |
+| REJECTED ↔ JD mục tiêu       | 0,738 / 0,757 / 0,782 (3)  | 0,732 / 0,759 / 0,781 (9)  |
+| CV ↔ JD khác ngành           | 0,715 / 0,758 / 0,790 (22) | 0,717 / 0,769 / 0,841 (60) |
+| `labels.csv` "phù hợp"       | 0,898 / 0,908 / 0,922 (5)  | 0,890 / 0,909 / 0,921 (15) |
+| `labels.csv` "không phù hợp" | 0,738 / 0,807 / 0,898 (8)  | 0,732 / 0,792 / 0,896 (25) |
+| Toàn bộ cặp CV ↔ JD          | 0,715 / 0,793 / 0,922 (33) | 0,717 / 0,798 / 0,921 (90) |
+
+Ghi nhận:
+
+- Cosine **dồn vào khoảng hẹp 0,72–0,92** (hai câu không liên quan backend ↔ marketing vẫn ~0,78),
+  nên không dùng thẳng `cosine × 100`.
+- Với mỗi JD, CV phù hợp có cosine trung bình cao hơn rõ so với CV ngành khác (30 CV: BE 0,912 vs 0,762;
+  DA 0,911 vs 0,779; MKT 0,902 vs 0,765).
+- CV REJECTED của bộ dữ liệu phần lớn lệch ngành, nên cosine ngang mức CV ngành khác (~0,73–0,78).
+- Embedding phân biệt **đúng ngành / sai ngành**, nhưng **không** phân biệt đủ / thiếu một kỹ năng:
+  BORDERLINE gần bằng QUALIFIED, và một số cặp nhãn "không phù hợp" (thiếu kỹ năng bắt buộc) vẫn tới ~0,90.
+  Phần đó do điểm kỹ năng và số năm (tính bằng code) đảm nhận.
+- Tập dev có khoảng trống sạch 0,79–0,88 giữa cùng ngành và khác ngành; trên 30 CV hai nhóm chồng nhau một chút
+  (BORDERLINE thấp nhất 0,831, cặp khác ngành cao nhất 0,841), có thể do ngành gần nhau (Data ↔ Backend).
+
+**Gợi ý quy đổi cho W2-AI-02** (mốc để trong config, chỉnh lại sau W2-AI-04):
+
+```ts
+const SIMILARITY_MIN = 0.75; // ≈ mức CV khác ngành / REJECTED
+const SIMILARITY_MAX = 0.92; // ≈ mức CV phù hợp cao nhất
+similarityScore = clamp(
+  ((cosine - SIMILARITY_MIN) / (SIMILARITY_MAX - SIMILARITY_MIN)) * 100,
+  0,
+  100,
+);
+```
+
+Trên 30 CV: QUALIFIED ~82–100, BORDERLINE ~48–100, REJECTED ~0–18, khác ngành ~0–54.
+Similarity chỉ chiếm 15% nên phần chồng lấn làm lệch điểm tổng tối đa khoảng 8 điểm.
+
 ## Scripts
 
 Chạy từ thư mục gốc repo:
 
-| Lệnh                                                   | Việc                                                                              |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| `npm run build -w packages/ai`                         | Build ra `dist/` (ESM + CJS + `.d.ts`)                                            |
-| `npm run dev -w packages/ai`                           | Build lại khi sửa code (đã có trong `npm run dev` ở gốc)                          |
-| `npm run test -w packages/ai`                          | Unit test (không gọi Gemini thật)                                                 |
-| `npm run test:cov -w packages/ai`                      | Test + độ phủ (báo cáo HTML ở `coverage/`)                                        |
-| `npm run typecheck -w packages/ai`                     | Kiểm tra kiểu, kể cả kiểu trong test                                              |
-| `npm run try -w packages/ai [-- text\|structured\|jd\|cv]` | Chạy thử với Gemini thật (`jd`: `parseJd` trên 3 JD; `cv`: `extractCvText` trên 30 CV + 2 scan, có tự đánh dấu ✓/✗) |
-| `npm run try -w packages/ai -- cv <tên file>` | Như `cv`, in nội dung một CV chỉ định để kiểm tra bằng mắt (mặc định `cv_be_06.pdf`) |
-| `npm run try -w packages/ai -- parse-cv` | `parseCv` trên 11 CV tập dev, in JSON + tự kiểm tra ✓/✗ (dùng để chỉnh prompt) |
-| `npm run try -w packages/ai -- parse-cv all` | `parseCv` trên cả 30 CV, chỉ in kết quả kiểm tra (chỉ để xác nhận, không chỉnh prompt theo tập test) |
-| `npm run try -w packages/ai -- parse-cv <tên file>` | `parseCv` trên một CV của fixtures, in JSON |
+| Lệnh                                                                       | Việc                                                                                                                                                                                              |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run build -w packages/ai`                                             | Build ra `dist/` (ESM + CJS + `.d.ts`)                                                                                                                                                            |
+| `npm run dev -w packages/ai`                                               | Build lại khi sửa code (đã có trong `npm run dev` ở gốc)                                                                                                                                          |
+| `npm run test -w packages/ai`                                              | Unit test (không gọi Gemini thật)                                                                                                                                                                 |
+| `npm run test:cov -w packages/ai`                                          | Test + độ phủ (báo cáo HTML ở `coverage/`)                                                                                                                                                        |
+| `npm run typecheck -w packages/ai`                                         | Kiểm tra kiểu, kể cả kiểu trong test                                                                                                                                                              |
+| `npm run try -w packages/ai [-- text\|structured\|jd\|cv]`                 | Chạy thử với Gemini thật (`jd`: `parseJd` trên 3 JD; `cv`: `extractCvText` trên 30 CV + 2 scan, có tự đánh dấu ✓/✗)                                                                               |
+| `npm run try -w packages/ai -- cv <tên file>`                              | Như `cv`, in nội dung một CV chỉ định để kiểm tra bằng mắt (mặc định `cv_be_06.pdf`)                                                                                                              |
+| `npm run try -w packages/ai -- parse-cv`                                   | `parseCv` trên 11 CV tập dev, in JSON + tự kiểm tra ✓/✗ (dùng để chỉnh prompt)                                                                                                                    |
+| `npm run try -w packages/ai -- parse-cv all`                               | `parseCv` trên cả 30 CV, chỉ in kết quả kiểm tra (chỉ để xác nhận, không chỉnh prompt theo tập test)                                                                                              |
+| `npm run try -w packages/ai -- parse-cv <tên file>`                        | `parseCv` trên một CV của fixtures, in JSON                                                                                                                                                       |
 | `npm run try -w packages/ai -- parse-cv <đường dẫn...> [--jd be\|da\|mkt]` | `parseCv` trên CV tự thêm: file `.pdf` / `.txt` hoặc thư mục chứa chúng. In JSON, kiểm tra schema và email/SĐT/link; `--jd` liệt kê kỹ năng bắt buộc của JD còn thiếu. Ngày tham chiếu là hôm nay |
 
-`npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT`.
+| `npm run try -w packages/ai -- embed quick` | Kiểm tra nhanh model embedding: 3 câu mẫu, 768 chiều, độ dài 1 |
+| `npm run try -w packages/ai -- embed [all]` | `embedJd` 3 JD + `embedCv` 11 CV tập dev (`all`: 30 CV), in bảng cosine và khoảng cosine theo nhóm |
+
+`npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT` (demo `embed` cần thêm `GEMINI_MODEL_EMBEDDING`).
