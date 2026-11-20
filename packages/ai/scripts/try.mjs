@@ -10,6 +10,9 @@
 //   npm run try -w packages/ai -- parse-cv all # parseCv trên cả 30 CV, chỉ in kết quả kiểm tra
 //   npm run try -w packages/ai -- parse-cv cv_be_06.pdf   # một CV của fixtures, in JSON
 //   npm run try -w packages/ai -- parse-cv ./my-cvs [--jd be]   # CV tự thêm (.pdf/.txt, file hoặc thư mục)
+//   npm run try -w packages/ai -- embed quick  # kiểm tra nhanh model embedding (3 lần gọi) (W2-AI-01)
+//   npm run try -w packages/ai -- embed        # embedding 3 JD + 11 CV tập dev, in khoảng cosine
+//   npm run try -w packages/ai -- embed all    # như trên với cả 30 CV
 //
 // Chỉ chỉnh prompt dựa trên tập dev. "parse-cv all" chỉ dùng để xác nhận sau khi đã chốt prompt.
 // Nghỉ giữa các lần gọi Gemini: TRY_DELAY_MS (mặc định 2000) để không vượt quota.
@@ -21,7 +24,15 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 import {
+  buildCvEmbeddingText,
+  buildJdEmbeddingText,
+  cosineSimilarity,
   createAiClient,
+  EMBEDDING_DIMENSIONS,
+  EMBEDDING_TASK_TYPE,
+  embedCv,
+  embedJd,
+  embedText,
   extractCvText,
   isAiError,
   isCvExtractionError,
@@ -44,8 +55,9 @@ const ai = createAiClient({
   apiKey: process.env.GEMINI_API_KEY,
   models: {
     text: process.env.GEMINI_MODEL_TEXT,
-    // Script chưa gọi embedding/audio; giá trị tạm chỉ để qua bước kiểm tra cấu hình.
-    embedding: process.env.GEMINI_MODEL_EMBEDDING || 'not-used-by-try',
+    // Chỉ demo embed cần model embedding (embedDemo tự báo nếu thiếu); script chưa gọi audio.
+    // Giá trị tạm chỉ để qua bước kiểm tra cấu hình.
+    embedding: process.env.GEMINI_MODEL_EMBEDDING || 'not-set',
     audio: process.env.GEMINI_MODEL_AUDIO || 'not-used-by-try',
   },
 });
@@ -505,6 +517,177 @@ async function parseCvDemo() {
   if (failed > 0) process.exitCode = 1;
 }
 
+// ── Demo embed: embedding CV / JD + cosine (W2-AI-01) ──────────────────
+const JD_NAMES = ['be', 'da', 'mkt'];
+const jdNameOf = (jdId) => jdId.replace('JD_', '').toLowerCase();
+const average = (values) => values.reduce((a, b) => a + b, 0) / (values.length || 1);
+const f3 = (value) => value.toFixed(3);
+
+/** min / trung bình / max của một nhóm cosine, dạng "0.612 / 0.701 / 0.788 (n=8)". */
+function describeGroup(values) {
+  if (values.length === 0) return '(không có)';
+  return `${f3(Math.min(...values))} / ${f3(average(values))} / ${f3(Math.max(...values))} (n=${values.length})`;
+}
+
+/** Kiểm tra nhanh model embedding: 3 câu, 3 lần gọi. */
+async function embedQuickDemo() {
+  const texts = {
+    backend: 'Kỹ năng: NodeJS, NestJS, PostgreSQL, Docker\nCông việc: xây dựng REST API',
+    backend2: 'Kỹ năng: TypeScript, Express, MySQL, Redis\nCông việc: phát triển API cho hệ thống',
+    marketing: 'Kỹ năng: Google Ads, SEO, Content Marketing\nCông việc: chạy chiến dịch quảng cáo',
+  };
+  const vectors = {};
+  for (const [name, text] of Object.entries(texts)) {
+    vectors[name] = await embedText(ai, text);
+  }
+  const v = vectors.backend;
+  check(
+    v.length === EMBEDDING_DIMENSIONS,
+    `vector đủ ${EMBEDDING_DIMENSIONS} chiều`,
+    String(v.length),
+  );
+  check(Math.abs(Math.hypot(...v) - 1) < 1e-6, 'vector có độ dài 1', f3(Math.hypot(...v)));
+  const near = cosineSimilarity(vectors.backend, vectors.backend2);
+  const far = cosineSimilarity(vectors.backend, vectors.marketing);
+  console.log(`   backend ↔ backend2: ${f3(near)} | backend ↔ marketing: ${f3(far)}`);
+  check(near > far, 'hai text backend giống nhau hơn backend ↔ marketing');
+}
+
+async function embedDemo() {
+  if (!process.env.GEMINI_MODEL_EMBEDDING?.trim()) {
+    console.error(
+      '✗ Thiếu GEMINI_MODEL_EMBEDDING (vd. gemini-embedding-001) trong packages/ai/.env',
+    );
+    process.exitCode = 1;
+    return;
+  }
+  console.log(
+    `── model embedding: ${ai.models.embedding}, taskType ${EMBEDDING_TASK_TYPE}, ${EMBEDDING_DIMENSIONS} chiều`,
+  );
+
+  const mode = process.argv[3] ?? 'dev';
+  if (mode === 'quick') {
+    await embedQuickDemo();
+  } else if (mode === 'dev' || mode === 'all') {
+    await embedFixturesDemo(mode);
+  } else {
+    throw new Error('embed chỉ nhận: quick, dev (mặc định), all');
+  }
+  console.log(
+    `\n${failedChecks === 0 ? '✓ Tất cả kiểm tra đạt' : `✗ ${failedChecks} kiểm tra không đạt`}`,
+  );
+  if (failedChecks > 0) process.exitCode = 1;
+}
+
+/**
+ * parseJd + embedJd cho 3 JD, parseCv + embedCv cho CV của fixtures, rồi tính cosine CV ↔ JD.
+ * In khoảng cosine theo nhóm để W2-AI-02 quy đổi sang thang 0–100.
+ */
+async function embedFixturesDemo(mode) {
+  const delayMs = Number(process.env.TRY_DELAY_MS ?? 2000);
+  const labels = readLabels();
+  const splits = new Map(labels.map((row) => [row.cv_file, row.split]));
+  const truth = readFixtureTruth();
+  const files = [...truth.keys()].filter((file) => mode === 'all' || splits.get(file) === 'dev');
+
+  // 1. JD
+  const jdVectors = {};
+  for (const name of JD_NAMES) {
+    const jd = readFixtureJd(name);
+    const parsed = await parseJd(ai, {
+      title: jd.title,
+      description: descriptionOf(jd),
+      requiredSkills: jd.requiredSkills,
+      preferredSkills: jd.preferredSkills,
+      minYearsExperience: jd.minYearsExperience,
+      level: jd.level,
+    });
+    jdVectors[name] = await embedJd(ai, parsed);
+    console.log(`\n${jd.code} — văn bản embedding:\n${buildJdEmbeddingText(parsed)}`);
+    await sleep(delayMs);
+  }
+
+  // 2. CV
+  console.log(`\n── ${files.length} CV (${mode}); cột: cosine với JD_BE / JD_DA / JD_MKT`);
+  const rows = [];
+  for (const [i, file] of files.entries()) {
+    if (i > 0) await sleep(delayMs);
+    const cv = truth.get(file);
+    const bytes = new Uint8Array(readFileSync(path.join(FIXTURES_DIR, 'cvs', file)));
+    const { text } = await extractCvText(bytes, { logger: quietLogger });
+    const parsed = await parseCv(ai, text, { referenceDate: FIXTURE_REFERENCE_DATE });
+    const vector = await embedCv(ai, parsed);
+
+    const cosines = Object.fromEntries(
+      JD_NAMES.map((name) => [name, cosineSimilarity(vector, jdVectors[name])]),
+    );
+    const target = jdNameOf(cv.jdId);
+    rows.push({ file, category: cv.category, target, cosines });
+
+    const best = JD_NAMES.reduce((a, b) => (cosines[a] >= cosines[b] ? a : b));
+    console.log(
+      `${file.padEnd(14)} ${cv.category.padEnd(10)} ` +
+        JD_NAMES.map((name) =>
+          name === target ? `[${f3(cosines[name])}]` : ` ${f3(cosines[name])} `,
+        ).join(' ') +
+        (best === target ? '' : `  ← gần ${best.toUpperCase()} hơn JD mục tiêu`),
+    );
+    if (i === 0)
+      console.log(
+        `   văn bản embedding (mẫu):\n${buildCvEmbeddingText(parsed).replace(/^/gm, '   │ ')}`,
+      );
+  }
+
+  // 3. Khoảng cosine theo nhóm
+  const targetOf = (category) =>
+    rows.filter((row) => row.category === category).map((row) => row.cosines[row.target]);
+  const crossDomain = rows.flatMap((row) =>
+    JD_NAMES.filter((name) => name !== row.target).map((name) => row.cosines[name]),
+  );
+  console.log('\n── Khoảng cosine (min / trung bình / max):');
+  console.log(`   QUALIFIED  ↔ JD mục tiêu : ${describeGroup(targetOf('QUALIFIED'))}`);
+  console.log(`   BORDERLINE ↔ JD mục tiêu : ${describeGroup(targetOf('BORDERLINE'))}`);
+  console.log(`   REJECTED   ↔ JD mục tiêu : ${describeGroup(targetOf('REJECTED'))}`);
+  console.log(`   CV ↔ JD khác ngành       : ${describeGroup(crossDomain)}`);
+
+  // Theo nhãn của labels.csv (cả cặp chéo)
+  const byFile = new Map(rows.map((row) => [row.file, row]));
+  const labeled = { 'phù hợp': [], 'không phù hợp': [] };
+  for (const row of labels) {
+    const result = byFile.get(row.cv_file);
+    if (result && labeled[row.label]) labeled[row.label].push(result.cosines[jdNameOf(row.jd_id)]);
+  }
+  console.log(`   labels.csv "phù hợp"     : ${describeGroup(labeled['phù hợp'])}`);
+  console.log(`   labels.csv "không phù hợp": ${describeGroup(labeled['không phù hợp'])}`);
+  const all = rows.flatMap((row) => Object.values(row.cosines));
+  console.log(`   Toàn bộ cặp CV ↔ JD      : ${describeGroup(all)}`);
+
+  // 4. Kiểm tra theo card: CV phù hợp có cosine với JD mục tiêu cao hơn CV lệch ngành
+  console.log('\n── Kiểm tra:');
+  for (const name of JD_NAMES) {
+    const qualified = rows
+      .filter((row) => row.target === name && row.category === 'QUALIFIED')
+      .map((row) => row.cosines[name]);
+    const rejected = rows
+      .filter((row) => row.target === name && row.category === 'REJECTED')
+      .map((row) => row.cosines[name]);
+    const otherDomain = rows.filter((row) => row.target !== name).map((row) => row.cosines[name]);
+    if (qualified.length === 0) continue;
+    check(
+      average(qualified) > average(otherDomain),
+      `JD_${name.toUpperCase()}: CV phù hợp > CV ngành khác (trung bình)`,
+      `${f3(average(qualified))} vs ${f3(average(otherDomain))}`,
+    );
+    if (rejected.length > 0) {
+      console.log(
+        `   ℹ JD_${name.toUpperCase()}: CV phù hợp ${f3(average(qualified))} vs CV REJECTED nộp vào JD này ${f3(average(rejected))}` +
+          ` | CV ngành khác ${f3(average(otherDomain))}` +
+          ' (tham khảo: CV REJECTED của bộ dữ liệu phần lớn lệch ngành nên cosine gần mức CV ngành khác)',
+      );
+    }
+  }
+}
+
 const demos = {
   text: () => ai.generateText('Trả lời trong 1 câu: thủ đô của Việt Nam là gì?'),
   structured: () =>
@@ -516,6 +699,7 @@ const demos = {
   jd: jdDemo,
   cv: cvDemo,
   'parse-cv': parseCvDemo,
+  embed: embedDemo,
 };
 
 /** Gợi ý cách xử lý cho các lỗi hay gặp khi chạy thử. */

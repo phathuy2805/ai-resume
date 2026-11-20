@@ -40,7 +40,7 @@ function setup(generateContent: GeminiModelsApi['generateContent']) {
     models: { text: 'text-model', embedding: 'embed-model', audio: 'audio-model' },
     logger,
   });
-  const api = { generateContent: vi.fn(generateContent) };
+  const api = { generateContent: vi.fn(generateContent), embedContent: vi.fn() };
   const client = buildAiClient(config, api, { sleep: async () => {}, random: () => 0 });
   return { client, api, lines };
 }
