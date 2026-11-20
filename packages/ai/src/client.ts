@@ -1,5 +1,7 @@
 import {
   GoogleGenAI,
+  type EmbedContentParameters,
+  type EmbedContentResponse,
   type GenerateContentParameters,
   type GenerateContentResponse,
 } from '@google/genai';
@@ -38,6 +40,13 @@ export interface GenerateTextOptions extends CallOptions {
 
 export type GenerateStructuredOptions = GenerateTextOptions;
 
+export interface EmbedOptions extends CallOptions {
+  /** Mục đích của vector, vd. "SEMANTIC_SIMILARITY". Hai vector muốn so sánh phải dùng cùng taskType. */
+  taskType?: string;
+  /** Số chiều muốn lấy (Gemini cắt bớt từ cuối). Không truyền thì lấy số chiều mặc định của model. */
+  outputDimensionality?: number;
+}
+
 /** Câu lệnh để Gemini chép lại nguyên văn chữ trong file PDF (dùng cho CV dạng ảnh scan). */
 export const READ_PDF_TEXT_INSTRUCTION = `Transcribe all readable text in this PDF exactly as written, in reading order.
 Rules:
@@ -64,11 +73,17 @@ export interface AiClient {
    * Lưu ý: kết quả do AI đọc, có thể sót hoặc sai chữ; không kiểm chứng lại được như text gốc của PDF.
    */
   readPdfText(pdf: Uint8Array, options?: CallOptions): Promise<string>;
+  /**
+   * Lấy vector embedding (chưa chuẩn hóa) của một đoạn text bằng model embedding.
+   * Thường không gọi trực tiếp: dùng embedText / embedCv / embedJd (đã cố định taskType, số chiều, chuẩn hóa).
+   */
+  embed(text: string, options?: EmbedOptions): Promise<number[]>;
 }
 
 /** Phần nhỏ của SDK mà client cần. Tách ra để test truyền bản giả vào. */
 export interface GeminiModelsApi {
   generateContent(params: GenerateContentParameters): Promise<GenerateContentResponse>;
+  embedContent(params: EmbedContentParameters): Promise<EmbedContentResponse>;
 }
 
 /** Tùy chọn chỉ dùng trong test để retry không phải chờ thật. */
@@ -90,37 +105,36 @@ export function buildAiClient(
 ): AiClient {
   const { logger } = config;
 
-  /** Mọi lần gọi Gemini đều đi qua đây: timeout + retry + log + đổi lỗi. */
-  async function generateContent(
+  /**
+   * Mọi lần gọi Gemini đều đi qua đây: timeout + retry + log + đổi lỗi.
+   * `describe` trả phần cuối của dòng log thành công (số token, số chiều...), không bao giờ chứa nội dung.
+   */
+  async function callGemini<R>(
     fn: string,
-    params: GenerateContentParameters,
+    model: string,
+    run: (signal: AbortSignal) => Promise<R>,
+    describe: (value: R) => string,
     options: CallOptions = {},
-  ): Promise<GenerateContentResponse> {
+  ): Promise<R> {
     const timeoutMs = options.timeoutMs ?? config.timeoutMs;
     const maxRetries = options.maxRetries ?? config.maxRetries;
-    const prefix = `ai.${fn} model=${params.model}`;
+    const prefix = `ai.${fn} model=${model}`;
     const startedAt = performance.now();
     const elapsedMs = () => Math.round(performance.now() - startedAt);
 
     try {
-      const { value, attempts } = await withRetry(
-        () =>
-          runWithTimeout(timeoutMs, (signal) =>
-            api.generateContent({ ...params, config: { ...params.config, abortSignal: signal } }),
+      const { value, attempts } = await withRetry(() => runWithTimeout(timeoutMs, run), {
+        ...retryTiming,
+        maxRetries,
+        shouldRetry: isRetryableGeminiError,
+        toFinalError: toAiError,
+        onRetry: ({ attempt, delayMs, error }) =>
+          logger.warn(
+            `${prefix} retry attempt=${attempt} reason="${describeRetryReason(error)}" delayMs=${delayMs}`,
           ),
-        {
-          ...retryTiming,
-          maxRetries,
-          shouldRetry: isRetryableGeminiError,
-          toFinalError: toAiError,
-          onRetry: ({ attempt, delayMs, error }) =>
-            logger.warn(
-              `${prefix} retry attempt=${attempt} reason="${describeRetryReason(error)}" delayMs=${delayMs}`,
-            ),
-        },
-      );
+      });
       logger.log(
-        `${prefix} ok durationMs=${elapsedMs()} retries=${attempts - 1} tokens(in/out/total)=${formatUsage(value.usageMetadata)}`,
+        `${prefix} ok durationMs=${elapsedMs()} retries=${attempts - 1} ${describe(value)}`,
       );
       return value;
     } catch (error) {
@@ -130,6 +144,21 @@ export function buildAiClient(
       );
       throw aiError;
     }
+  }
+
+  function generateContent(
+    fn: string,
+    params: GenerateContentParameters,
+    options: CallOptions = {},
+  ): Promise<GenerateContentResponse> {
+    return callGemini(
+      fn,
+      params.model,
+      (signal) =>
+        api.generateContent({ ...params, config: { ...params.config, abortSignal: signal } }),
+      (response) => `tokens(in/out/total)=${formatUsage(response.usageMetadata)}`,
+      options,
+    );
   }
 
   return {
@@ -203,6 +232,34 @@ export function buildAiClient(
         );
       }
       throw new AiInvalidResponseError(issues, { attempts: STRUCTURED_MAX_ATTEMPTS });
+    },
+
+    async embed(text, options = {}) {
+      const { taskType, outputDimensionality, ...callOptions } = options;
+      const model = config.models.embedding;
+      const response = await callGemini(
+        'embed',
+        model,
+        (signal) =>
+          api.embedContent({
+            model,
+            contents: text,
+            config: { taskType, outputDimensionality, abortSignal: signal },
+          }),
+        (result) => {
+          const embedding = result.embeddings?.[0];
+          // Gemini Developer API không trả số token cho embedding (chỉ Vertex có statistics).
+          const tokens = embedding?.statistics?.tokenCount ?? 'n/a';
+          return `dims=${embedding?.values?.length ?? 0} chars=${text.length} tokens=${tokens}`;
+        },
+        callOptions,
+      );
+
+      const values = response.embeddings?.[0]?.values;
+      if (!values || values.length === 0) {
+        throw new AiInvalidResponseError(['Gemini returned no embedding values']);
+      }
+      return values;
     },
   };
 }

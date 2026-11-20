@@ -1,5 +1,7 @@
 import {
   ApiError,
+  type EmbedContentParameters,
+  type EmbedContentResponse,
   type GenerateContentParameters,
   type GenerateContentResponse,
 } from '@google/genai';
@@ -43,9 +45,17 @@ function setup(generateContent: GeminiModelsApi['generateContent']) {
     models: { text: 'text-model', embedding: 'embed-model', audio: 'audio-model' },
     logger,
   });
-  const api = { generateContent: vi.fn(generateContent) };
+  const api = {
+    generateContent: vi.fn(generateContent),
+    embedContent: vi.fn<GeminiModelsApi['embedContent']>(async () => fakeEmbedding([0.1, 0.2])),
+  };
   const client = buildAiClient(config, api, { sleep: async () => {}, random: () => 0 });
   return { client, api, lines };
+}
+
+/** Phản hồi embedding giả, giống EmbedContentResponse của Gemini Developer API (không có số token). */
+function fakeEmbedding(values: number[] | undefined): EmbedContentResponse {
+  return { embeddings: values ? [{ values }] : [] } as EmbedContentResponse;
 }
 
 describe('createAiClient', () => {
@@ -183,5 +193,75 @@ describe('readPdfText', () => {
     expect(api.generateContent).toHaveBeenCalledTimes(2);
     expect(lines.at(-1)).toMatch(/^log ai\.readPdfText model=text-model ok /);
     expect(lines.join('\n')).not.toContain('HO SO UNG VIEN');
+  });
+});
+
+describe('embed', () => {
+  const TEXT = 'Kỹ năng: NodeJS, PostgreSQL';
+
+  it('dùng model embedding, truyền taskType, số chiều, abortSignal; trả mảng số', async () => {
+    const { client, api } = setup(async () => fakeResponse('unused'));
+    api.embedContent.mockResolvedValueOnce(fakeEmbedding([0.3, 0.4]));
+
+    await expect(
+      client.embed(TEXT, { taskType: 'SEMANTIC_SIMILARITY', outputDimensionality: 768 }),
+    ).resolves.toEqual([0.3, 0.4]);
+
+    const params = api.embedContent.mock.calls[0]![0] as EmbedContentParameters;
+    expect(params.model).toBe('embed-model');
+    expect(params.contents).toBe(TEXT);
+    expect(params.config).toMatchObject({
+      taskType: 'SEMANTIC_SIMILARITY',
+      outputDimensionality: 768,
+    });
+    expect(params.config?.abortSignal).toBeInstanceOf(AbortSignal);
+    expect(api.generateContent).not.toHaveBeenCalled();
+  });
+
+  it('dùng chung retry (429 rồi thành công)', async () => {
+    const { client, api, lines } = setup(async () => fakeResponse('unused'));
+    api.embedContent.mockRejectedValueOnce(apiError(429));
+
+    await expect(client.embed(TEXT)).resolves.toEqual([0.1, 0.2]);
+    expect(api.embedContent).toHaveBeenCalledTimes(2);
+    expect(lines[0]).toMatch(
+      /^warn ai\.embed model=embed-model retry attempt=1 reason="status 429"/,
+    );
+  });
+
+  it('ghi log thời gian, số chiều, độ dài text; không lộ nội dung hay API key', async () => {
+    const { client, lines } = setup(async () => fakeResponse('unused'));
+
+    await client.embed(TEXT);
+    expect(lines).toEqual([
+      expect.stringMatching(
+        new RegExp(
+          `^log ai\\.embed model=embed-model ok durationMs=\\d+ retries=0 dims=2 chars=${TEXT.length} tokens=n/a$`,
+        ),
+      ),
+    ]);
+    expect(lines.join('\n')).not.toContain('NodeJS');
+    expect(lines.join('\n')).not.toContain(API_KEY);
+  });
+
+  it('Gemini không trả vector: ném AI_INVALID_RESPONSE', async () => {
+    const { client, api } = setup(async () => fakeResponse('unused'));
+    api.embedContent.mockResolvedValueOnce(fakeEmbedding(undefined));
+
+    await expect(client.embed(TEXT)).rejects.toMatchObject({
+      code: 'AI_INVALID_RESPONSE',
+      issues: ['Gemini returned no embedding values'],
+    });
+  });
+
+  it('lỗi 400: không retry, ném AI_REQUEST_FAILED', async () => {
+    const { client, api } = setup(async () => fakeResponse('unused'));
+    api.embedContent.mockRejectedValue(apiError(400));
+
+    await expect(client.embed(TEXT)).rejects.toMatchObject({
+      code: 'AI_REQUEST_FAILED',
+      status: 400,
+    });
+    expect(api.embedContent).toHaveBeenCalledTimes(1);
   });
 });

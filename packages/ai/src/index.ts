@@ -8,6 +8,7 @@ export type {
   CallOptions,
   GenerateTextOptions,
   GenerateStructuredOptions,
+  EmbedOptions,
 } from './client.js';
 export type { AiClientOptions, AiModels } from './config.js';
 export type { AiLogger } from './logger.js';
@@ -51,6 +52,19 @@ export type {
   CvTextSource,
   ExtractCvTextOptions,
 } from './cv-text.js';
+
+// Embedding CV / JD và độ tương đồng (W2-AI-01)
+export {
+  embedText,
+  embedCv,
+  embedJd,
+  buildCvEmbeddingText,
+  buildJdEmbeddingText,
+  cosineSimilarity,
+  EMBEDDING_DIMENSIONS,
+  EMBEDDING_TASK_TYPE,
+} from './embedding.js';
+export type { EmbedTextOptions } from './embedding.js';
 
 /**
  * @deprecated Chỉ còn để apps/api (AppService) không bị lỗi.
