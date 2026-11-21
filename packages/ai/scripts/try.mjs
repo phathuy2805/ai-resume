@@ -13,6 +13,9 @@
 //   npm run try -w packages/ai -- embed quick  # kiểm tra nhanh model embedding (3 lần gọi) (W2-AI-01)
 //   npm run try -w packages/ai -- embed        # embedding 3 JD + 11 CV tập dev, in khoảng cosine
 //   npm run try -w packages/ai -- embed all    # như trên với cả 30 CV
+//   npm run try -w packages/ai -- score        # scoreCv trên các cặp CV ↔ JD tập dev của labels.csv (W2-AI-02)
+//   npm run try -w packages/ai -- score all    # như trên với cả 40 cặp
+//   npm run try -w packages/ai -- score repeat cv_be_06.pdf [3] [--full]   # chấm lại 3 lần, kiểm tra ±5
 //
 // Chỉ chỉnh prompt dựa trên tập dev. "parse-cv all" chỉ dùng để xác nhận sau khi đã chốt prompt.
 // Nghỉ giữa các lần gọi Gemini: TRY_DELAY_MS (mặc định 2000) để không vượt quota.
@@ -34,6 +37,7 @@ import {
   embedJd,
   embedText,
   extractCvText,
+  scoreCv,
   isAiError,
   isCvExtractionError,
   normalizeSkills,
@@ -688,6 +692,150 @@ async function embedFixturesDemo(mode) {
   }
 }
 
+// ── Demo score: scoreCv trên fixtures (W2-AI-02) ───────────────────────
+
+/** parseJd + embedJd cho một JD của fixtures. */
+async function prepareFixtureJd(name) {
+  const jd = readFixtureJd(name);
+  const parsedJd = await parseJd(ai, {
+    title: jd.title,
+    description: descriptionOf(jd),
+    requiredSkills: jd.requiredSkills,
+    preferredSkills: jd.preferredSkills,
+    minYearsExperience: jd.minYearsExperience,
+    level: jd.level,
+  });
+  const jdEmbedding = await embedJd(ai, parsedJd);
+  return { code: jd.code, threshold: jd.cvPassThreshold, parsedJd, jdEmbedding };
+}
+
+/** extractCvText + parseCv + embedCv cho một CV của fixtures. */
+async function prepareFixtureCv(file) {
+  const bytes = new Uint8Array(readFileSync(path.join(FIXTURES_DIR, 'cvs', file)));
+  const { text } = await extractCvText(bytes, { logger: quietLogger });
+  const parsedCv = await parseCv(ai, text, { referenceDate: FIXTURE_REFERENCE_DATE });
+  const cvEmbedding = await embedCv(ai, parsedCv);
+  return { parsedCv, cvEmbedding };
+}
+
+/** "R 83 P 50 Y 100 L 70 S 48" — điểm 5 thành phần, gọn trên một dòng. */
+function describeBreakdown(b) {
+  return (
+    `R ${String(b.requiredSkills.score).padStart(3)} P ${String(b.preferredSkills.score).padStart(3)}` +
+    ` Y ${String(b.experienceYears.score).padStart(3)} L ${String(b.relevance.score).padStart(3)}` +
+    ` S ${String(b.similarity.score).padStart(3)}${b.capped ? ' capped' : ''}`
+  );
+}
+
+async function scoreDemo() {
+  if (!process.env.GEMINI_MODEL_EMBEDDING?.trim()) {
+    console.error(
+      '✗ Thiếu GEMINI_MODEL_EMBEDDING (vd. gemini-embedding-001) trong packages/ai/.env',
+    );
+    process.exitCode = 1;
+    return;
+  }
+  const mode = process.argv[3] ?? 'dev';
+  if (mode === 'repeat') return scoreRepeatDemo(process.argv.slice(4));
+  if (mode !== 'dev' && mode !== 'all') {
+    throw new Error('score chỉ nhận: dev (mặc định), all, repeat <cv.pdf> [số lần] [--full]');
+  }
+
+  const delayMs = Number(process.env.TRY_DELAY_MS ?? 2000);
+  const truth = readFixtureTruth();
+  const rows = readLabels().filter((row) => mode === 'all' || row.split === 'dev');
+
+  const jds = {};
+  for (const name of JD_NAMES) {
+    jds[name] = await prepareFixtureJd(name);
+    await sleep(delayMs);
+  }
+
+  console.log(
+    `\n── scoreCv trên ${rows.length} cặp CV ↔ JD của labels.csv (${mode});` +
+      ' R/P = kỹ năng bắt buộc/ưu tiên, Y = số năm, L = liên quan (Gemini), S = tương đồng',
+  );
+  const cvCache = new Map();
+  const results = [];
+  for (const [i, row] of rows.entries()) {
+    if (i > 0) await sleep(delayMs);
+    if (!cvCache.has(row.cv_file)) cvCache.set(row.cv_file, await prepareFixtureCv(row.cv_file));
+    const jd = jds[jdNameOf(row.jd_id)];
+    const { total, breakdown } = await scoreCv(ai, {
+      ...cvCache.get(row.cv_file),
+      parsedJd: jd.parsedJd,
+      jdEmbedding: jd.jdEmbedding,
+    });
+    const expected = Number(row.expected_score);
+    const pass = total >= jd.threshold;
+    const agrees = pass === (row.label === 'phù hợp');
+    results.push({ row, total, expected, agrees });
+
+    const category = truth.get(row.cv_file)?.category ?? '?';
+    console.log(
+      `${row.cv_file.padEnd(14)} ${row.jd_id.padEnd(6)} ${category.padEnd(10)} ` +
+        `${String(total).padStart(3)} (nhãn ${String(expected).padStart(2)}, ${row.label.padEnd(13)}) ` +
+        `${describeBreakdown(breakdown)}${agrees ? '' : '  ← lệch nhãn theo ngưỡng'}`,
+    );
+    console.log(`   ${breakdown.relevance.comment}`);
+  }
+
+  const errors = results.map(({ total, expected }) => Math.abs(total - expected));
+  const byLabel = (label) =>
+    results.filter(({ row }) => row.label === label).map(({ total }) => total);
+  const range = (values) =>
+    values.length ? `${Math.min(...values)}–${Math.max(...values)}` : '(không có)';
+  const agreed = results.filter(({ agrees }) => agrees).length;
+  console.log('\n── Tổng hợp:');
+  console.log(`   "phù hợp": điểm ${range(byLabel('phù hợp'))}`);
+  console.log(`   "không phù hợp": điểm ${range(byLabel('không phù hợp'))}`);
+  console.log(
+    `   Lệch so với expected_score: trung bình ${average(errors).toFixed(1)}, tối đa ${Math.max(...errors)}`,
+  );
+  console.log(
+    `   Khớp nhãn theo ngưỡng của job (≥ ngưỡng ↔ "phù hợp"): ${agreed}/${results.length}`,
+  );
+}
+
+/**
+ * Chấm một CV nhiều lần (mặc định 3) để kiểm tra độ ổn định (±5).
+ * Mặc định parse + embed một lần rồi chỉ lặp scoreCv; --full thì parse + embed lại mỗi lần (như BE chấm lại).
+ */
+async function scoreRepeatDemo(args) {
+  const full = args.includes('--full');
+  const [file, countArg] = args.filter((arg) => arg !== '--full');
+  const truth = readFixtureTruth();
+  const cv = truth.get(file);
+  if (!cv)
+    throw new Error(
+      'Cách dùng: score repeat <cv của fixtures, vd. cv_be_06.pdf> [số lần] [--full]',
+    );
+  const count = Number(countArg ?? 3);
+  const delayMs = Number(process.env.TRY_DELAY_MS ?? 2000);
+
+  const jd = await prepareFixtureJd(jdNameOf(cv.jdId));
+  console.log(
+    `\n── ${file} ↔ ${jd.code}, ${count} lần${full ? ' (parse + embed lại mỗi lần)' : ''}`,
+  );
+  let prepared;
+  const totals = [];
+  for (let i = 0; i < count; i++) {
+    await sleep(delayMs);
+    if (full || !prepared) prepared = await prepareFixtureCv(file);
+    const { total, breakdown } = await scoreCv(ai, {
+      ...prepared,
+      parsedJd: jd.parsedJd,
+      jdEmbedding: jd.jdEmbedding,
+    });
+    totals.push(total);
+    console.log(`   lần ${i + 1}: ${String(total).padStart(3)}  ${describeBreakdown(breakdown)}`);
+    console.log(`           ${breakdown.relevance.comment}`);
+  }
+  const spread = Math.max(...totals) - Math.min(...totals);
+  check(spread <= 5, 'chênh lệch giữa các lần ≤ 5', `${spread} (${totals.join(', ')})`);
+  if (failedChecks > 0) process.exitCode = 1;
+}
+
 const demos = {
   text: () => ai.generateText('Trả lời trong 1 câu: thủ đô của Việt Nam là gì?'),
   structured: () =>
@@ -700,6 +848,7 @@ const demos = {
   cv: cvDemo,
   'parse-cv': parseCvDemo,
   embed: embedDemo,
+  score: scoreDemo,
 };
 
 /** Gợi ý cách xử lý cho các lỗi hay gặp khi chạy thử. */
