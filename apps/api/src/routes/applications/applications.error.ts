@@ -2,6 +2,7 @@ import type { CvExtractionError } from '@hireflow/ai';
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
   PayloadTooLargeException,
   UnprocessableEntityException,
@@ -18,6 +19,9 @@ export enum ApplicationErrorCode {
   JOB_NOT_FOUND = 'JOB_NOT_FOUND',
   JOB_CLOSED = 'JOB_CLOSED',
   ALREADY_APPLIED = 'ALREADY_APPLIED',
+  APPLICATION_NOT_FOUND = 'APPLICATION_NOT_FOUND',
+  APPLICATION_FORBIDDEN = 'APPLICATION_FORBIDDEN',
+  INVALID_DECISION_STATUS = 'INVALID_DECISION_STATUS',
 }
 
 export const CvFileRequiredException = new BadRequestException({
@@ -48,6 +52,26 @@ export const JobClosedException = new ConflictException({
 export const AlreadyAppliedException = new ConflictException({
   message: 'Bạn đã nộp CV vào tin tuyển dụng này',
   code: ApplicationErrorCode.ALREADY_APPLIED,
+});
+
+export const JobNotFoundForHrException = new NotFoundException({
+  message: 'Không tìm thấy tin tuyển dụng',
+  code: ApplicationErrorCode.JOB_NOT_FOUND,
+});
+
+export const ApplicationNotFoundException = new NotFoundException({
+  message: 'Không tìm thấy hồ sơ ứng tuyển',
+  code: ApplicationErrorCode.APPLICATION_NOT_FOUND,
+});
+
+export const ApplicationForbiddenException = new ForbiddenException({
+  message: 'Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này',
+  code: ApplicationErrorCode.APPLICATION_FORBIDDEN,
+});
+
+export const InvalidDecisionStatusException = new ConflictException({
+  message: 'Chỉ có thể duyệt hoặc từ chối hồ sơ đang ở trạng thái SCREENED',
+  code: ApplicationErrorCode.INVALID_DECISION_STATUS,
 });
 
 /**

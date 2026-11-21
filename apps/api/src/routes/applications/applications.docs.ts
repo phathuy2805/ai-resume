@@ -16,14 +16,26 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
-import { ApplicationDto } from './applications.dto.js';
+import {
+  ApplicationDto,
+  DecisionResDto,
+  GetApplicationCvUrlResDto,
+  GetApplicationDetailResDto,
+  GetJobApplicationsResDto,
+  GetJobStatsResDto,
+  MyApplicationResDto,
+} from './applications.dto.js';
 import {
   AlreadyAppliedException,
+  ApplicationForbiddenException,
+  ApplicationNotFoundException,
   CvFileRequiredException,
   CvFileTooLargeException,
   CvInvalidFileTypeException,
+  InvalidDecisionStatusException,
   JobClosedException,
   JobNotFoundForApplyException,
+  JobNotFoundForHrException,
 } from './applications.error.js';
 
 const EXAMPLE_TIMESTAMP = '2026-11-18T03:00:00.000Z';
@@ -64,8 +76,7 @@ const CANDIDATE_ONLY = ApiForbiddenResponse({
   description: 'Chỉ tài khoản ứng viên (CANDIDATE) mới được gọi',
 });
 
-export const ApiApplicationsController = () =>
-  applyDecorators(ApiTags('Applications'));
+export const ApiApplicationsController = () => applyDecorators(ApiTags('Applications'));
 
 export const ApiApplyJobDoc = () =>
   applyDecorators(
@@ -100,13 +111,11 @@ export const ApiApplyJobDoc = () =>
     }),
     ZodResponse({
       status: HttpStatus.CREATED,
-      description:
-        'Nộp hồ sơ thành công, trạng thái SUBMITTED (không trả cvText, cvS3Key)',
+      description: 'Nộp hồ sơ thành công, trạng thái SUBMITTED (không trả cvText, cvS3Key)',
       type: ApplicationDto,
     }) as MethodDecorator,
     ApiBadRequestResponse({
-      description:
-        'Thiếu file, file không phải PDF, hoặc job id không đúng định dạng UUID',
+      description: 'Thiếu file, file không phải PDF, hoặc job id không đúng định dạng UUID',
       examples: {
         ...exampleOf(CvFileRequiredException),
         ...exampleOf(CvInvalidFileTypeException),
@@ -147,9 +156,148 @@ export const ApiGetMyApplicationsDoc = () =>
     ZodResponse({
       status: HttpStatus.OK,
       description:
-        'Danh sách hồ sơ (job, trạng thái, ngày nộp); không trả cvText, cvS3Key, link CV',
-      type: [ApplicationDto],
+        'Danh sách hồ sơ (job, trạng thái, ngày nộp, interviewId nếu đã mời); không trả cvText, cvS3Key, link CV',
+      type: [MyApplicationResDto],
     }) as MethodDecorator,
     UNAUTHORIZED,
     CANDIDATE_ONLY,
+  );
+
+const HR_ONLY = ApiForbiddenResponse({
+  description: 'Chỉ HR sở hữu tin tuyển dụng mới được truy cập',
+  examples: exampleOf(ApplicationForbiddenException),
+});
+
+export const ApiGetJobApplicationsDoc = () =>
+  applyDecorators(
+    ApiBearerAuth('JWT-auth'),
+    ApiOperation({
+      summary: 'Danh sách hồ sơ ứng tuyển theo tin tuyển dụng (HR sở hữu job)',
+      description:
+        'Hỗ trợ lọc theo status, khoảng điểm minScore/maxScore, sắp xếp theo score hoặc createdAt và phân trang.',
+    }),
+    ApiParam({
+      name: 'jobId',
+      description: 'Mã định danh tin tuyển dụng (Job UUID)',
+      example: 'd19e9185-1715-46a2-94b2-e1e779a1d123',
+    }),
+    ZodResponse({
+      status: HttpStatus.OK,
+      description: 'Danh sách hồ sơ kèm phân trang',
+      type: GetJobApplicationsResDto,
+    }) as MethodDecorator,
+    ApiBadRequestResponse({
+      description: 'Query filter hoặc jobId không hợp lệ',
+    }),
+    UNAUTHORIZED,
+    HR_ONLY,
+    ApiNotFoundResponse({
+      description: 'Không tìm thấy tin tuyển dụng',
+      examples: exampleOf(JobNotFoundForHrException),
+    }),
+  );
+
+export const ApiGetApplicationDetailDoc = () =>
+  applyDecorators(
+    ApiBearerAuth('JWT-auth'),
+    ApiOperation({
+      summary: 'Chi tiết một hồ sơ ứng tuyển cho HR',
+      description:
+        'Bao gồm thông tin ứng viên, job (kèm cvPassThreshold), ScreeningResult, quyết định của HR và lịch sử trạng thái. Không trả cvText hay embedding.',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Mã định danh hồ sơ (Application UUID)',
+    }),
+    ZodResponse({
+      status: HttpStatus.OK,
+      description: 'Chi tiết hồ sơ ứng tuyển',
+      type: GetApplicationDetailResDto,
+    }) as MethodDecorator,
+    UNAUTHORIZED,
+    HR_ONLY,
+    ApiNotFoundResponse({
+      description: 'Không tìm thấy hồ sơ',
+      examples: exampleOf(ApplicationNotFoundException),
+    }),
+  );
+
+export const ApiDecideApplicationDoc = () =>
+  applyDecorators(
+    ApiBearerAuth('JWT-auth'),
+    ApiOperation({
+      summary: 'HR duyệt hoặc loại hồ sơ sau vòng sàng lọc CV',
+      description:
+        'Chỉ nhận khi hồ sơ đang ở trạng thái SCREENED. APPROVE sẽ chuyển SHORTLISTED -> tạo Interview -> INTERVIEW_INVITED trong cùng transaction; REJECT chuyển sang REJECTED.',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Mã định danh hồ sơ (Application UUID)',
+    }),
+    ZodResponse({
+      status: HttpStatus.OK,
+      description: 'Cập nhật quyết định thành công',
+      type: DecisionResDto,
+    }) as MethodDecorator,
+    ApiBadRequestResponse({
+      description: 'Dữ liệu quyết định hoặc ID không hợp lệ',
+    }),
+    UNAUTHORIZED,
+    HR_ONLY,
+    ApiNotFoundResponse({
+      description: 'Không tìm thấy hồ sơ',
+      examples: exampleOf(ApplicationNotFoundException),
+    }),
+    ApiConflictResponse({
+      description: 'Hồ sơ không ở trạng thái SCREENED',
+      examples: exampleOf(InvalidDecisionStatusException),
+    }),
+  );
+
+export const ApiGetJobStatsDoc = () =>
+  applyDecorators(
+    ApiBearerAuth('JWT-auth'),
+    ApiOperation({
+      summary: 'Thống kê hồ sơ ứng tuyển theo tin tuyển dụng (HR sở hữu job)',
+      description:
+        'Trả số lượng theo trạng thái, phân bố điểm theo khoảng 10, phân bố AI recommendation, tỷ lệ AI đề xuất đạt và tỷ lệ HR đồng ý với AI.',
+    }),
+    ApiParam({
+      name: 'jobId',
+      description: 'Mã định danh tin tuyển dụng (Job UUID)',
+    }),
+    ZodResponse({
+      status: HttpStatus.OK,
+      description: 'Số liệu thống kê của job',
+      type: GetJobStatsResDto,
+    }) as MethodDecorator,
+    UNAUTHORIZED,
+    HR_ONLY,
+    ApiNotFoundResponse({
+      description: 'Không tìm thấy tin tuyển dụng',
+      examples: exampleOf(JobNotFoundForHrException),
+    }),
+  );
+
+export const ApiGetApplicationCvUrlDoc = () =>
+  applyDecorators(
+    ApiBearerAuth('JWT-auth'),
+    ApiOperation({
+      summary: 'Tạo link presigned S3 tạm thời để xem/tải CV của ứng viên (10 phút)',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Mã định danh hồ sơ (Application UUID)',
+    }),
+    ZodResponse({
+      status: HttpStatus.OK,
+      description: 'Link presigned S3 kèm thời gian hết hạn',
+      type: GetApplicationCvUrlResDto,
+    }) as MethodDecorator,
+    UNAUTHORIZED,
+    HR_ONLY,
+    ApiNotFoundResponse({
+      description: 'Không tìm thấy hồ sơ',
+      examples: exampleOf(ApplicationNotFoundException),
+    }),
   );

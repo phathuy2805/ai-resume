@@ -1,12 +1,30 @@
 import { createZodDto } from 'nestjs-zod';
-import { ApplicationSchema, JobSummarySchema, UploadCvFileSchema } from './applications.schema.js';
-
-export class JobSummaryDto extends createZodDto(JobSummarySchema) {}
+import { ApplicationSchema } from '../../shared/models/application.model.js';
+import {
+  ApplicationIdParamSchema,
+  DecisionBodySchema,
+  DecisionResSchema,
+  GetApplicationCvUrlResSchema,
+  GetApplicationDetailResSchema,
+  GetJobApplicationsQuerySchema,
+  GetJobApplicationsResSchema,
+  GetJobStatsResSchema,
+  JobApplicationsParamSchema,
+  MyApplicationResSchema,
+  UploadCvFileSchema,
+} from './applications.schema.js';
 
 export class ApplicationDto extends createZodDto(ApplicationSchema) {}
-export const ApplicationResponseDto = ApplicationDto;
-export type ApplicationResponseDto = ApplicationDto;
+export class MyApplicationResDto extends createZodDto(MyApplicationResSchema) {}
 
 export class UploadCvFileDto extends createZodDto(UploadCvFileSchema) {}
-export const ApplyJobDto = UploadCvFileDto;
-export type ApplyJobDto = UploadCvFileDto;
+
+export class JobApplicationsParamDto extends createZodDto(JobApplicationsParamSchema) {}
+export class ApplicationIdParamDto extends createZodDto(ApplicationIdParamSchema) {}
+export class GetJobApplicationsQueryDto extends createZodDto(GetJobApplicationsQuerySchema) {}
+export class GetJobApplicationsResDto extends createZodDto(GetJobApplicationsResSchema) {}
+export class GetApplicationDetailResDto extends createZodDto(GetApplicationDetailResSchema) {}
+export class DecisionBodyDto extends createZodDto(DecisionBodySchema) {}
+export class DecisionResDto extends createZodDto(DecisionResSchema) {}
+export class GetJobStatsResDto extends createZodDto(GetJobStatsResSchema) {}
+export class GetApplicationCvUrlResDto extends createZodDto(GetApplicationCvUrlResSchema) {}
