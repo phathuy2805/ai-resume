@@ -7,7 +7,10 @@ import { cleanupOpenApiDoc } from 'nestjs-zod';
 import path from 'path';
 import { AppModule } from './app.module.js';
 import envConfig from './shared/config/env.config.js';
-import { wrapOpenApiSuccessResponses } from './shared/utils/openapi.util.js';
+import {
+  attachOpenApiErrorResponses,
+  wrapOpenApiSuccessResponses,
+} from './shared/utils/openapi.util.js';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -36,7 +39,9 @@ async function bootstrap() {
     .build();
 
   const rawDocument = SwaggerModule.createDocument(app, config);
-  const document = wrapOpenApiSuccessResponses(cleanupOpenApiDoc(rawDocument));
+  const document = attachOpenApiErrorResponses(
+    wrapOpenApiSuccessResponses(cleanupOpenApiDoc(rawDocument)),
+  );
   SwaggerModule.setup('api/docs', app, document);
 
   if (process.env.NODE_ENV !== 'production') {
