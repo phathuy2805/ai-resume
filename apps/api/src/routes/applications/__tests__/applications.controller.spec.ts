@@ -113,6 +113,7 @@ describe('ApplicationsController (HTTP)', () => {
         cvSizeBytes: 100,
         cvMimeType: 'application/pdf',
         aiRecommendation: null,
+        interviewId: null,
         createdAt: '2026-11-18T03:00:00.000Z',
         updatedAt: '2026-11-18T03:00:00.000Z',
       },

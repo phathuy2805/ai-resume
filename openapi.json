@@ -1,20 +1,6 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api": {
-      "get": {
-        "operationId": "AppController_getHello",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "App"
-        ]
-      }
-    },
     "/api/auth/register": {
       "post": {
         "description": "Tạo tài khoản mới, đồng thời cấp httpOnly cookie `refresh_token` để client có thể gọi `/api/auth/refresh` lấy `accessToken` ngay.",
@@ -955,7 +941,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Danh sách hồ sơ (job, trạng thái, ngày nộp); không trả cvText, cvS3Key, link CV",
+            "description": "Danh sách hồ sơ (job, trạng thái, ngày nộp, interviewId nếu đã mời); không trả cvText, cvS3Key, link CV",
             "content": {
               "application/json": {
                 "schema": {
@@ -964,7 +950,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/ApplicationDto_Output"
+                        "$ref": "#/components/schemas/MyApplicationResDto_Output"
                       }
                     }
                   },
@@ -988,6 +974,563 @@
           }
         ],
         "summary": "Danh sách hồ sơ ứng tuyển của chính ứng viên đăng nhập",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
+    "/api/jobs/{jobId}/applications": {
+      "get": {
+        "description": "Hỗ trợ lọc theo status, khoảng điểm minScore/maxScore, sắp xếp theo score hoặc createdAt và phân trang.",
+        "operationId": "ApplicationsController_getJobApplications",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh tin tuyển dụng (Job UUID)",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "example": "d19e9185-1715-46a2-94b2-e1e779a1d123",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Số thứ tự trang cần lấy (bắt đầu từ 1)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Số lượng bản ghi trên một trang (tối đa 100)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Lọc theo trạng thái hồ sơ",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SUBMITTED",
+                "SCREENING",
+                "SCREENING_FAILED",
+                "SCREENED",
+                "SHORTLISTED",
+                "REJECTED",
+                "INTERVIEW_INVITED",
+                "INTERVIEWING",
+                "EVALUATED",
+                "PASSED",
+                "FAILED"
+              ]
+            }
+          },
+          {
+            "name": "minScore",
+            "required": false,
+            "in": "query",
+            "description": "Điểm sàng lọc tối thiểu",
+            "schema": {
+              "minimum": 0,
+              "maximum": 100,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "maxScore",
+            "required": false,
+            "in": "query",
+            "description": "Điểm sàng lọc tối đa",
+            "schema": {
+              "minimum": 0,
+              "maximum": 100,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Tiêu chí sắp xếp",
+            "schema": {
+              "default": "createdAt",
+              "type": "string",
+              "enum": [
+                "score",
+                "createdAt"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Thứ tự sắp xếp",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách hồ sơ kèm phân trang",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetJobApplicationsResDto_Output"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query filter hoặc jobId không hợp lệ"
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
+          },
+          "403": {
+            "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_FORBIDDEN": {
+                    "summary": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                      "code": "APPLICATION_FORBIDDEN",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy tin tuyển dụng",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "JOB_NOT_FOUND": {
+                    "summary": "Không tìm thấy tin tuyển dụng",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy tin tuyển dụng",
+                      "code": "JOB_NOT_FOUND",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Danh sách hồ sơ ứng tuyển theo tin tuyển dụng (HR sở hữu job)",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
+    "/api/jobs/{jobId}/stats": {
+      "get": {
+        "description": "Trả số lượng theo trạng thái, phân bố điểm theo khoảng 10, phân bố AI recommendation, tỷ lệ AI đề xuất đạt và tỷ lệ HR đồng ý với AI.",
+        "operationId": "ApplicationsController_getJobStats",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh tin tuyển dụng (Job UUID)",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Số liệu thống kê của job",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GetJobStatsResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
+          },
+          "403": {
+            "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_FORBIDDEN": {
+                    "summary": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                      "code": "APPLICATION_FORBIDDEN",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy tin tuyển dụng",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "JOB_NOT_FOUND": {
+                    "summary": "Không tìm thấy tin tuyển dụng",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy tin tuyển dụng",
+                      "code": "JOB_NOT_FOUND",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Thống kê hồ sơ ứng tuyển theo tin tuyển dụng (HR sở hữu job)",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
+    "/api/applications/{id}": {
+      "get": {
+        "description": "Bao gồm thông tin ứng viên, job (kèm cvPassThreshold), ScreeningResult, quyết định của HR và lịch sử trạng thái. Không trả cvText hay embedding.",
+        "operationId": "ApplicationsController_getApplicationDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh hồ sơ (Application UUID)",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chi tiết hồ sơ ứng tuyển",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GetApplicationDetailResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
+          },
+          "403": {
+            "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_FORBIDDEN": {
+                    "summary": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                      "code": "APPLICATION_FORBIDDEN",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy hồ sơ",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_NOT_FOUND": {
+                    "summary": "Không tìm thấy hồ sơ ứng tuyển",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy hồ sơ ứng tuyển",
+                      "code": "APPLICATION_NOT_FOUND",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Chi tiết một hồ sơ ứng tuyển cho HR",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
+    "/api/applications/{id}/decision": {
+      "post": {
+        "description": "Chỉ nhận khi hồ sơ đang ở trạng thái SCREENED. APPROVE sẽ chuyển SHORTLISTED -> tạo Interview -> INTERVIEW_INVITED trong cùng transaction; REJECT chuyển sang REJECTED.",
+        "operationId": "ApplicationsController_decideApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh hồ sơ (Application UUID)",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật quyết định thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/DecisionResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu quyết định hoặc ID không hợp lệ"
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
+          },
+          "403": {
+            "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_FORBIDDEN": {
+                    "summary": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                      "code": "APPLICATION_FORBIDDEN",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy hồ sơ",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_NOT_FOUND": {
+                    "summary": "Không tìm thấy hồ sơ ứng tuyển",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy hồ sơ ứng tuyển",
+                      "code": "APPLICATION_NOT_FOUND",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Hồ sơ không ở trạng thái SCREENED",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "INVALID_DECISION_STATUS": {
+                    "summary": "Chỉ có thể duyệt hoặc từ chối hồ sơ đang ở trạng thái SCREENED",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Chỉ có thể duyệt hoặc từ chối hồ sơ đang ở trạng thái SCREENED",
+                      "code": "INVALID_DECISION_STATUS",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "HR duyệt hoặc loại hồ sơ sau vòng sàng lọc CV",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
+    "/api/applications/{id}/cv-url": {
+      "get": {
+        "operationId": "ApplicationsController_getApplicationCvUrl",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh hồ sơ (Application UUID)",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Link presigned S3 kèm thời gian hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GetApplicationCvUrlResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ"
+          },
+          "403": {
+            "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_FORBIDDEN": {
+                    "summary": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                      "code": "APPLICATION_FORBIDDEN",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy hồ sơ",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_NOT_FOUND": {
+                    "summary": "Không tìm thấy hồ sơ ứng tuyển",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy hồ sơ ứng tuyển",
+                      "code": "APPLICATION_NOT_FOUND",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Tạo link presigned S3 tạm thời để xem/tải CV của ứng viên (10 phút)",
         "tags": [
           "Applications"
         ]
@@ -3124,6 +3667,888 @@
           "cvMimeType",
           "createdAt",
           "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "MyApplicationResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh đơn ứng tuyển (UUID)"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUBMITTED",
+              "SCREENING",
+              "SCREENING_FAILED",
+              "SCREENED",
+              "SHORTLISTED",
+              "REJECTED",
+              "INTERVIEW_INVITED",
+              "INTERVIEWING",
+              "EVALUATED",
+              "PASSED",
+              "FAILED"
+            ],
+            "description": "Trạng thái đơn ứng tuyển"
+          },
+          "job": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "description": "Mã định danh công việc (UUID)"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Tiêu đề tuyển dụng"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "additionalProperties": false,
+            "description": "Thông tin công việc ứng tuyển"
+          },
+          "cvFileName": {
+            "type": "string",
+            "description": "Tên file CV đã nộp"
+          },
+          "cvSizeBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Dung lượng file CV (byte)"
+          },
+          "cvMimeType": {
+            "type": "string",
+            "description": "Định dạng file CV (application/pdf)"
+          },
+          "cvUrl": {
+            "type": "string",
+            "description": "Link xem CV có chữ ký, hết hạn sau thời gian ngắn",
+            "format": "uri"
+          },
+          "aiRecommendation": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "CONSIDER",
+              "REJECT",
+              null
+            ],
+            "description": "Kết luận của AI sau khi sàng lọc CV (null nếu chưa chấm)",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm nộp đơn (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật trạng thái gần nhất (ISO 8601)"
+          },
+          "interviewId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã phiên phỏng vấn AI nếu đã được mời phỏng vấn (null nếu chưa có)",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "job",
+          "cvFileName",
+          "cvSizeBytes",
+          "cvMimeType",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "GetJobApplicationsResDto_Output": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "description": "Mã định danh đơn ứng tuyển (UUID)"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "SUBMITTED",
+                    "SCREENING",
+                    "SCREENING_FAILED",
+                    "SCREENED",
+                    "SHORTLISTED",
+                    "REJECTED",
+                    "INTERVIEW_INVITED",
+                    "INTERVIEWING",
+                    "EVALUATED",
+                    "PASSED",
+                    "FAILED"
+                  ],
+                  "description": "Trạng thái đơn ứng tuyển"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "description": "Thời điểm nộp đơn (ISO 8601)"
+                },
+                "candidateName": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Họ và tên đầy đủ"
+                },
+                "totalScore": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "Điểm tổng AI chấm CV",
+                  "nullable": true
+                },
+                "aiRecommendation": {
+                  "type": "string",
+                  "enum": [
+                    "PASS",
+                    "CONSIDER",
+                    "REJECT",
+                    null
+                  ],
+                  "description": "Đề xuất của AI",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "status",
+                "createdAt",
+                "candidateName",
+                "totalScore",
+                "aiRecommendation"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "description": "Trang hiện tại"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "description": "Số lượng mục trên mỗi trang"
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "description": "Tổng số bản ghi thỏa điều kiện tìm kiếm"
+              },
+              "totalPages": {
+                "description": "Tổng số trang",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "page",
+              "limit",
+              "total"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "additionalProperties": false
+      },
+      "GetJobStatsResDto_Output": {
+        "type": "object",
+        "properties": {
+          "totalApplications": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "byStatus": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "required": [
+              "SUBMITTED",
+              "SCREENING",
+              "SCREENING_FAILED",
+              "SCREENED",
+              "SHORTLISTED",
+              "REJECTED",
+              "INTERVIEW_INVITED",
+              "INTERVIEWING",
+              "EVALUATED",
+              "PASSED",
+              "FAILED"
+            ]
+          },
+          "scoreDistribution": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "range": {
+                  "type": "string",
+                  "description": "Khoảng điểm (VD: 0-9, 10-19, ..., 90-100)"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Số lượng hồ sơ trong khoảng điểm"
+                }
+              },
+              "required": [
+                "range",
+                "count"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "byRecommendation": {
+            "type": "object",
+            "properties": {
+              "PASS": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "CONSIDER": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "REJECT": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "unrated": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "PASS",
+              "CONSIDER",
+              "REJECT",
+              "unrated"
+            ],
+            "additionalProperties": false
+          },
+          "aiPassRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "hrAgreementRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "nullable": true
+          }
+        },
+        "required": [
+          "totalApplications",
+          "byStatus",
+          "scoreDistribution",
+          "byRecommendation",
+          "aiPassRate",
+          "hrAgreementRate"
+        ],
+        "additionalProperties": false
+      },
+      "GetApplicationDetailResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh đơn ứng tuyển (UUID)"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUBMITTED",
+              "SCREENING",
+              "SCREENING_FAILED",
+              "SCREENED",
+              "SHORTLISTED",
+              "REJECTED",
+              "INTERVIEW_INVITED",
+              "INTERVIEWING",
+              "EVALUATED",
+              "PASSED",
+              "FAILED"
+            ],
+            "description": "Trạng thái đơn ứng tuyển"
+          },
+          "cvFileName": {
+            "type": "string",
+            "description": "Tên file CV đã nộp"
+          },
+          "cvSizeBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Dung lượng file CV (byte)"
+          },
+          "cvMimeType": {
+            "type": "string",
+            "description": "Định dạng file CV (application/pdf)"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm nộp đơn (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật trạng thái gần nhất (ISO 8601)"
+          },
+          "aiRecommendation": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "CONSIDER",
+              "REJECT",
+              null
+            ],
+            "nullable": true
+          },
+          "screeningError": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "candidate": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "description": "ID người dùng (UUID)"
+              },
+              "fullName": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Họ và tên đầy đủ"
+              },
+              "email": {
+                "description": "Email người dùng",
+                "type": "string",
+                "format": "email",
+                "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+              }
+            },
+            "required": [
+              "id",
+              "fullName",
+              "email"
+            ],
+            "additionalProperties": false
+          },
+          "job": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "description": "Mã định danh công việc (UUID)"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Tiêu đề tuyển dụng"
+              },
+              "cvPassThreshold": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Điểm sàn qua vòng CV (0-100)"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "cvPassThreshold"
+            ],
+            "additionalProperties": false
+          },
+          "screeningResult": {
+            "type": "object",
+            "properties": {
+              "totalScore": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "breakdown": {
+                "type": "object",
+                "properties": {
+                  "requiredSkills": {
+                    "type": "object",
+                    "properties": {
+                      "score": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "weight": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "matched": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "missing": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "score",
+                      "weight",
+                      "matched",
+                      "missing"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "preferredSkills": {
+                    "type": "object",
+                    "properties": {
+                      "score": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "weight": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "matched": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "missing": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "score",
+                      "weight",
+                      "matched",
+                      "missing"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "experienceYears": {
+                    "type": "object",
+                    "properties": {
+                      "score": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "weight": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "candidateYears": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "requiredYears": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "score",
+                      "weight",
+                      "candidateYears",
+                      "requiredYears"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "relevance": {
+                    "type": "object",
+                    "properties": {
+                      "score": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "weight": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "comment": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "score",
+                      "weight",
+                      "comment"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "similarity": {
+                    "type": "object",
+                    "properties": {
+                      "score": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "weight": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "cosine": {
+                        "type": "number",
+                        "minimum": -1,
+                        "maximum": 1
+                      }
+                    },
+                    "required": [
+                      "score",
+                      "weight",
+                      "cosine"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "capped": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "requiredSkills",
+                  "preferredSkills",
+                  "experienceYears",
+                  "relevance",
+                  "similarity",
+                  "capped"
+                ],
+                "additionalProperties": false
+              },
+              "explanation": {},
+              "timings": {},
+              "processingDurationMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "createdAt": {
+                "type": "string"
+              },
+              "updatedAt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "totalScore",
+              "breakdown",
+              "explanation",
+              "timings",
+              "processingDurationMs",
+              "createdAt",
+              "updatedAt"
+            ],
+            "additionalProperties": false,
+            "nullable": true
+          },
+          "hrDecisionBy": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "description": "ID người dùng (UUID)"
+              },
+              "fullName": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Họ và tên đầy đủ"
+              }
+            },
+            "required": [
+              "id",
+              "fullName"
+            ],
+            "additionalProperties": false,
+            "nullable": true
+          },
+          "hrDecisionAt": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hrNote": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "interviewId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "nullable": true
+          },
+          "statusHistories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "fromStatus": {
+                  "type": "string",
+                  "enum": [
+                    "SUBMITTED",
+                    "SCREENING",
+                    "SCREENING_FAILED",
+                    "SCREENED",
+                    "SHORTLISTED",
+                    "REJECTED",
+                    "INTERVIEW_INVITED",
+                    "INTERVIEWING",
+                    "EVALUATED",
+                    "PASSED",
+                    "FAILED",
+                    null
+                  ],
+                  "nullable": true
+                },
+                "toStatus": {
+                  "type": "string",
+                  "enum": [
+                    "SUBMITTED",
+                    "SCREENING",
+                    "SCREENING_FAILED",
+                    "SCREENED",
+                    "SHORTLISTED",
+                    "REJECTED",
+                    "INTERVIEW_INVITED",
+                    "INTERVIEWING",
+                    "EVALUATED",
+                    "PASSED",
+                    "FAILED"
+                  ]
+                },
+                "changedById": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "nullable": true
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "changedAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "fromStatus",
+                "toStatus",
+                "changedById",
+                "reason",
+                "changedAt"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "cvFileName",
+          "cvSizeBytes",
+          "cvMimeType",
+          "createdAt",
+          "updatedAt",
+          "aiRecommendation",
+          "screeningError",
+          "candidate",
+          "job",
+          "screeningResult",
+          "hrDecisionBy",
+          "hrDecisionAt",
+          "hrNote",
+          "interviewId",
+          "statusHistories"
+        ],
+        "additionalProperties": false
+      },
+      "DecisionBodyDto": {
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "APPROVE",
+              "REJECT"
+            ],
+            "description": "Quyết định của HR sau vòng CV"
+          },
+          "note": {
+            "description": "Ghi chú của HR",
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "DecisionResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh đơn ứng tuyển (UUID)"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUBMITTED",
+              "SCREENING",
+              "SCREENING_FAILED",
+              "SCREENED",
+              "SHORTLISTED",
+              "REJECTED",
+              "INTERVIEW_INVITED",
+              "INTERVIEWING",
+              "EVALUATED",
+              "PASSED",
+              "FAILED"
+            ],
+            "description": "Trạng thái đơn ứng tuyển"
+          },
+          "interviewId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "nullable": true
+          },
+          "hrDecisionById": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "nullable": true
+          },
+          "hrDecisionAt": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hrNote": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "interviewId",
+          "hrDecisionById",
+          "hrDecisionAt",
+          "hrNote"
+        ],
+        "additionalProperties": false
+      },
+      "GetApplicationCvUrlResDto_Output": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Link presigned S3 tạm thời để xem/tải CV"
+          },
+          "expiresInSec": {
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "description": "Thời gian sống của link (giây)",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "url",
+          "expiresInSec"
         ],
         "additionalProperties": false
       }
