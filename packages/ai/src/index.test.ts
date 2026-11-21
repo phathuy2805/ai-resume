@@ -12,6 +12,7 @@ describe('public API (src/index.ts)', () => {
       'AiTimeoutError',
       'CV_EXTRACTION_MESSAGES_VI',
       'CvExtractionError',
+      'DEFAULT_SCORING_CONFIG',
       'EMBEDDING_DIMENSIONS',
       'EMBEDDING_TASK_TYPE',
       'ParsedCvSchema',
@@ -33,6 +34,7 @@ describe('public API (src/index.ts)', () => {
       'normalizeSkills',
       'parseCv',
       'parseJd',
+      'scoreCv',
     ]);
   });
 });

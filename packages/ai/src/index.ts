@@ -66,6 +66,18 @@ export {
 } from './embedding.js';
 export type { EmbedTextOptions } from './embedding.js';
 
+// Chấm điểm CV 0–100 (W2-AI-02)
+export { scoreCv, DEFAULT_SCORING_CONFIG } from './scoring.js';
+export type {
+  ScoreBreakdown,
+  ScoreCvInput,
+  ScoreCvOptions,
+  ScoreCvResult,
+  ScoringConfig,
+  ScoringConfigInput,
+  ScoringWeights,
+} from './scoring.js';
+
 /**
  * @deprecated Chỉ còn để apps/api (AppService) không bị lỗi.
  * Sẽ xóa khi BE tích hợp createAiClient (W2-BE-02).

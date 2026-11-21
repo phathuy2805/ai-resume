@@ -302,6 +302,67 @@ similarityScore = clamp(
 Trên 30 CV: QUALIFIED ~82–100, BORDERLINE ~48–100, REJECTED ~0–18, khác ngành ~0–54.
 Similarity chỉ chiếm 15% nên phần chồng lấn làm lệch điểm tổng tối đa khoảng 8 điểm.
 
+## Chấm điểm CV (`scoreCv`)
+
+Ra điểm phù hợp CV ↔ JD từ 0–100 kèm chi tiết từng phần (W2-AI-02). Phần nào tính được bằng code thì không giao Gemini,
+để điểm ít dao động. Gemini chỉ được gọi 1 lần, để chấm mức độ liên quan.
+
+```ts
+import { scoreCv } from '@hireflow/ai';
+
+const { total, breakdown } = await scoreCv(ai, { parsedCv, parsedJd, cvEmbedding, jdEmbedding });
+// total → ScreeningResult.totalScore, breakdown → ScreeningResult.breakdown (lưu nguyên)
+```
+
+| Thành phần        | Trọng số | Cách tính                                                                                                    |
+| ----------------- | -------: | ------------------------------------------------------------------------------------------------------------ |
+| `requiredSkills`  |      35% | Code: tỷ lệ kỹ năng bắt buộc của JD có trong CV (`skills` + công nghệ của công việc / dự án, so sau `normalizeSkill`) |
+| `preferredSkills` |      10% | Code: như trên với kỹ năng ưu tiên                                                                          |
+| `experienceYears` |      15% | Code: `min(1, totalYearsExperience / minYearsExperience) × 100`; JD không yêu cầu thì 100                     |
+| `relevance`       |      25% | Gemini chấm 0–10 theo rubric (temperature 0), × 10. Chỉ xét kinh nghiệm và dự án so với trách nhiệm, lĩnh vực, level của JD |
+| `similarity`      |      15% | Cosine CV ↔ JD quy về 0–100: ≤ 0,75 → 0, ≥ 0,92 → 100, ở giữa tuyến tính                                      |
+
+- JD không có kỹ năng nào ở một nhóm → nhóm đó được 100 (không phạt ứng viên vì JD thiếu thông tin).
+- **Luật chặn:** thiếu **quá** một nửa kỹ năng bắt buộc (đúng một nửa thì không) → tổng tối đa 49, `capped = true`.
+- Tổng = Σ(score × weight) / 100 tính trên giá trị chưa làm tròn, rồi làm tròn số nguyên. `score` từng phần là số nguyên 0–100.
+- Prompt chấm liên quan chỉ dùng `parsedCv` (không có thông tin cá nhân), không đưa tên công ty và số năm kinh nghiệm.
+  CV không có công việc lẫn dự án → `relevance` = 0, không gọi Gemini.
+- Trọng số, điểm chặn, mốc cosine để trong config (`DEFAULT_SCORING_CONFIG`), ghi đè được bằng
+  `scoreCv(ai, input, { config: { weights: {...}, capScore, similarity: { min, max } } })`; sai (tổng trọng số ≠ 100...) → `AiConfigError`.
+- **Lỗi:** Gemini lỗi thì ném lỗi luôn, không cho điểm mặc định. Embedding khác số chiều → `RangeError` (trước khi gọi Gemini).
+- Không làm ở đây: so điểm với ngưỡng để ra PASS / CONSIDER / REJECT (BE, W2-BE-02); giải thích kèm trích dẫn (W2-AI-03).
+
+Cấu trúc `breakdown` (type `ScoreBreakdown`):
+
+```ts
+{
+  requiredSkills:  { score, weight: 35, matched: string[], missing: string[] },
+  preferredSkills: { score, weight: 10, matched: string[], missing: string[] },
+  experienceYears: { score, weight: 15, candidateYears: number, requiredYears: number | null },
+  relevance:       { score, weight: 25, comment: string },  // comment: nhận xét ngắn tiếng Việt
+  similarity:      { score, weight: 15, cosine: number },   // cosine làm tròn 3 chữ số
+  capped: boolean,
+}
+```
+
+### Kết quả chạy thử (W2-AI-02)
+
+`npm run try -w packages/ai -- score` trên 13 cặp CV ↔ JD tập dev của `labels.csv`
+(`gemini-3.5-flash-lite` + `gemini-embedding-001`, ngưỡng của 3 JD là 70):
+
+| Nhóm                                   | Điểm   |
+| -------------------------------------- | ------ |
+| `labels.csv` "phù hợp" (5)             | 82–94  |
+| BORDERLINE "không phù hợp" (3)         | 72–74  |
+| REJECTED / khác ngành (5)              | 13–20 (đều `capped`) |
+
+- Lệch so với `expected_score`: trung bình 5,9, tối đa 10. Khớp nhãn theo ngưỡng 70: 10/13.
+- 3 cặp lệch nhãn đều là CV BORDERLINE thiếu **đúng 1** kỹ năng bắt buộc cốt lõi (`cv_be_05` thiếu NestJS,
+  `cv_da_05` thiếu Python, `cv_mkt_05` thiếu Google Ads): thiếu 1/5–1/6 kỹ năng chỉ mất ~6–7 điểm, nên được 72–74 thay vì ~65.
+  Cần chỉnh trọng số / luật ở W2-AI-04 nếu muốn nhóm này rơi vào CONSIDER.
+- **Ổn định:** `score repeat` 3 lần trên `cv_be_06`, và 3 lần trên `cv_be_05` có parse + embed lại mỗi lần (`--full`), đều chênh 0 điểm.
+  Giữa các lần chạy demo (JD được parse lại) `cv_be_06` được 79–82 điểm.
+
 ## Scripts
 
 Chạy từ thư mục gốc repo:
@@ -322,5 +383,8 @@ Chạy từ thư mục gốc repo:
 
 | `npm run try -w packages/ai -- embed quick` | Kiểm tra nhanh model embedding: 3 câu mẫu, 768 chiều, độ dài 1 |
 | `npm run try -w packages/ai -- embed [all]` | `embedJd` 3 JD + `embedCv` 11 CV tập dev (`all`: 30 CV), in bảng cosine và khoảng cosine theo nhóm |
+| `npm run try -w packages/ai -- score [all]` | `scoreCv` trên 13 cặp CV ↔ JD tập dev của `labels.csv` (`all`: 40 cặp), so với `expected_score` và nhãn theo ngưỡng của job |
+| `npm run try -w packages/ai -- score repeat <cv> [số lần] [--full]` | Chấm một CV nhiều lần (mặc định 3), kiểm tra chênh ≤ 5; `--full` parse + embed lại mỗi lần |
 
-`npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT` (demo `embed` cần thêm `GEMINI_MODEL_EMBEDDING`).
+`npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT` (demo `embed` và `score` cần thêm `GEMINI_MODEL_EMBEDDING`). Free tier dễ chạm giới hạn số lần gọi mỗi phút:
+tăng `TRY_DELAY_MS` (vd. `$env:TRY_DELAY_MS='12000'`) nếu gặp `AI_RATE_LIMIT`.
