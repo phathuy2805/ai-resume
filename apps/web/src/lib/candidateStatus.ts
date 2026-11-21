@@ -7,12 +7,7 @@ import type { ApplicationStatus } from '@/types/applications';
  * 2: Phỏng vấn
  * 3: Kết quả
  */
-export const CANDIDATE_STEPS = [
-  'Đã nộp',
-  'Xét duyệt CV',
-  'Phỏng vấn',
-  'Kết quả',
-] as const;
+export const CANDIDATE_STEPS = ['Đã nộp', 'Xét duyệt CV', 'Phỏng vấn', 'Kết quả'] as const;
 
 export type CandidateTone = 'neutral' | 'progress' | 'action' | 'success' | 'failed';
 
@@ -29,8 +24,8 @@ export interface CandidateProgress {
  */
 export function getCandidateProgress(status: ApplicationStatus): CandidateProgress {
   switch (status) {
+    // Bước 0 "Đã nộp" luôn hoàn thành: hồ sơ tồn tại nghĩa là đã nộp xong.
     case 'SUBMITTED':
-      return { step: 0, tone: 'neutral', label: 'Đang xét duyệt' };
     case 'SCREENING':
     case 'SCREENING_FAILED':
     case 'SCREENED':

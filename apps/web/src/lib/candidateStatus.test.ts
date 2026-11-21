@@ -50,8 +50,8 @@ describe('candidateStatus', () => {
 
   it('map chính xác từng trạng thái theo quy định của bảng W2-FE-03', () => {
     expect(getCandidateProgress('SUBMITTED')).toEqual({
-      step: 0,
-      tone: 'neutral',
+      step: 1,
+      tone: 'progress',
       label: 'Đang xét duyệt',
     });
     expect(getCandidateProgress('SCREENING')).toEqual({

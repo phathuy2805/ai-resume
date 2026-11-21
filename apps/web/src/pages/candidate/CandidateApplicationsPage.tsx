@@ -31,29 +31,39 @@ type Filter = 'all' | 'processing' | 'completed';
 
 const isCompleted = (app: Application) => ['PASSED', 'FAILED', 'REJECTED'].includes(app.status);
 
-const toneStyle: Record<CandidateTone, { pill: string; banner: string; icon: string }> = {
+/** Đang chờ = xanh dương, thành công = xanh lá, thất bại = đỏ (khớp màu timeline). */
+const toneStyle: Record<
+  CandidateTone,
+  { pill: string; dot: string; banner: string; icon: string }
+> = {
   neutral: {
     pill: 'border-slate-200 bg-slate-50 text-slate-700',
+    dot: 'bg-slate-400',
     banner: 'border-slate-200 bg-slate-50 text-slate-700',
     icon: 'text-slate-500',
   },
   progress: {
-    pill: 'border-amber-200 bg-amber-50 text-amber-700',
-    banner: 'border-amber-200 bg-amber-100/70 text-amber-900',
-    icon: 'text-amber-600',
+    pill: 'border-blue-200 bg-blue-50 text-blue-700',
+    dot: 'animate-pulse bg-blue-500',
+    banner: 'border-blue-200 bg-blue-50 text-blue-900',
+    icon: 'text-blue-600',
   },
+  // Được mời phỏng vấn: vẫn là đang chờ nhưng cần ứng viên hành động nên đậm hơn.
   action: {
-    pill: 'border-indigo-200 bg-indigo-50 text-indigo-700',
-    banner: 'border-indigo-200 bg-indigo-50 text-indigo-900',
-    icon: 'text-primary',
+    pill: 'border-blue-600 bg-blue-600 text-white',
+    dot: 'bg-white',
+    banner: 'border-blue-200 bg-blue-50 text-blue-900',
+    icon: 'text-blue-600',
   },
   success: {
     pill: 'border-green-200 bg-green-50 text-green-700',
+    dot: 'bg-green-500',
     banner: 'border-green-200 bg-green-100/70 text-green-900',
     icon: 'text-green-600',
   },
   failed: {
     pill: 'border-rose-200 bg-rose-50 text-rose-700',
+    dot: 'bg-rose-500',
     banner: 'border-rose-100 bg-rose-50 text-rose-900',
     icon: 'text-rose-600',
   },
@@ -182,9 +192,7 @@ function ApplicationCard({ app }: { app: Application }) {
             style.pill,
           )}
         >
-          {progress.tone === 'progress' && (
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
-          )}
+          <span className={cn('h-1.5 w-1.5 rounded-full', style.dot)} />
           {progress.label}
         </span>
       </div>
