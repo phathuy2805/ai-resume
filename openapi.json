@@ -36,10 +36,24 @@
             }
           },
           "400": {
-            "description": "Dữ liệu đầu vào không hợp lệ"
+            "description": "Dữ liệu đầu vào không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "409": {
-            "description": "Email đã được sử dụng"
+            "description": "Email đã được sử dụng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "summary": "Đăng ký tài khoản mới (HR hoặc CANDIDATE)",
@@ -83,10 +97,24 @@
             }
           },
           "400": {
-            "description": "Dữ liệu đầu vào không hợp lệ"
+            "description": "Dữ liệu đầu vào không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Email hoặc mật khẩu không đúng"
+            "description": "Email hoặc mật khẩu không đúng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "summary": "Đăng nhập vào hệ thống",
@@ -119,7 +147,14 @@
             }
           },
           "401": {
-            "description": "Thiếu access token, token không hợp lệ hoặc người dùng không tồn tại"
+            "description": "Thiếu access token, token không hợp lệ hoặc người dùng không tồn tại",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -168,7 +203,14 @@
             }
           },
           "401": {
-            "description": "Thiếu refresh token, token không hợp lệ, hết hạn hoặc đã bị thu hồi"
+            "description": "Thiếu refresh token, token không hợp lệ, hết hạn hoặc đã bị thu hồi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "summary": "Làm mới Access Token bằng Refresh Token",
@@ -269,7 +311,14 @@
             }
           },
           "400": {
-            "description": "Tham số phân trang hoặc tìm kiếm không hợp lệ"
+            "description": "Tham số phân trang hoặc tìm kiếm không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "summary": "Lấy danh sách việc làm đang mở (Công khai)",
@@ -310,13 +359,34 @@
             }
           },
           "400": {
-            "description": "Dữ liệu đầu vào không hợp lệ"
+            "description": "Dữ liệu đầu vào không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Chỉ tài khoản HR mới được tạo tin"
+            "description": "Chỉ tài khoản HR mới được tạo tin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -394,13 +464,34 @@
             }
           },
           "400": {
-            "description": "Tham số phân trang hoặc lọc trạng thái không hợp lệ"
+            "description": "Tham số phân trang hoặc lọc trạng thái không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Chỉ tài khoản HR mới được truy cập"
+            "description": "Chỉ tài khoản HR mới được truy cập",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -451,16 +542,44 @@
             }
           },
           "400": {
-            "description": "ID tin tuyển dụng không đúng định dạng UUID"
+            "description": "ID tin tuyển dụng không đúng định dạng UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR"
+            "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Không tìm thấy tin tuyển dụng"
+            "description": "Không tìm thấy tin tuyển dụng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -511,10 +630,24 @@
             }
           },
           "400": {
-            "description": "ID tin tuyển dụng không đúng định dạng UUID"
+            "description": "ID tin tuyển dụng không đúng định dạng UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Tin tuyển dụng không tồn tại hoặc đã đóng"
+            "description": "Tin tuyển dụng không tồn tại hoặc đã đóng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "summary": "Xem chi tiết một tin tuyển dụng đang mở theo ID",
@@ -568,19 +701,54 @@
             }
           },
           "400": {
-            "description": "ID không phải UUID hoặc dữ liệu cập nhật không hợp lệ"
+            "description": "ID không phải UUID hoặc dữ liệu cập nhật không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR"
+            "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Không tìm thấy tin tuyển dụng"
+            "description": "Không tìm thấy tin tuyển dụng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "409": {
-            "description": "Không thể chỉnh sửa tin tuyển dụng đã đóng"
+            "description": "Không thể chỉnh sửa tin tuyển dụng đã đóng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -631,16 +799,44 @@
             }
           },
           "400": {
-            "description": "ID tin tuyển dụng không đúng định dạng UUID"
+            "description": "ID tin tuyển dụng không đúng định dạng UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR"
+            "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Không tìm thấy tin tuyển dụng"
+            "description": "Không tìm thấy tin tuyển dụng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -691,16 +887,44 @@
             }
           },
           "400": {
-            "description": "ID tin tuyển dụng không đúng định dạng UUID"
+            "description": "ID tin tuyển dụng không đúng định dạng UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR"
+            "description": "Không phải chủ sở hữu tin tuyển dụng hoặc không phải HR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Không tìm thấy tin tuyển dụng"
+            "description": "Không tìm thấy tin tuyển dụng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -795,15 +1019,32 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Chỉ tài khoản ứng viên (CANDIDATE) mới được gọi"
+            "description": "Chỉ tài khoản ứng viên (CANDIDATE) mới được gọi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Không tìm thấy tin tuyển dụng",
@@ -819,6 +1060,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -846,6 +1090,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -864,6 +1111,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -918,6 +1168,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -962,10 +1215,24 @@
             }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Chỉ tài khoản ứng viên (CANDIDATE) mới được gọi"
+            "description": "Chỉ tài khoản ứng viên (CANDIDATE) mới được gọi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1105,10 +1372,24 @@
             }
           },
           "400": {
-            "description": "Query filter hoặc jobId không hợp lệ"
+            "description": "Query filter hoặc jobId không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
@@ -1124,6 +1405,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1142,6 +1426,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1195,7 +1482,14 @@
             }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
@@ -1211,6 +1505,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1229,6 +1526,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1282,7 +1582,14 @@
             }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
@@ -1298,6 +1605,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1316,6 +1626,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1379,10 +1692,24 @@
             }
           },
           "400": {
-            "description": "Dữ liệu quyết định hoặc ID không hợp lệ"
+            "description": "Dữ liệu quyết định hoặc ID không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
@@ -1398,6 +1725,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1416,6 +1746,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1434,6 +1767,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1486,7 +1822,14 @@
             }
           },
           "401": {
-            "description": "Thiếu access token hoặc token không hợp lệ"
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "403": {
             "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
@@ -1502,6 +1845,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1520,6 +1866,9 @@
                       "timestamp": "2026-11-18T03:00:00.000Z"
                     }
                   }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4549,6 +4898,41 @@
         "required": [
           "url",
           "expiresInSec"
+        ],
+        "additionalProperties": false
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "description": "HTTP status code"
+          },
+          "message": {
+            "type": "string",
+            "description": "Thông báo lỗi"
+          },
+          "code": {
+            "type": "string",
+            "description": "Mã lỗi nghiệp vụ (tùy chọn)"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách chi tiết lỗi validation (nếu có)"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Thời điểm phát sinh lỗi (ISO 8601)"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "timestamp"
         ],
         "additionalProperties": false
       }
