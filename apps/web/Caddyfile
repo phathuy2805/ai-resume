@@ -1,11 +1,19 @@
 {$DOMAIN:localhost} {
-    # Chuyển hướng API và WebSocket vào service api
-    reverse_proxy /api/* api:3000
-    reverse_proxy /socket.io/* api:3000
-
-    # Phục vụ Frontend Vite tĩnh
-    root * /srv
     encode gzip zstd
-    file_server
-    try_files {path} /index.html
+
+    # Chuyển hướng API và WebSocket vào service api
+    handle /api/* {
+        reverse_proxy api:3000
+    }
+
+    handle /socket.io/* {
+        reverse_proxy api:3000
+    }
+
+    # Phục vụ Frontend Vite tĩnh (chỉ fallback SPA cho các route không phải /api/*)
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
 }
