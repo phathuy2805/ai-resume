@@ -19,6 +19,7 @@ export interface Application {
   cvMimeType: string;
   cvUrl?: string;
   aiRecommendation?: 'PASS' | 'CONSIDER' | 'REJECT' | null;
+  interviewId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

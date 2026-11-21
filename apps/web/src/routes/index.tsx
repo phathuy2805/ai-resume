@@ -5,6 +5,8 @@ import HrLayout from '@/components/layout/HrLayout';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import CandidateApplicationsPage from '@/pages/candidate/CandidateApplicationsPage';
+import CandidateFeedbackPlaceholderPage from '@/pages/candidate/CandidateFeedbackPlaceholderPage';
+import CandidateInterviewPlaceholderPage from '@/pages/candidate/CandidateInterviewPlaceholderPage';
 import CandidateJobsPage from '@/pages/candidate/CandidateJobsPage';
 import CandidateJobDetailPage from '@/pages/candidate/CandidateJobDetailPage';
 import NotFoundPage from '@/pages/NotFoundPage';
@@ -57,7 +59,11 @@ export const router = createBrowserRouter([
       { path: 'jobs/:id', element: <CandidateJobDetailPage /> },
       {
         element: <ProtectedRoute allowedRoles={['CANDIDATE']} />,
-        children: [{ path: 'applications', element: <CandidateApplicationsPage /> }],
+        children: [
+          { path: 'applications', element: <CandidateApplicationsPage /> },
+          { path: 'applications/:id/feedback', element: <CandidateFeedbackPlaceholderPage /> },
+          { path: 'interviews/:id', element: <CandidateInterviewPlaceholderPage /> },
+        ],
       },
     ],
   },

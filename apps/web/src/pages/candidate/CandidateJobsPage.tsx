@@ -9,7 +9,7 @@ import { Badge, type BadgeVariant } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button-variants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { getCandidateProgress, type CandidateTone } from '@/lib/applicationStatus';
+import { getCandidateProgress, type CandidateTone } from '@/lib/candidateStatus';
 import { formatExperience, formatRelativeDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -20,10 +20,11 @@ import { queryKeys } from '@/api/queryKeys';
 import type { Application } from '@/types/applications';
 import type { PublicJob as Job } from '@/types/jobs';
 
+/** Cùng quy ước màu với trang Hồ sơ của tôi: đang chờ xanh dương, đạt xanh lá, thất bại đỏ. */
 const toneBadge: Record<CandidateTone, BadgeVariant> = {
   neutral: 'secondary',
-  progress: 'warning',
-  action: 'default',
+  progress: 'info',
+  action: 'infoSolid',
   success: 'success',
   failed: 'danger',
 };
@@ -73,7 +74,7 @@ function JobCard({ job, application }: { job: Job; application?: Application }) 
           </div>
         </div>
         {progress && (
-          <Badge variant={toneBadge[progress.tone]} className="shrink-0">
+          <Badge variant="success" className="shrink-0">
             <Check />
             Đã nộp
           </Badge>
@@ -108,7 +109,7 @@ function JobCard({ job, application }: { job: Job; application?: Application }) 
                   ? 'bg-rose-500'
                   : progress.tone === 'success'
                     ? 'bg-green-500'
-                    : 'bg-primary',
+                    : 'bg-blue-500',
               )}
             />
             Hồ sơ của bạn: {progress.label}
@@ -143,7 +144,7 @@ function MyApplicationsCard({ applications }: { applications: Application[] }) {
     (app) => !['PASSED', 'FAILED', 'REJECTED'].includes(app.status),
   ).length;
   const invited = applications.filter((app) =>
-    ['SHORTLISTED', 'INTERVIEW_INVITED', 'INTERVIEWING'].includes(app.status),
+    ['INTERVIEW_INVITED', 'INTERVIEWING'].includes(app.status),
   ).length;
   return (
     <Card className="p-5">

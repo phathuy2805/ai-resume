@@ -6,21 +6,19 @@ import {
   Hourglass,
   Inbox,
   Info,
-  Lightbulb,
   MessageSquareText,
   Play,
   Search,
   Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import ApplicationSteps from '@/components/candidate/ApplicationSteps';
 import EmptyState from '@/components/common/EmptyState';
 import SegmentedControl from '@/components/common/SegmentedControl';
-import { Button } from '@/components/ui/button';
 import { buttonVariants } from '@/components/ui/button-variants';
 import { Card } from '@/components/ui/card';
-import { getCandidateProgress, type CandidateTone } from '@/lib/applicationStatus';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getCandidateProgress, type CandidateTone } from '@/lib/candidateStatus';
 import { formatDate } from '@/lib/format';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMyApplications } from '@/hooks/useMyApplications';
@@ -33,103 +31,134 @@ type Filter = 'all' | 'processing' | 'completed';
 
 const isCompleted = (app: Application) => ['PASSED', 'FAILED', 'REJECTED'].includes(app.status);
 
-const toneStyle: Record<CandidateTone, { pill: string; banner: string; icon: string }> = {
+/** Đang chờ = xanh dương, thành công = xanh lá, thất bại = đỏ (khớp màu timeline). */
+const toneStyle: Record<
+  CandidateTone,
+  { pill: string; dot: string; banner: string; icon: string }
+> = {
   neutral: {
     pill: 'border-slate-200 bg-slate-50 text-slate-700',
+    dot: 'bg-slate-400',
     banner: 'border-slate-200 bg-slate-50 text-slate-700',
     icon: 'text-slate-500',
   },
   progress: {
-    pill: 'border-amber-200 bg-amber-50 text-amber-700',
-    banner: 'border-amber-200 bg-amber-100/70 text-amber-900',
-    icon: 'text-amber-600',
+    pill: 'border-blue-200 bg-blue-50 text-blue-700',
+    dot: 'animate-pulse bg-blue-500',
+    banner: 'border-blue-200 bg-blue-50 text-blue-900',
+    icon: 'text-blue-600',
   },
+  // Được mời phỏng vấn: vẫn là đang chờ nhưng cần ứng viên hành động nên đậm hơn.
   action: {
-    pill: 'border-indigo-200 bg-indigo-50 text-indigo-700',
-    banner: 'border-indigo-200 bg-indigo-50 text-indigo-900',
-    icon: 'text-primary',
+    pill: 'border-blue-600 bg-blue-600 text-white',
+    dot: 'bg-white',
+    banner: 'border-blue-200 bg-blue-50 text-blue-900',
+    icon: 'text-blue-600',
   },
   success: {
     pill: 'border-green-200 bg-green-50 text-green-700',
+    dot: 'bg-green-500',
     banner: 'border-green-200 bg-green-100/70 text-green-900',
     icon: 'text-green-600',
   },
   failed: {
     pill: 'border-rose-200 bg-rose-50 text-rose-700',
+    dot: 'bg-rose-500',
     banner: 'border-rose-100 bg-rose-50 text-rose-900',
     icon: 'text-rose-600',
   },
 };
 
 function statusMessage(app: Application): { icon: typeof Info; text: string; action?: ReactNode } {
-  // TODO(W3-FE-01/W3-FE-04): link to the interview room and result pages once they exist.
-  const comingSoon = () => toast.info('Tính năng sẽ có ở Tuần 3');
+  const interviewTarget = `/candidate/interviews/${app.interviewId || app.id}`;
+  const feedbackTarget = `/candidate/applications/${app.id}/feedback`;
+
   switch (app.status) {
     case 'SUBMITTED':
-      return { icon: Inbox, text: 'Hồ sơ đã được tiếp nhận và sẽ sớm được AI đánh giá.' };
+      return {
+        icon: Inbox,
+        text: 'Hồ sơ đã được tiếp nhận và đang trong quá trình xét duyệt.',
+      };
     case 'SCREENING':
     case 'SCREENED':
     case 'SCREENING_FAILED':
-      return { icon: Hourglass, text: 'AI đang đánh giá CV, thường mất dưới 1 phút.' };
     case 'SHORTLISTED':
+      return {
+        icon: Hourglass,
+        text: 'Hồ sơ của bạn đang được xét duyệt. Vui lòng chờ thông báo kết quả.',
+      };
+    case 'REJECTED':
+      return {
+        icon: Info,
+        text: 'Hồ sơ chưa phù hợp với vị trí này. Cảm ơn bạn đã quan tâm ứng tuyển.',
+      };
     case 'INTERVIEW_INVITED':
       return {
         icon: Sparkles,
-        text: 'Chúc mừng! Bạn được mời phỏng vấn với AI. Hãy xem hướng dẫn trong lời mời.',
+        text: 'Chúc mừng! Bạn đã được mời tham gia vòng phỏng vấn.',
         action: (
-          <Button size="sm" className="h-9" onClick={comingSoon}>
-            <Play />
+          <Link
+            to={interviewTarget}
+            className={buttonVariants({ size: 'sm', className: 'h-9 shrink-0 gap-1.5' })}
+          >
+            <Play className="h-4 w-4 fill-current" />
             Vào phỏng vấn
-          </Button>
+          </Link>
         ),
       };
     case 'INTERVIEWING':
       return {
         icon: Sparkles,
-        text: 'Bạn đang có một phiên phỏng vấn chưa hoàn thành.',
+        text: 'Bạn đang có phiên phỏng vấn chưa hoàn thành.',
         action: (
-          <Button size="sm" className="h-9" onClick={comingSoon}>
-            <Play />
+          <Link
+            to={interviewTarget}
+            className={buttonVariants({ size: 'sm', className: 'h-9 shrink-0 gap-1.5' })}
+          >
+            <Play className="h-4 w-4 fill-current" />
             Tiếp tục phỏng vấn
-          </Button>
+          </Link>
         ),
       };
     case 'EVALUATED':
       return {
         icon: Hourglass,
-        text: 'Đã hoàn thành phỏng vấn. Nhà tuyển dụng đang xem xét kết quả.',
+        text: 'Đã hoàn thành phỏng vấn. Nhà tuyển dụng đang tổng hợp và đánh giá kết quả.',
       };
     case 'PASSED':
       return {
         icon: CircleCheck,
-        text: 'Bạn đã vượt qua vòng sơ tuyển. Nhà tuyển dụng sẽ liên hệ cho bước tiếp theo.',
+        text: 'Chúc mừng bạn đã hoàn thành xuất sắc và đạt yêu cầu tuyển dụng.',
         action: (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 border-green-200 text-green-800 hover:bg-green-50"
-            onClick={comingSoon}
+          <Link
+            to={feedbackTarget}
+            className={buttonVariants({
+              variant: 'outline',
+              size: 'sm',
+              className: 'h-9 shrink-0 gap-1.5 border-green-200 text-green-800 hover:bg-green-50',
+            })}
           >
-            <MessageSquareText />
+            <MessageSquareText className="h-4 w-4" />
             Xem phản hồi
-          </Button>
+          </Link>
         ),
       };
     case 'FAILED':
-    case 'REJECTED':
       return {
         icon: Info,
-        text: 'Hồ sơ chưa phù hợp với vị trí này. Hãy xem góp ý để chuẩn bị tốt hơn cho cơ hội sau.',
+        text: 'Hồ sơ chưa đạt yêu cầu cho vị trí này. Hãy xem phản hồi chi tiết để chuẩn bị tốt hơn.',
         action: (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 border-rose-200 text-rose-800 hover:bg-rose-50"
-            onClick={comingSoon}
+          <Link
+            to={feedbackTarget}
+            className={buttonVariants({
+              variant: 'outline',
+              size: 'sm',
+              className: 'h-9 shrink-0 gap-1.5 border-rose-200 text-rose-800 hover:bg-rose-50',
+            })}
           >
-            <Lightbulb />
-            Xem góp ý kỹ năng
-          </Button>
+            <MessageSquareText className="h-4 w-4" />
+            Xem phản hồi
+          </Link>
         ),
       };
   }
@@ -163,9 +192,7 @@ function ApplicationCard({ app }: { app: Application }) {
             style.pill,
           )}
         >
-          {progress.tone === 'progress' && (
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
-          )}
+          <span className={cn('h-1.5 w-1.5 rounded-full', style.dot)} />
           {progress.label}
         </span>
       </div>
@@ -194,10 +221,36 @@ function ApplicationCard({ app }: { app: Application }) {
   );
 }
 
+function ApplicationSkeletonList() {
+  return (
+    <div className="flex flex-col gap-5" role="status" aria-label="Đang tải hồ sơ…">
+      {[1, 2].map((i) => (
+        <Card key={i} className="flex flex-col gap-6 p-6">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-6 w-48" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </div>
+            <Skeleton className="h-6 w-24 rounded-full" />
+          </div>
+          <div className="py-2">
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <Skeleton className="h-12 w-full rounded-lg" />
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function CandidateApplicationsPage() {
   const [filter, setFilter] = useState<Filter>('all');
   const session = useCurrentUser();
   const query = useMyApplications(session.user?.role === 'CANDIDATE' ? session.user.id : undefined);
+
   if (session.isLoading) return <p role="status">Đang xác minh tài khoản…</p>;
   if (session.error)
     return <QueryError message="Không tải được tài khoản." retry={() => void session.retry()} />;
@@ -208,18 +261,6 @@ export default function CandidateApplicationsPage() {
       </Link>
     );
   if (session.user.role !== 'CANDIDATE') return <p>Trang hồ sơ dành cho ứng viên.</p>;
-  if (query.isPending) return <p role="status">Đang tải hồ sơ…</p>;
-  if (query.isError)
-    return <QueryError message="Không tải được hồ sơ đã nộp." retry={() => void query.refetch()} />;
-  const applications = query.data;
-
-  const completed = applications.filter(isCompleted);
-  const visible =
-    filter === 'all'
-      ? applications
-      : filter === 'completed'
-        ? completed
-        : applications.filter((app) => !isCompleted(app));
 
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-6">
@@ -230,26 +271,34 @@ export default function CandidateApplicationsPage() {
             Theo dõi tiến độ và kết quả đánh giá hồ sơ ứng tuyển
           </p>
         </div>
-        {applications.length > 0 && (
+        {query.data && query.data.length > 0 && (
           <SegmentedControl
             ariaLabel="Lọc hồ sơ"
             className="self-start sm:self-auto"
             value={filter}
             onChange={setFilter}
             options={[
-              { value: 'all', label: 'Tất cả', count: applications.length },
+              { value: 'all', label: 'Tất cả', count: query.data.length },
               {
                 value: 'processing',
                 label: 'Đang xử lý',
-                count: applications.length - completed.length,
+                count: query.data.filter((a) => !isCompleted(a)).length,
               },
-              { value: 'completed', label: 'Đã hoàn thành', count: completed.length },
+              {
+                value: 'completed',
+                label: 'Đã hoàn thành',
+                count: query.data.filter(isCompleted).length,
+              },
             ]}
           />
         )}
       </div>
 
-      {applications.length === 0 ? (
+      {query.isPending ? (
+        <ApplicationSkeletonList />
+      ) : query.isError ? (
+        <QueryError message="Không tải được hồ sơ đã nộp." retry={() => void query.refetch()} />
+      ) : query.data.length === 0 ? (
         <EmptyState
           icon={Inbox}
           title="Bạn chưa nộp hồ sơ nào"
@@ -257,13 +306,18 @@ export default function CandidateApplicationsPage() {
           action={
             <Link to="/candidate/jobs" className={buttonVariants({ size: 'sm', className: 'h-9' })}>
               <Search />
-              Xem việc làm
+              Tìm việc
             </Link>
           }
         />
       ) : (
         <div className="flex flex-col gap-5">
-          {visible.map((app) => (
+          {(filter === 'all'
+            ? query.data
+            : filter === 'completed'
+              ? query.data.filter(isCompleted)
+              : query.data.filter((a) => !isCompleted(a))
+          ).map((app) => (
             <ApplicationCard key={app.id} app={app} />
           ))}
         </div>
