@@ -155,7 +155,16 @@ export default function HRJobsPage() {
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{job.applicationCount ?? 0}</TableCell>
+                    <TableCell className="text-right">
+                      <Link
+                        to={`/hr/jobs/${job.id}/candidates`}
+                        className="inline-flex items-center gap-1 font-medium text-foreground hover:text-primary hover:underline"
+                        title="Xem danh sách ứng viên"
+                      >
+                        <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                        {job.applicationCount ?? 0}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-center">
                       <JobStatusBadge status={job.status} />
                     </TableCell>

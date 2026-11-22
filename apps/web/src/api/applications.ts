@@ -2,7 +2,11 @@ import { apiClient } from '@/lib/axios';
 import type { ApiResponse, PaginatedResponse } from '@/types/api';
 import type {
   Application,
+  ApplicationDetail,
   ApplyJobOptions,
+  CvUrlResult,
+  DecideApplicationPayload,
+  DecisionResult,
   GetJobApplicationsParams,
   JobApplicationListItem,
 } from '@/types/applications';
@@ -32,12 +36,14 @@ export async function applyJob(
   );
   return unwrap(response.data);
 }
+
 export async function getMyApplications(signal?: AbortSignal): Promise<Application[]> {
   return unwrap(
     (await apiClient.get<ApiResponse<Application[]>>('/me/applications', { signal })).data,
   );
 }
 
+/** HR: Get applications of a job with filters and pagination. */
 export async function getJobApplications(
   jobId: string,
   params: GetJobApplicationsParams = {},
@@ -52,4 +58,34 @@ export async function getJobApplications(
 
 export async function rescreenApplication(applicationId: string): Promise<void> {
   await apiClient.post(`/applications/${encodeURIComponent(applicationId)}/rescreen`);
+}
+
+/** HR: Get detailed application data (candidate, job, breakdown, explanation, decision). */
+export async function getApplication(id: string, signal?: AbortSignal): Promise<ApplicationDetail> {
+  const response = await apiClient.get<ApiResponse<ApplicationDetail>>(
+    `/applications/${encodeURIComponent(id)}`,
+    { signal },
+  );
+  return unwrap(response.data);
+}
+
+/** HR: Get presigned signed URL to view/download original CV. */
+export async function getCvUrl(id: string, signal?: AbortSignal): Promise<CvUrlResult> {
+  const response = await apiClient.get<ApiResponse<CvUrlResult>>(
+    `/applications/${encodeURIComponent(id)}/cv-url`,
+    { signal },
+  );
+  return unwrap(response.data);
+}
+
+/** HR: Submit hiring decision (APPROVE / REJECT) for an application in SCREENED status. */
+export async function decideApplication(
+  id: string,
+  payload: DecideApplicationPayload,
+): Promise<DecisionResult> {
+  const response = await apiClient.post<ApiResponse<DecisionResult>>(
+    `/applications/${encodeURIComponent(id)}/decision`,
+    payload,
+  );
+  return unwrap(response.data);
 }
