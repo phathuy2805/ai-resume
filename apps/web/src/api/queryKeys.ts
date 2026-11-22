@@ -1,4 +1,5 @@
 import type { JobsParams } from '@/types/jobs';
+
 export const queryKeys = {
   auth: { all: ['auth'] as const, me: () => ['auth', 'me'] as const },
   jobs: {
@@ -14,6 +15,11 @@ export const queryKeys = {
     all: ['applications'] as const,
     mine: (userId?: string) =>
       userId ? (['applications', 'mine', userId] as const) : (['applications', 'mine'] as const),
+    byJob: (jobId: string, params?: unknown) =>
+      params !== undefined
+        ? (['applications', jobId, params] as const)
+        : (['applications', jobId] as const),
+    detail: (id: string) => ['application', id] as const,
   },
   // Namespace only; no interview endpoint has been assumed or implemented.
   interviews: { all: ['interviews'] as const },

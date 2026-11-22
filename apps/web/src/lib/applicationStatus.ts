@@ -25,10 +25,14 @@ export const AI_RECOMMENDATION: Record<AiRecommendation, { label: string; varian
     REJECT: { label: 'Không phù hợp', variant: 'danger' },
   };
 
-
-/** Score colour follows the job threshold: green ≥ threshold, amber within 20 below, red otherwise. */
+/**
+ * Score colour follows the job threshold:
+ * - Green (PASS): score >= threshold
+ * - Amber (CONSIDER): score >= threshold - 10 && score < threshold
+ * - Red (REJECT): score < threshold - 10
+ */
 export function scoreTone(score: number, threshold = 70): 'success' | 'warning' | 'danger' {
   if (score >= threshold) return 'success';
-  if (score >= threshold - 20) return 'warning';
+  if (score >= threshold - 10) return 'warning';
   return 'danger';
 }

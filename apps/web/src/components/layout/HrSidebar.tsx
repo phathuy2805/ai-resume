@@ -1,9 +1,11 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import Logo from '@/components/common/Logo';
 import { hrLinks } from '@/components/layout/hrLinks';
 import { cn } from '@/lib/utils';
 
 export default function HrSidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const location = useLocation();
+
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-card">
       <Link
@@ -23,14 +25,17 @@ export default function HrSidebar({ onNavigate }: { onNavigate?: () => void }) {
               key={to}
               to={to}
               onClick={onNavigate}
-              className={({ isActive }) =>
-                cn(
+              className={({ isActive }) => {
+                const active =
+                  isActive ||
+                  (to === '/hr/candidates' && location.pathname.includes('/candidates'));
+                return cn(
                   'flex items-center gap-2 rounded-lg px-2 py-2 font-medium transition-colors',
-                  isActive
+                  active
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-foreground',
-                )
-              }
+                );
+              }}
             >
               <Icon className="h-5 w-5" />
               {label}

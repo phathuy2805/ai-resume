@@ -141,7 +141,7 @@ export default function HRJobDetailPage() {
         actions={
           <>
             <Link
-              to={`/hr/candidates?jobId=${job.id}`}
+              to={`/hr/jobs/${job.id}/candidates`}
               className={buttonVariants({ variant: 'outline' })}
             >
               <Users />

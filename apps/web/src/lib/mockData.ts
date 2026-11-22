@@ -4,7 +4,7 @@
  * TanStack Query hooks only replaces the data source.
  */
 import type { AiRecommendation } from '@/lib/applicationStatus';
-import type { Application, ApplicationStatus } from '@/types/applications';
+import type { Application } from '@/types/applications';
 import type { Job } from '@/types/jobs';
 
 const base = { createdById: 'hr-1', interviewQuestionCount: 3 } as const;
@@ -107,110 +107,6 @@ export const mockJobStats: Record<string, { applications: number; shortlisted: n
   'job-qa': { applications: 6, shortlisted: 2 },
   'job-intern': { applications: 21, shortlisted: 9 },
 };
-
-export interface CandidateRow {
-  id: string;
-  jobId: string;
-  fullName: string;
-  email: string;
-  score: number | null;
-  aiRecommendation: AiRecommendation | null;
-  status: ApplicationStatus;
-  createdAt: string;
-}
-
-export const mockCandidates: CandidateRow[] = [
-  {
-    id: 'app-1',
-    jobId: 'job-backend',
-    fullName: 'Nguyễn Hoàng Nam',
-    email: 'nam.nguyen@gmail.com',
-    score: 92,
-    aiRecommendation: 'PASS',
-    status: 'SHORTLISTED',
-    createdAt: '2026-11-12T03:00:00.000Z',
-  },
-  {
-    id: 'app-2',
-    jobId: 'job-backend',
-    fullName: 'Trần Minh Đức',
-    email: 'duc.tran@outlook.com',
-    score: 85,
-    aiRecommendation: 'PASS',
-    status: 'INTERVIEW_INVITED',
-    createdAt: '2026-11-11T03:00:00.000Z',
-  },
-  {
-    id: 'app-3',
-    jobId: 'job-backend',
-    fullName: 'Lê Bảo Ngọc',
-    email: 'ngoc.le@gmail.com',
-    score: 78,
-    aiRecommendation: 'PASS',
-    status: 'SCREENED',
-    createdAt: '2026-11-11T02:00:00.000Z',
-  },
-  {
-    id: 'app-4',
-    jobId: 'job-backend',
-    fullName: 'Phạm Quang Huy',
-    email: 'huy.pq@gmail.com',
-    score: 64,
-    aiRecommendation: 'CONSIDER',
-    status: 'SCREENED',
-    createdAt: '2026-11-10T03:00:00.000Z',
-  },
-  {
-    id: 'app-5',
-    jobId: 'job-backend',
-    fullName: 'Đỗ Anh Tuấn',
-    email: 'tuan.do@tech.vn',
-    score: null,
-    aiRecommendation: null,
-    status: 'SCREENING',
-    createdAt: '2026-11-14T07:20:00.000Z',
-  },
-  {
-    id: 'app-6',
-    jobId: 'job-backend',
-    fullName: 'Vũ Thu Trang',
-    email: 'trang.vu@gmail.com',
-    score: null,
-    aiRecommendation: null,
-    status: 'SCREENING_FAILED',
-    createdAt: '2026-11-14T04:05:00.000Z',
-  },
-  {
-    id: 'app-7',
-    jobId: 'job-backend',
-    fullName: 'Hoàng Gia Bảo',
-    email: 'bao.hoang@gmail.com',
-    score: 44,
-    aiRecommendation: 'REJECT',
-    status: 'REJECTED',
-    createdAt: '2026-11-09T03:00:00.000Z',
-  },
-  {
-    id: 'app-8',
-    jobId: 'job-frontend',
-    fullName: 'Bùi Thanh Hà',
-    email: 'ha.bui@gmail.com',
-    score: 81,
-    aiRecommendation: 'PASS',
-    status: 'EVALUATED',
-    createdAt: '2026-11-09T05:00:00.000Z',
-  },
-  {
-    id: 'app-9',
-    jobId: 'job-data',
-    fullName: 'Ngô Minh Khoa',
-    email: 'khoa.ngo@gmail.com',
-    score: 72,
-    aiRecommendation: 'CONSIDER',
-    status: 'SHORTLISTED',
-    createdAt: '2026-11-07T05:00:00.000Z',
-  },
-];
 
 /** Applications of the signed-in candidate ("Hồ sơ của tôi"). */
 export const mockMyApplications: Application[] = [

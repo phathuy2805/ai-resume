@@ -9,6 +9,18 @@ export function formatDate(value: string): string {
   return dateFormatter.format(new Date(value));
 }
 
+/** ISO string → "dd/MM/yyyy HH:mm". */
+export function formatDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
 /** ISO string → "hôm nay" / "3 ngày trước" / "2 tuần trước" / "dd/mm/yyyy". */
 export function formatRelativeDate(value: string, now = Date.now()): string {
   const days = Math.floor((now - new Date(value).getTime()) / 86_400_000);
