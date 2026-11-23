@@ -1,20 +1,7 @@
-import { useMemo, useState } from 'react';
-import {
-  AlertCircle,
-  ArrowDownWideNarrow,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  FolderOpen,
-  Lock,
-  RefreshCw,
-  SlidersHorizontal,
-} from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
-import { toast } from 'sonner';
-import SearchInput from '@/components/common/SearchInput';
-import SegmentedControl from '@/components/common/SegmentedControl';
-import ScoreBar from '@/components/common/ScoreBar';
+import { AlertCircle, FolderOpen, Loader2, RotateCcw } from 'lucide-react';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import EmptyState from '@/components/common/EmptyState';
+import PageHeader from '@/components/common/PageHeader';
 import {
   AiRecommendationBadge,
   ApplicationStatusBadge,
@@ -23,12 +10,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -37,282 +25,339 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatDate, initials } from '@/lib/format';
-import { mockCandidates, mockJobs, type CandidateRow } from '@/lib/mockData';
+import { useJobApplications, useRescreenApplication } from '@/hooks/useJobApplications';
+import { useMyJob, useMyJobs } from '@/hooks/useJobs';
+import { HR_STATUS, scoreTone } from '@/lib/applicationStatus';
+import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ApplicationStatus } from '@/types/applications';
 
-type TabKey = 'all' | 'review' | 'shortlisted' | 'interview' | 'rejected';
-type SortKey = 'score' | 'newest';
-
-const TAB_STATUSES: Record<Exclude<TabKey, 'all'>, ApplicationStatus[]> = {
-  review: ['SCREENED'],
-  shortlisted: ['SHORTLISTED'],
-  interview: ['INTERVIEW_INVITED', 'INTERVIEWING', 'EVALUATED', 'PASSED', 'FAILED'],
-  rejected: ['REJECTED'],
-};
-
-const SORT_LABEL: Record<SortKey, string> = { score: 'Điểm cao nhất', newest: 'Mới nhất' };
-
-function matchesTab(candidate: CandidateRow, tab: TabKey) {
-  return tab === 'all' || TAB_STATUSES[tab].includes(candidate.status);
+function HRCandidatesRedirect() {
+  const jobsQuery = useMyJobs({ limit: 100 });
+  const jobs = jobsQuery.data?.data ?? [];
+  if (jobsQuery.isLoading) return <Skeleton className="h-32 w-full" />;
+  if (jobsQuery.isError || jobs.length === 0) {
+    return (
+      <EmptyState
+        icon={FolderOpen}
+        title="Chưa có tin tuyển dụng nào"
+        description="Hãy tạo tin tuyển dụng để bắt đầu quản lý ứng viên."
+      />
+    );
+  }
+  const target = jobs.find((job) => job.status === 'OPEN') ?? jobs[0];
+  return <Navigate to={`/hr/jobs/${target.id}/candidates`} replace />;
 }
 
 export default function HRCandidatesPage() {
+  const { jobId = '' } = useParams<{ jobId: string }>();
+  if (!jobId) return <HRCandidatesRedirect />;
+  return <HRCandidatesPageContent jobId={jobId} />;
+}
+
+function HRCandidatesPageContent({ jobId }: { jobId: string }) {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const job = mockJobs.find((item) => item.id === searchParams.get('jobId')) ?? mockJobs[0];
-  const [tab, setTab] = useState<TabKey>('all');
-  const [sort, setSort] = useState<SortKey>('score');
-  const [search, setSearch] = useState('');
 
-  // TODO(W2-FE-01): load candidates of `job` from the HR dashboard API.
-  const jobCandidates = useMemo(
-    () => mockCandidates.filter((candidate) => candidate.jobId === job.id),
-    [job.id],
-  );
+  const myJobsQuery = useMyJobs({ limit: 100 });
+  const jobQuery = useMyJob(jobId);
+  const myJobs = myJobsQuery.data?.data ?? [];
+  const job = jobQuery.data;
+  const threshold = job?.cvPassThreshold ?? 70;
 
-  // Rank = position by score among already-scored candidates.
-  const ranks = useMemo(() => {
-    const scored = jobCandidates
-      .filter((candidate) => candidate.score !== null)
-      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-    return new Map(scored.map((candidate, index) => [candidate.id, index + 1]));
-  }, [jobCandidates]);
+  const statusParam = searchParams.get('status') ?? 'ALL';
+  const minScoreParam = searchParams.get('minScore');
+  const maxScoreParam = searchParams.get('maxScore');
+  const sortParam = (searchParams.get('sort') as 'score' | 'createdAt') ?? 'createdAt';
+  const orderParam = (searchParams.get('order') as 'asc' | 'desc') ?? 'desc';
+  const pageParam = parseInt(searchParams.get('page') ?? '1', 10);
+  const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
-  const rows = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return jobCandidates
-      .filter(
-        (candidate) =>
-          matchesTab(candidate, tab) &&
-          (!query ||
-            candidate.fullName.toLowerCase().includes(query) ||
-            candidate.email.toLowerCase().includes(query)),
-      )
-      .sort((a, b) =>
-        sort === 'score'
-          ? (b.score ?? -1) - (a.score ?? -1)
-          : b.createdAt.localeCompare(a.createdAt),
-      );
-  }, [jobCandidates, search, sort, tab]);
+  const applicationsQuery = useJobApplications(jobId, {
+    status: statusParam === 'ALL' ? undefined : (statusParam as ApplicationStatus),
+    minScore: minScoreParam ? parseInt(minScoreParam, 10) : undefined,
+    maxScore: maxScoreParam ? parseInt(maxScoreParam, 10) : undefined,
+    sort: sortParam,
+    order: orderParam,
+    page,
+    limit: 10,
+  });
+  const rescreenMutation = useRescreenApplication(jobId);
 
-  const count = (key: TabKey) => jobCandidates.filter((c) => matchesTab(c, key)).length;
+  const applications = applicationsQuery.data?.data ?? [];
+  const meta = applicationsQuery.data?.meta;
+  const totalPages = meta?.totalPages ?? 1;
+
+  const updateParams = (updates: Record<string, string | undefined>) => {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (!value || value === 'ALL') next.delete(key);
+      else next.set(key, value);
+    });
+    setSearchParams(next);
+  };
+
+  if (jobQuery.isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+  if (jobQuery.isError || !job) {
+    return (
+      <Card className="flex flex-col items-center p-10 text-center">
+        <AlertCircle className="mb-3 h-8 w-8 text-destructive" />
+        <h2 className="font-semibold">Không thể tải tin tuyển dụng</h2>
+      </Card>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="group flex items-center gap-2 text-left">
-            <span className="text-page-title text-foreground">{job.title}</span>
-            <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-72">
-            <DropdownMenuLabel>Chọn vị trí</DropdownMenuLabel>
-            {mockJobs.map((item) => (
-              <DropdownMenuItem
-                key={item.id}
-                className={cn(item.id === job.id && 'bg-slate-50 font-medium')}
-                onClick={() => {
-                  setSearchParams({ jobId: item.id });
-                  setTab('all');
-                }}
-              >
-                <span className="flex-1 truncate">{item.title}</span>
-                {item.id === job.id && <Check className="!text-primary" />}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <JobStatusBadge status={job.status} />
-          <span className="inline-flex items-center gap-1">
-            <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
-            Ngưỡng đạt:{' '}
-            <span className="font-medium text-foreground">{job.cvPassThreshold} điểm</span>
-          </span>
-          <span className="text-slate-300">·</span>
-          <span className="inline-flex items-center gap-1">
-            <FolderOpen className="h-3.5 w-3.5" />
-            <span className="font-medium text-foreground">{jobCandidates.length} hồ sơ</span>
-          </span>
-        </div>
-      </div>
-
-      <SegmentedControl
-        ariaLabel="Lọc theo trạng thái hồ sơ"
-        className="w-full justify-start overflow-x-auto bg-card p-1 ring-1 ring-border [&>button]:flex-none [&>button]:px-4 [&>button]:text-sm"
-        value={tab}
-        onChange={setTab}
-        options={[
-          { value: 'all', label: 'Tất cả', count: count('all') },
-          { value: 'review', label: 'Chờ duyệt', count: count('review') },
-          { value: 'shortlisted', label: 'Đạt sàng lọc', count: count('shortlisted') },
-          { value: 'interview', label: 'Phỏng vấn', count: count('interview') },
-          { value: 'rejected', label: 'Đã loại', count: count('rejected') },
-        ]}
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        back={{ to: `/hr/jobs/${jobId}`, label: 'Chi tiết tin tuyển dụng' }}
+        title="Danh sách ứng viên"
       />
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <SearchInput
-          className="sm:w-80"
-          placeholder="Tìm ứng viên theo tên hoặc email"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex h-[38px] items-center gap-2 rounded-lg border border-border bg-card px-3 transition-colors hover:bg-slate-50">
-            <ArrowDownWideNarrow className="h-4 w-4 text-muted-foreground" />
-            Sắp xếp: <strong className="font-semibold">{SORT_LABEL[sort]}</strong>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
-              <DropdownMenuItem key={key} onClick={() => setSort(key)}>
-                <span className="flex-1">{SORT_LABEL[key]}</span>
-                {key === sort && <Check className="!text-primary" />}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <Card className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-1">
+          <Select value={jobId} onValueChange={(value) => navigate(`/hr/jobs/${value}/candidates`)}>
+            <SelectTrigger className="w-full lg:w-80">
+              <SelectValue placeholder="Chọn tin tuyển dụng" />
+            </SelectTrigger>
+            <SelectContent>
+              {myJobs.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <JobStatusBadge status={job.status} />
+            <span>
+              Ngưỡng đạt: <strong className="text-foreground">{threshold} điểm</strong>
+            </span>
+            <span>· {meta?.total ?? 0} hồ sơ</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <Select
+            value={statusParam}
+            onValueChange={(value) => updateParams({ status: value, page: '1' })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
+              {(Object.keys(HR_STATUS) as ApplicationStatus[]).map((status) => (
+                <SelectItem key={status} value={status}>
+                  {HR_STATUS[status].label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={
+              minScoreParam || maxScoreParam
+                ? `${minScoreParam ?? ''}:${maxScoreParam ?? ''}`
+                : 'ALL'
+            }
+            onValueChange={(value) => {
+              if (value === 'ALL')
+                updateParams({ minScore: undefined, maxScore: undefined, page: '1' });
+              if (value === 'PASS')
+                updateParams({ minScore: String(threshold), maxScore: undefined, page: '1' });
+              if (value === 'CONSIDER')
+                updateParams({
+                  minScore: String(threshold - 10),
+                  maxScore: String(threshold - 1),
+                  page: '1',
+                });
+              if (value === 'REJECT')
+                updateParams({ minScore: undefined, maxScore: String(threshold - 11), page: '1' });
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Tất cả điểm</SelectItem>
+              <SelectItem value="PASS">Đạt ngưỡng ({threshold}+)</SelectItem>
+              <SelectItem value="CONSIDER">
+                Cân nhắc ({threshold - 10}–{threshold - 1})
+              </SelectItem>
+              <SelectItem value="REJECT">Dưới ngưỡng ({threshold - 10})</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={`${sortParam}_${orderParam}`}
+            onValueChange={(value) => {
+              const [sort, order] = value.split('_') as ['score' | 'createdAt', 'asc' | 'desc'];
+              updateParams({ sort, order, page: '1' });
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt_desc">Mới nộp nhất</SelectItem>
+              <SelectItem value="createdAt_asc">Nộp lâu nhất</SelectItem>
+              <SelectItem value="score_desc">Điểm cao nhất</SelectItem>
+              <SelectItem value="score_asc">Điểm thấp nhất</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
 
       <Card className="overflow-hidden">
-        <Table>
-          <TableHeader>
-            <tr>
-              <TableHead className="w-14 text-center">#</TableHead>
-              <TableHead className="min-w-[240px]">Ứng viên</TableHead>
-              <TableHead className="min-w-[150px]">Điểm CV</TableHead>
-              <TableHead className="min-w-[140px]">AI đề xuất</TableHead>
-              <TableHead className="min-w-[140px]">Trạng thái</TableHead>
-              <TableHead>Ngày nộp</TableHead>
-              <TableHead className="text-right">Thao tác</TableHead>
-            </tr>
-          </TableHeader>
-          <TableBody>
-            {rows.map((candidate) => {
-              const rank = ranks.get(candidate.id);
-              const scoring = candidate.status === 'SCREENING';
-              const failed = candidate.status === 'SCREENING_FAILED';
-              return (
-                <TableRow
-                  key={candidate.id}
-                  className={cn(
-                    'group',
-                    scoring && 'bg-slate-50/60',
-                    failed && 'hover:bg-red-50/40',
-                  )}
-                >
-                  <TableCell className="text-center">
-                    {rank ? (
-                      <span
-                        className={cn(
-                          'inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold',
-                          rank === 1 ? 'bg-indigo-50 text-primary' : 'bg-slate-100 text-slate-600',
-                        )}
-                      >
-                        {rank}
-                      </span>
-                    ) : (
-                      <span
-                        className={cn('font-semibold', failed ? 'text-red-600' : 'text-slate-400')}
-                      >
-                        {failed ? '!' : '—'}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                          failed ? 'bg-red-50 text-red-600' : 'bg-indigo-50 text-indigo-700',
-                        )}
-                      >
-                        {initials(candidate.fullName)}
-                      </span>
-                      <div className="flex min-w-0 flex-col">
-                        <span className="truncate font-semibold text-foreground transition-colors group-hover:text-primary">
-                          {candidate.fullName}
-                        </span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {candidate.email}
-                        </span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {candidate.score !== null ? (
-                      <ScoreBar score={candidate.score} threshold={job.cvPassThreshold} />
-                    ) : scoring ? (
-                      <span className="flex items-center gap-1.5 text-xs font-medium italic text-primary">
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        Đang chấm điểm...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-xs font-medium text-red-600">
-                        <AlertCircle className="h-4 w-4" />
-                        Không đọc được CV
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {candidate.aiRecommendation ? (
-                      <AiRecommendationBadge value={candidate.aiRecommendation} />
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <ApplicationStatusBadge status={candidate.status} />
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                    {formatDate(candidate.createdAt)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="inline-flex items-center gap-1">
-                      {failed && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="text-primary"
-                          onClick={() =>
-                            toast.success(`Đã gửi chấm lại hồ sơ ${candidate.fullName}`)
-                          }
-                        >
-                          <RefreshCw />
-                          Chấm lại
-                        </Button>
+        {applicationsQuery.isLoading ? (
+          <div className="space-y-3 p-5">
+            {[1, 2, 3, 4, 5].map((item) => (
+              <Skeleton key={item} className="h-14 w-full" />
+            ))}
+          </div>
+        ) : applicationsQuery.isError ? (
+          <div className="flex flex-col items-center p-10 text-center">
+            <AlertCircle className="mb-3 h-8 w-8 text-destructive" />
+            <h3 className="font-semibold">Không thể tải danh sách ứng viên</h3>
+            <Button
+              className="mt-4"
+              variant="outline"
+              size="sm"
+              onClick={() => applicationsQuery.refetch()}
+            >
+              Thử lại
+            </Button>
+          </div>
+        ) : applications.length === 0 ? (
+          <EmptyState
+            icon={FolderOpen}
+            title="Job này chưa có hồ sơ nào"
+            description="Ứng viên nộp hồ sơ vào vị trí này sẽ xuất hiện ở đây để AI sàng lọc."
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Ứng viên</TableHead>
+                <TableHead>Điểm AI</TableHead>
+                <TableHead>Đề xuất AI</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead>Ngày nộp</TableHead>
+                <TableHead className="text-right">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {applications.map((app) => {
+                const isScoring = app.status === 'SUBMITTED' || app.status === 'SCREENING';
+                const isFailed = app.status === 'SCREENING_FAILED';
+                const tone = app.totalScore !== null ? scoreTone(app.totalScore, threshold) : null;
+                return (
+                  <TableRow
+                    key={app.id}
+                    className="cursor-pointer"
+                    onClick={() => navigate(`/hr/applications/${app.id}`)}
+                  >
+                    <TableCell>
+                      <div className="font-semibold">{app.candidateName}</div>
+                      {app.candidateEmail && (
+                        <div className="text-xs text-muted-foreground">{app.candidateEmail}</div>
                       )}
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        disabled={scoring}
-                        // TODO(W2-FE-02): navigate to the candidate detail page.
-                        onClick={() => toast.info('Màn hình chi tiết ứng viên sẽ có ở W2-FE-02')}
-                      >
-                        Xem
-                        {scoring ? <Lock /> : <ChevronRight />}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
-                  Chưa có ứng viên nào trong mục này.
-                </td>
-              </tr>
-            )}
-          </TableBody>
-        </Table>
-        <div className="border-t border-border bg-slate-50/60 px-4 py-3 text-xs text-muted-foreground">
-          Hiển thị <strong className="font-medium text-foreground">{rows.length}</strong> trong tổng
-          số <strong className="font-medium text-foreground">{jobCandidates.length}</strong> ứng
-          viên
-        </div>
+                    </TableCell>
+                    <TableCell>
+                      {isScoring ? (
+                        <span className="flex items-center gap-1.5 text-xs text-primary">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Đang chấm…
+                        </span>
+                      ) : isFailed ? (
+                        <span className="rounded-md bg-red-100 px-2 py-0.5 text-xs text-red-700">
+                          Chấm lỗi
+                        </span>
+                      ) : app.totalScore !== null ? (
+                        <span
+                          className={cn(
+                            'rounded-md px-2 py-0.5 text-xs font-bold',
+                            tone === 'success' && 'bg-green-100 text-green-700',
+                            tone === 'warning' && 'bg-amber-100 text-amber-700',
+                            tone === 'danger' && 'bg-red-100 text-red-700',
+                          )}
+                        >
+                          {app.totalScore}/100
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {app.aiRecommendation && !isScoring && !isFailed ? (
+                        <AiRecommendationBadge value={app.aiRecommendation} />
+                      ) : (
+                        '—'
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <ApplicationStatusBadge status={app.status} />
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {formatDate(app.createdAt)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {isFailed ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 text-destructive"
+                          disabled={rescreenMutation.isPending}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            rescreenMutation.mutate(app.id);
+                          }}
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" /> Chấm lại
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Chi tiết →</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+        {meta && meta.total > 0 && (
+          <div className="flex items-center justify-between border-t px-5 py-3 text-sm text-muted-foreground">
+            <span>
+              Trang {meta.page} / {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => updateParams({ page: String(page - 1) })}
+              >
+                Trước
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => updateParams({ page: String(page + 1) })}
+              >
+                Sau
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

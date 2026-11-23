@@ -182,7 +182,7 @@ export default function HRJobsPage() {
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem
-                            onClick={() => navigate(`/hr/candidates?jobId=${job.id}`)}
+                            onClick={() => navigate(`/hr/jobs/${job.id}/candidates`)}
                           >
                             <Users />
                             Xem ứng viên

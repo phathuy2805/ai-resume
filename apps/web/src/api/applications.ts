@@ -1,7 +1,12 @@
 import { apiClient } from '@/lib/axios';
-import type { ApiResponse } from '@/types/api';
-import type { Application, ApplyJobOptions } from '@/types/applications';
-import { unwrap } from './response';
+import type { ApiResponse, PaginatedResponse } from '@/types/api';
+import type {
+  Application,
+  ApplyJobOptions,
+  GetJobApplicationsParams,
+  JobApplicationListItem,
+} from '@/types/applications';
+import { paginated, unwrap } from './response';
 
 export async function applyJob(
   jobId: string,
@@ -31,4 +36,20 @@ export async function getMyApplications(signal?: AbortSignal): Promise<Applicati
   return unwrap(
     (await apiClient.get<ApiResponse<Application[]>>('/me/applications', { signal })).data,
   );
+}
+
+export async function getJobApplications(
+  jobId: string,
+  params: GetJobApplicationsParams = {},
+  signal?: AbortSignal,
+): Promise<PaginatedResponse<JobApplicationListItem>> {
+  const response = await apiClient.get<PaginatedResponse<JobApplicationListItem>>(
+    `/jobs/${encodeURIComponent(jobId)}/applications`,
+    { params, signal },
+  );
+  return paginated(response.data);
+}
+
+export async function rescreenApplication(applicationId: string): Promise<void> {
+  await apiClient.post(`/applications/${encodeURIComponent(applicationId)}/rescreen`);
 }

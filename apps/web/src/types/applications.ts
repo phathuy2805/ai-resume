@@ -32,3 +32,23 @@ export interface ApplyJobOptions {
   signal?: AbortSignal;
   onUploadProgress?: (progress: UploadProgress) => void;
 }
+
+export interface JobApplicationListItem {
+  id: string;
+  candidateName: string;
+  candidateEmail?: string | null;
+  totalScore: number | null;
+  aiRecommendation: 'PASS' | 'CONSIDER' | 'REJECT' | null;
+  status: ApplicationStatus;
+  createdAt: string;
+}
+
+export interface GetJobApplicationsParams {
+  status?: ApplicationStatus;
+  minScore?: number;
+  maxScore?: number;
+  sort?: 'score' | 'createdAt';
+  order?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
