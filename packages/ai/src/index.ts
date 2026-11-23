@@ -78,6 +78,17 @@ export type {
   ScoringWeights,
 } from './scoring.js';
 
+// Sàng lọc CV trọn gói: parse → embed → chấm điểm → giải thích (W2-AI-03)
+export { screenCv, ScreeningStepError } from './screening.js';
+export type {
+  ScreeningOutput,
+  ScreeningTimings,
+  ScreeningStep,
+  ScreenCvInput,
+  ScreenCvOptions,
+} from './screening.js';
+export type { Explanation, ExplanationStrength, ExplanationGap } from './explanation.js';
+
 /**
  * @deprecated Chỉ còn để apps/api (AppService) không bị lỗi.
  * Sẽ xóa khi BE tích hợp createAiClient (W2-BE-02).

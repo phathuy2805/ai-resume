@@ -17,6 +17,7 @@ describe('public API (src/index.ts)', () => {
       'EMBEDDING_TASK_TYPE',
       'ParsedCvSchema',
       'ParsedJdSchema',
+      'ScreeningStepError',
       'buildCvEmbeddingText',
       'buildJdEmbeddingText',
       'calculateTotalYearsExperience',
@@ -35,6 +36,7 @@ describe('public API (src/index.ts)', () => {
       'parseCv',
       'parseJd',
       'scoreCv',
+      'screenCv',
     ]);
   });
 });
