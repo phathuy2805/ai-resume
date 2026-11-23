@@ -16,6 +16,9 @@
 //   npm run try -w packages/ai -- score        # scoreCv trên các cặp CV ↔ JD tập dev của labels.csv (W2-AI-02)
 //   npm run try -w packages/ai -- score all    # như trên với cả 40 cặp
 //   npm run try -w packages/ai -- score repeat cv_be_06.pdf [3] [--full]   # chấm lại 3 lần, kiểm tra ±5
+//   npm run try -w packages/ai -- screen       # screenCv trên 3 cặp dev: phù hợp / borderline / khác ngành (W2-AI-03)
+//   npm run try -w packages/ai -- screen dev   # như trên với cả 13 cặp tập dev
+//   npm run try -w packages/ai -- screen cv_be_06.pdf [...]   # CV chỉ định, ghép JD theo labels.csv
 //
 // Chỉ chỉnh prompt dựa trên tập dev. "parse-cv all" chỉ dùng để xác nhận sau khi đã chốt prompt.
 // Nghỉ giữa các lần gọi Gemini: TRY_DELAY_MS (mặc định 2000) để không vượt quota.
@@ -38,6 +41,8 @@ import {
   embedText,
   extractCvText,
   scoreCv,
+  screenCv,
+  ScreeningStepError,
   isAiError,
   isCvExtractionError,
   normalizeSkills,
@@ -836,6 +841,126 @@ async function scoreRepeatDemo(args) {
   if (failedChecks > 0) process.exitCode = 1;
 }
 
+// ── Demo screen: screenCv trọn gói trên fixtures (W2-AI-03) ─────────────
+
+/** Mặc định: 1 cặp phù hợp, 1 cặp borderline (thiếu NestJS), 1 cặp khác ngành — đều thuộc tập dev. */
+const DEFAULT_SCREEN_PAIRS = [
+  ['cv_be_01.pdf', 'JD_BE'],
+  ['cv_be_05.pdf', 'JD_BE'],
+  ['cv_be_02.pdf', 'JD_DA'],
+];
+
+/** Chọn các dòng labels.csv cần chạy: mặc định 3 cặp, "dev" cả tập dev, hoặc danh sách file CV. */
+function screenRows(args) {
+  const labels = readLabels();
+  if (args.length === 0) {
+    return DEFAULT_SCREEN_PAIRS.map(([file, jdId]) =>
+      labels.find((row) => row.cv_file === file && row.jd_id === jdId),
+    );
+  }
+  if (args[0] === 'dev') return labels.filter((row) => row.split === 'dev');
+  return args.map((file) => {
+    const row = labels.find((item) => item.cv_file === file);
+    if (!row) throw new Error(`Không có ${file} trong labels.csv`);
+    return row;
+  });
+}
+
+/** Số câu (ước lượng theo dấu kết thúc câu). */
+const countSentences = (text) => text.split(/[.!?](?:\s|$)/).filter((s) => s.trim()).length;
+
+async function screenDemo() {
+  if (!process.env.GEMINI_MODEL_EMBEDDING?.trim()) {
+    console.error(
+      '✗ Thiếu GEMINI_MODEL_EMBEDDING (vd. gemini-embedding-001) trong packages/ai/.env',
+    );
+    process.exitCode = 1;
+    return;
+  }
+  const delayMs = Number(process.env.TRY_DELAY_MS ?? 2000);
+  const rows = screenRows(process.argv.slice(3));
+  const truth = readFixtureTruth();
+
+  const jds = {};
+  for (const name of new Set(rows.map((row) => jdNameOf(row.jd_id)))) {
+    jds[name] = await prepareFixtureJd(name);
+    await sleep(delayMs);
+  }
+
+  const totals = { quotes: 0, verified: 0, totalMs: [] };
+  for (const [i, row] of rows.entries()) {
+    if (i > 0) await sleep(delayMs);
+    const jd = jds[jdNameOf(row.jd_id)];
+    const bytes = new Uint8Array(readFileSync(path.join(FIXTURES_DIR, 'cvs', row.cv_file)));
+    const { text: cvText } = await extractCvText(bytes, { logger: quietLogger });
+
+    const warnings = [];
+    const logger = { log() {}, error: console.error, warn: (message) => warnings.push(message) };
+    let result;
+    try {
+      result = await screenCv(
+        ai,
+        { cvText, parsedJd: jd.parsedJd, jdEmbedding: jd.jdEmbedding },
+        { referenceDate: FIXTURE_REFERENCE_DATE, logger },
+      );
+    } catch (error) {
+      if (!(error instanceof ScreeningStepError)) throw error;
+      console.error(`✗ ${row.cv_file}: ${error.message}`);
+      // Để phần xử lý lỗi chung in chi tiết và gợi ý cho lỗi của Gemini.
+      throw isAiError(error.cause) ? error.cause : error;
+    }
+
+    const { total, breakdown, explanation, timings } = result;
+    console.log(
+      `\n── ${row.cv_file} ↔ ${row.jd_id}: ${total} điểm (nhãn ${row.expected_score}, ${row.label}, ngưỡng ${jd.threshold}) ` +
+        describeBreakdown(breakdown),
+    );
+    console.log('   Điểm mạnh:');
+    for (const { point, quote } of explanation.strengths) {
+      console.log(`   - ${point}`);
+      console.log(`     ${quote === null ? '✗ (trích dẫn bị bỏ)' : `“${quote}”`}`);
+    }
+    console.log('   Kỹ năng bắt buộc còn thiếu:');
+    if (explanation.gaps.length === 0) console.log('   (không)');
+    for (const { skill, note } of explanation.gaps) console.log(`   - ${skill}: ${note}`);
+    console.log(`   Tóm tắt: ${explanation.summary}`);
+    console.log(
+      `   Thời gian: parse ${timings.parseCvMs} / embed ${timings.embedMs} / score ${timings.scoreMs}` +
+        ` / explain ${timings.explainMs} / tổng ${timings.totalMs} ms`,
+    );
+    for (const warning of warnings) console.log(`   ! ${warning}`);
+
+    const verified = explanation.strengths.filter(({ quote }) => quote !== null).length;
+    totals.quotes += explanation.strengths.length;
+    totals.verified += verified;
+    totals.totalMs.push(timings.totalMs);
+
+    const text = JSON.stringify(explanation);
+    const leaked = personalDataOf(truth.get(row.cv_file) ?? {}).filter((item) =>
+      text.includes(item),
+    );
+    check(
+      explanation.strengths.length >= 2 && explanation.strengths.length <= 4,
+      '2–4 điểm mạnh',
+      String(explanation.strengths.length),
+    );
+    check(
+      JSON.stringify(explanation.gaps.map(({ skill }) => skill)) ===
+        JSON.stringify(breakdown.requiredSkills.missing),
+      'gaps khớp breakdown.requiredSkills.missing',
+    );
+    check(leaked.length === 0, 'không lộ thông tin cá nhân', leaked.join(', '));
+    console.log(
+      `   · trích dẫn còn giữ ${verified}/${explanation.strengths.length}, tóm tắt ~${countSentences(explanation.summary)} câu`,
+    );
+  }
+
+  console.log('\n── Tổng hợp:');
+  console.log(`   Trích dẫn kiểm chứng được: ${totals.verified}/${totals.quotes}`);
+  console.log(`   Thời gian trung bình mỗi CV: ${Math.round(average(totals.totalMs))} ms`);
+  if (failedChecks > 0) process.exitCode = 1;
+}
+
 const demos = {
   text: () => ai.generateText('Trả lời trong 1 câu: thủ đô của Việt Nam là gì?'),
   structured: () =>
@@ -849,6 +974,7 @@ const demos = {
   'parse-cv': parseCvDemo,
   embed: embedDemo,
   score: scoreDemo,
+  screen: screenDemo,
 };
 
 /** Gợi ý cách xử lý cho các lỗi hay gặp khi chạy thử. */

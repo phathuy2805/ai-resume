@@ -13,3 +13,11 @@ export function toWords(text: string): string {
     .replace(/[^a-z0-9+#]+/g, ' ')
     .trim();
 }
+
+/**
+ * Chuẩn hóa để so khớp nguyên văn (kiểm chứng trích dẫn CV): NFC, chữ thường, gộp mọi khoảng trắng
+ * (kể cả xuống dòng) thành 1 dấu cách. KHÔNG bỏ dấu tiếng Việt như fold(): sai dấu là không khớp.
+ */
+export function normalizeForMatch(text: string): string {
+  return text.normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
+}
