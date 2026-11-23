@@ -330,7 +330,7 @@ const { total, breakdown } = await scoreCv(ai, { parsedCv, parsedJd, cvEmbedding
 - Trọng số, điểm chặn, mốc cosine để trong config (`DEFAULT_SCORING_CONFIG`), ghi đè được bằng
   `scoreCv(ai, input, { config: { weights: {...}, capScore, similarity: { min, max } } })`; sai (tổng trọng số ≠ 100...) → `AiConfigError`.
 - **Lỗi:** Gemini lỗi thì ném lỗi luôn, không cho điểm mặc định. Embedding khác số chiều → `RangeError` (trước khi gọi Gemini).
-- Không làm ở đây: so điểm với ngưỡng để ra PASS / CONSIDER / REJECT (BE, W2-BE-02); giải thích kèm trích dẫn (W2-AI-03).
+- Không làm ở đây: so điểm với ngưỡng để ra PASS / CONSIDER / REJECT (BE, W2-BE-02); giải thích kèm trích dẫn (`screenCv`, W2-AI-03).
 
 Cấu trúc `breakdown` (type `ScoreBreakdown`):
 
@@ -363,6 +363,76 @@ Cấu trúc `breakdown` (type `ScoreBreakdown`):
 - **Ổn định:** `score repeat` 3 lần trên `cv_be_06`, và 3 lần trên `cv_be_05` có parse + embed lại mỗi lần (`--full`), đều chênh 0 điểm.
   Giữa các lần chạy demo (JD được parse lại) `cv_be_06` được 79–82 điểm.
 
+## Sàng lọc CV trọn gói (`screenCv`)
+
+BE gọi **một hàm** cho mỗi hồ sơ (W2-AI-03): `parseCv` → `embedCv` → `scoreCv` → giải thích điểm, chạy tuần tự.
+
+```ts
+import { screenCv, ScreeningStepError } from '@hireflow/ai';
+
+try {
+  const result = await screenCv(
+    ai,
+    { cvText: application.cvText, parsedJd: job.parsedJd, jdEmbedding },
+    { logger: new Logger('AI') }, // không bắt buộc; còn nhận timeoutMs, maxRetries, referenceDate, scoring
+  );
+} catch (error) {
+  if (error instanceof ScreeningStepError) {
+    // error.step: 'PARSE' | 'EMBED' | 'SCORE' | 'EXPLAIN'; error.cause: lỗi gốc (AiError, CvExtractionError...)
+    application.screeningError = error.message; // vd. "Screening failed at EXPLAIN: Gemini rate limit exceeded"
+  }
+}
+```
+
+Kết quả (`ScreeningOutput`) và chỗ BE lưu:
+
+| Trường             | Lưu vào                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `parsedCv`         | `Application.parsedCv`                                                  |
+| `cvEmbedding`      | `Application.embedding` (`$executeRaw`, ép `::vector`)                  |
+| `total`            | `ScreeningResult.totalScore`; so với `cvPassThreshold` ra PASS / CONSIDER / REJECT |
+| `breakdown`        | `ScreeningResult.breakdown` (cấu trúc ở mục `scoreCv`)                  |
+| `explanation`      | `ScreeningResult.explanation`                                           |
+| `timings`          | `ScreeningResult.timings`; `timings.totalMs` → `processingDurationMs`   |
+
+```ts
+// explanation (type Explanation)
+{
+  strengths: { point: string, quote: string | null }[], // 2–4 ý; quote = trích nguyên văn CV, null nếu không kiểm chứng được
+  gaps: { skill: string, note: string }[],               // đúng breakdown.requiredSkills.missing (thứ tự, tên theo JD)
+  summary: string,                                       // 2–3 câu
+}
+// timings (type ScreeningTimings), đơn vị ms
+{ parseCvMs, embedMs, scoreMs, explainMs, totalMs }
+```
+
+- **Kiểm chứng trích dẫn:** so `quote` với `cvText` sau khi chuẩn hóa NFC, chữ thường, gộp khoảng trắng / xuống dòng
+  (ngoặc kép, dấu `…` và dấu câu ở hai đầu được bỏ). Sai dấu tiếng Việt thì không khớp. Không tìm thấy hoặc dài quá 30 từ
+  → `quote = null`, vẫn giữ `point`. Số trích dẫn bị bỏ được ghi log `warn` (không ghi nội dung).
+- **Kỹ năng thiếu** lấy từ `breakdown` (tính bằng code); Gemini chỉ viết `note`. Kỹ năng Gemini bỏ sót dùng câu mặc định
+  `CV chưa thể hiện kỹ năng <tên>.`, kỹ năng Gemini tự thêm bị bỏ.
+- Prompt giải thích: tiếng Việt, trung lập, gọi là "ứng viên"; cấm nhắc tên, tuổi, giới tính, tình trạng hôn nhân, quê quán,
+  quốc tịch, độ nổi tiếng của trường / công ty. Temperature 0.
+- **Lỗi:** bước nào lỗi thì ném `ScreeningStepError` với `step` tương ứng (`cvText` rỗng → `PARSE`;
+  `jdEmbedding` sai số chiều → `SCORE`). `message` không chứa nội dung CV. Gemini lỗi ở bước giải thích thì ném lỗi,
+  không trả giải thích mặc định.
+- **Không tự thử lại cả pipeline:** client đã retry từng lần gọi; W2-BE-01 chạy lại cả pipeline 1 lần khi lỗi.
+- **Quota:** mỗi CV gọi Gemini 4 lần (parse, embed, chấm liên quan, giải thích); CV không có công việc lẫn dự án thì 3 lần.
+
+### Kết quả chạy thử (W2-AI-03)
+
+`npm run try -w packages/ai -- screen` trên 3 cặp tập dev (`gemini-3.5-flash-lite` + `gemini-embedding-001`):
+
+| Cặp                         | Điểm (nhãn)  | Điểm mạnh / trích dẫn giữ | Kỹ năng thiếu   | Thời gian |
+| --------------------------- | ------------ | ------------------------- | --------------- | --------- |
+| `cv_be_01` ↔ JD_BE (phù hợp)  | 94 (92)      | 2 / 2                     | 0               | 6,2 s     |
+| `cv_be_05` ↔ JD_BE (borderline) | 74 (66)    | 3 / 3                     | 1 (NestJS)      | 5,4 s     |
+| `cv_be_02` ↔ JD_DA (khác ngành) | 22 (15), capped | 2 / 2                | 6               | 6,1 s     |
+
+- Trích dẫn kiểm chứng được 7/7; `gaps` khớp `breakdown` ở cả 3 cặp; không lộ họ tên, email, SĐT, địa chỉ.
+- Tóm tắt 2 câu, khớp mức điểm; cặp bị chặn điểm có nêu "thiếu hơn một nửa số kỹ năng bắt buộc".
+- Trung bình ~5,9 s mỗi CV; bước giải thích ~1,7–2,1 s, ~1.100–1.600 token.
+
 ## Scripts
 
 Chạy từ thư mục gốc repo:
@@ -385,6 +455,7 @@ Chạy từ thư mục gốc repo:
 | `npm run try -w packages/ai -- embed [all]` | `embedJd` 3 JD + `embedCv` 11 CV tập dev (`all`: 30 CV), in bảng cosine và khoảng cosine theo nhóm |
 | `npm run try -w packages/ai -- score [all]` | `scoreCv` trên 13 cặp CV ↔ JD tập dev của `labels.csv` (`all`: 40 cặp), so với `expected_score` và nhãn theo ngưỡng của job |
 | `npm run try -w packages/ai -- score repeat <cv> [số lần] [--full]` | Chấm một CV nhiều lần (mặc định 3), kiểm tra chênh ≤ 5; `--full` parse + embed lại mỗi lần |
+| `npm run try -w packages/ai -- screen [dev \| <cv...>]` | `screenCv` trên 3 cặp dev (phù hợp / borderline / khác ngành); `dev`: 13 cặp tập dev; hoặc CV chỉ định (ghép JD theo `labels.csv`). In giải thích, tự kiểm tra 2–4 điểm mạnh, `gaps` khớp `breakdown`, không lộ thông tin cá nhân |
 
 `npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT` (demo `embed` và `score` cần thêm `GEMINI_MODEL_EMBEDDING`). Free tier dễ chạm giới hạn số lần gọi mỗi phút:
 tăng `TRY_DELAY_MS` (vd. `$env:TRY_DELAY_MS='12000'`) nếu gặp `AI_RATE_LIMIT`.
