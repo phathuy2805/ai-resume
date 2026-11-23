@@ -3,13 +3,13 @@ import { Menu } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import HrSidebar from '@/components/layout/HrSidebar';
-import { hrLinks } from '@/components/layout/hrLinks';
+import { getActiveHrLink } from '@/components/layout/hrLinks';
 import UserMenu from '@/components/layout/UserMenu';
 
 export default function HrHeader() {
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const section = hrLinks.find((link) => pathname.startsWith(link.to))?.label ?? 'Tuyển dụng';
+  const section = getActiveHrLink(pathname)?.label ?? 'Tuyển dụng';
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur md:px-6">

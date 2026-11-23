@@ -1,4 +1,4 @@
-import { AlertCircle, FolderOpen, Loader2, RotateCcw } from 'lucide-react';
+import { AlertCircle, FolderOpen, Loader2, RotateCcw, SearchX } from 'lucide-react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import EmptyState from '@/components/common/EmptyState';
 import PageHeader from '@/components/common/PageHeader';
@@ -31,6 +31,8 @@ import { HR_STATUS, scoreTone } from '@/lib/applicationStatus';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ApplicationStatus } from '@/types/applications';
+
+type ScoreBand = 'ALL' | 'PASS' | 'CONSIDER' | 'REJECT';
 
 function HRCandidatesRedirect() {
   const jobsQuery = useMyJobs({ limit: 100 });
@@ -72,6 +74,36 @@ function HRCandidatesPageContent({ jobId }: { jobId: string }) {
   const orderParam = (searchParams.get('order') as 'asc' | 'desc') ?? 'desc';
   const pageParam = parseInt(searchParams.get('page') ?? '1', 10);
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+
+  // Khoảng điểm theo ngưỡng của job, khớp PASS / CONSIDER / REJECT. BE chỉ nhận điểm 0–100:
+  // ngưỡng thấp (< 11) thì khoảng "Dưới ngưỡng" / "Cân nhắc" không tồn tại nên ẩn đi, không gửi số âm.
+  const scoreBands: Partial<
+    Record<ScoreBand, { label: string; minScore?: string; maxScore?: string }>
+  > = {
+    ALL: { label: 'Tất cả điểm' },
+    PASS: { label: `Đạt ngưỡng (${threshold}+)`, minScore: String(threshold) },
+    ...(threshold >= 1 && {
+      CONSIDER: {
+        label: `Cân nhắc (${Math.max(0, threshold - 10)}–${threshold - 1})`,
+        minScore: String(Math.max(0, threshold - 10)),
+        maxScore: String(threshold - 1),
+      },
+    }),
+    ...(threshold >= 11 && {
+      REJECT: { label: `Dưới ngưỡng (< ${threshold - 10})`, maxScore: String(threshold - 11) },
+    }),
+  };
+  const scoreBandEntries = Object.entries(scoreBands) as [
+    ScoreBand,
+    NonNullable<(typeof scoreBands)[ScoreBand]>,
+  ][];
+  // URL chỉ lưu minScore/maxScore → suy ngược ra lựa chọn để Select hiện đúng nhãn.
+  const scoreBand =
+    scoreBandEntries.find(
+      ([, band]) =>
+        (band.minScore ?? null) === minScoreParam && (band.maxScore ?? null) === maxScoreParam,
+    )?.[0] ?? 'CUSTOM';
+  const hasFilters = statusParam !== 'ALL' || scoreBand !== 'ALL';
 
   const applicationsQuery = useJobApplications(jobId, {
     status: statusParam === 'ALL' ? undefined : (statusParam as ApplicationStatus),
@@ -163,36 +195,26 @@ function HRCandidatesPageContent({ jobId }: { jobId: string }) {
           </Select>
 
           <Select
-            value={
-              minScoreParam || maxScoreParam
-                ? `${minScoreParam ?? ''}:${maxScoreParam ?? ''}`
-                : 'ALL'
-            }
+            value={scoreBand}
             onValueChange={(value) => {
-              if (value === 'ALL')
-                updateParams({ minScore: undefined, maxScore: undefined, page: '1' });
-              if (value === 'PASS')
-                updateParams({ minScore: String(threshold), maxScore: undefined, page: '1' });
-              if (value === 'CONSIDER')
-                updateParams({
-                  minScore: String(threshold - 10),
-                  maxScore: String(threshold - 1),
-                  page: '1',
-                });
-              if (value === 'REJECT')
-                updateParams({ minScore: undefined, maxScore: String(threshold - 11), page: '1' });
+              const { minScore, maxScore } = scoreBands[value as ScoreBand] ?? {};
+              updateParams({ minScore, maxScore, page: '1' });
             }}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Tất cả điểm</SelectItem>
-              <SelectItem value="PASS">Đạt ngưỡng ({threshold}+)</SelectItem>
-              <SelectItem value="CONSIDER">
-                Cân nhắc ({threshold - 10}–{threshold - 1})
-              </SelectItem>
-              <SelectItem value="REJECT">Dưới ngưỡng ({threshold - 10})</SelectItem>
+              {scoreBand === 'CUSTOM' && (
+                <SelectItem value="CUSTOM" disabled>
+                  Điểm {minScoreParam ?? 0}–{maxScoreParam ?? 100}
+                </SelectItem>
+              )}
+              {scoreBandEntries.map(([value, band]) => (
+                <SelectItem key={value} value={value}>
+                  {band.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
@@ -237,11 +259,46 @@ function HRCandidatesPageContent({ jobId }: { jobId: string }) {
             </Button>
           </div>
         ) : applications.length === 0 ? (
-          <EmptyState
-            icon={FolderOpen}
-            title="Job này chưa có hồ sơ nào"
-            description="Ứng viên nộp hồ sơ vào vị trí này sẽ xuất hiện ở đây để AI sàng lọc."
-          />
+          (meta?.total ?? 0) > 0 ? (
+            // Trang vượt quá số trang (VD sửa URL page=5 khi chỉ có 2 trang).
+            <EmptyState
+              icon={FolderOpen}
+              title="Trang này không có hồ sơ nào"
+              description={`Danh sách chỉ có ${totalPages} trang.`}
+              action={
+                <Button variant="outline" onClick={() => updateParams({ page: undefined })}>
+                  Về trang đầu
+                </Button>
+              }
+            />
+          ) : hasFilters ? (
+            <EmptyState
+              icon={SearchX}
+              title="Không có hồ sơ phù hợp bộ lọc"
+              description="Thử đổi trạng thái hoặc khoảng điểm."
+              action={
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    updateParams({
+                      status: undefined,
+                      minScore: undefined,
+                      maxScore: undefined,
+                      page: undefined,
+                    })
+                  }
+                >
+                  Xóa bộ lọc
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon={FolderOpen}
+              title="Job này chưa có hồ sơ nào"
+              description="Ứng viên nộp hồ sơ vào vị trí này sẽ xuất hiện ở đây để AI sàng lọc."
+            />
+          )
         ) : (
           <Table>
             <TableHeader>
@@ -333,7 +390,7 @@ function HRCandidatesPageContent({ jobId }: { jobId: string }) {
             </TableBody>
           </Table>
         )}
-        {meta && meta.total > 0 && (
+        {meta && applications.length > 0 && (
           <div className="flex items-center justify-between border-t px-5 py-3 text-sm text-muted-foreground">
             <span>
               Trang {meta.page} / {totalPages}
