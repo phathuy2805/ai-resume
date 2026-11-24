@@ -175,6 +175,6 @@ describe('JobAnalysisTrigger', () => {
 
     expect(() => trigger.enqueue(JOB_ID)).not.toThrow();
     await Promise.resolve();
-    expect(enqueueAnalyzeJob).toHaveBeenCalledWith(JOB_ID);
+    expect(enqueueAnalyzeJob).toHaveBeenCalledWith(JOB_ID, { force: true });
   });
 });

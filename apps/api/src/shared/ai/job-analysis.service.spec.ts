@@ -156,5 +156,22 @@ describe('JobAnalysisService', () => {
 
       await expect(service.ensureJobAnalyzed(JOB_ID)).rejects.toBeInstanceOf(NotFoundException);
     });
+
+    it('schedules one follow-up analysis when force=true arrives during an in-flight run', async () => {
+      aiRepo.findJobForAnalysis.mockResolvedValue(makeJobRow());
+      aiMocks.parseJd.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve(SAMPLE_PARSED_JD), 20)),
+      );
+      aiMocks.embedJd.mockResolvedValue(SAMPLE_VECTOR);
+
+      const first = service.enqueueAnalyzeJob(JOB_ID, { force: true });
+      void service.enqueueAnalyzeJob(JOB_ID, { force: true });
+
+      await first;
+      await aiQueue.onIdle();
+
+      expect(aiMocks.parseJd).toHaveBeenCalledTimes(2);
+      expect(aiRepo.saveJobAnalysis).toHaveBeenCalledTimes(2);
+    });
   });
 });

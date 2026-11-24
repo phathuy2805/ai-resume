@@ -11,6 +11,7 @@ export class JobAnalysisService {
   private readonly logger = new Logger(JobAnalysisService.name);
   private readonly inFlight = new Map<string, Promise<AnalyzedJobResult | null>>();
   private readonly queuedByJob = new Map<string, Promise<AnalyzedJobResult | null>>();
+  private readonly pendingReanalyze = new Set<string>();
 
   constructor(
     @Inject(AI_CLIENT) private readonly aiClient: AiClient,
@@ -20,15 +21,28 @@ export class JobAnalysisService {
 
   /**
    * Đưa phân tích JD vào `AiQueueService`, gộp các lời gọi trùng `jobId` đang chờ/đang chạy.
+   * Khi `force: true` (VD: HR vừa sửa JD lúc lượt phân tích cũ đang chạy), đánh dấu chạy thêm 1 lượt mới ngay sau đó.
    */
-  enqueueAnalyzeJob(jobId: string): Promise<AnalyzedJobResult | null> {
+  enqueueAnalyzeJob(
+    jobId: string,
+    options: { force?: boolean } = {},
+  ): Promise<AnalyzedJobResult | null> {
     const existing = this.queuedByJob.get(jobId);
     if (existing) {
+      if (options.force) {
+        this.pendingReanalyze.add(jobId);
+      }
       return existing;
     }
 
     const promise = this.aiQueue.add(() => this.analyzeJob(jobId)).finally(() => {
       this.queuedByJob.delete(jobId);
+      if (this.pendingReanalyze.delete(jobId)) {
+        void this.enqueueAnalyzeJob(jobId).catch((error) => {
+          const reason = error instanceof Error ? error.message : String(error);
+          this.logger.error(`Phân tích lại JD thất bại cho job ${jobId}: ${reason}`);
+        });
+      }
     });
     this.queuedByJob.set(jobId, promise);
     return promise;

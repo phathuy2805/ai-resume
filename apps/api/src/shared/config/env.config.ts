@@ -21,6 +21,14 @@ const optionalString = z
   .optional()
   .transform((v) => v || undefined);
 
+/** Biến có giá trị mặc định: để trống trong .env (`KEY=`) vẫn rơi về `fallback`. */
+const optionalWithDefault = (fallback: string) =>
+  z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => v || fallback);
+
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -50,13 +58,10 @@ export const envSchema = z
     S3_ACCESS_KEY: optionalString,
     S3_SECRET_KEY: optionalString,
     // Gemini AI & Hàng đợi (W2-BE-02)
-    GEMINI_API_KEY: z
-      .string()
-      .min(1, 'GEMINI_API_KEY là bắt buộc')
-      .default('dev-gemini-api-key'),
-    GEMINI_MODEL_TEXT: z.string().min(1).default('gemini-2.5-flash-lite'),
-    GEMINI_MODEL_EMBEDDING: z.string().min(1).default('gemini-embedding-001'),
-    GEMINI_MODEL_AUDIO: z.string().min(1).default('gemini-2.5-flash'),
+    GEMINI_API_KEY: optionalWithDefault('dev-gemini-api-key'),
+    GEMINI_MODEL_TEXT: optionalWithDefault('gemini-2.5-flash-lite'),
+    GEMINI_MODEL_EMBEDDING: optionalWithDefault('gemini-embedding-001'),
+    GEMINI_MODEL_AUDIO: optionalWithDefault('gemini-2.5-flash'),
     AI_QUEUE_CONCURRENCY: z.coerce.number().int().min(1).default(2),
     AI_CONSIDER_MARGIN: z.coerce.number().int().min(0).max(100).default(10),
   })
