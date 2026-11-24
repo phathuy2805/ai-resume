@@ -4638,8 +4638,106 @@
                 ],
                 "additionalProperties": false
               },
-              "explanation": {},
-              "timings": {},
+              "explanation": {
+                "type": "object",
+                "properties": {
+                  "strengths": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "point": {
+                          "type": "string",
+                          "description": "Nhận xét điểm mạnh của ứng viên"
+                        },
+                        "quote": {
+                          "description": "Trích dẫn nguyên văn từ CV (null nếu không kiểm chứng được)",
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "point",
+                        "quote"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "Danh sách điểm mạnh kèm trích dẫn CV"
+                  },
+                  "gaps": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "skill": {
+                          "type": "string",
+                          "description": "Tên kỹ năng bắt buộc còn thiếu"
+                        },
+                        "note": {
+                          "type": "string",
+                          "description": "Nhận xét về kỹ năng còn thiếu"
+                        }
+                      },
+                      "required": [
+                        "skill",
+                        "note"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "Danh sách kỹ năng bắt buộc còn thiếu kèm nhận xét"
+                  },
+                  "summary": {
+                    "type": "string",
+                    "description": "Tóm tắt mức độ phù hợp của ứng viên"
+                  }
+                },
+                "required": [
+                  "strengths",
+                  "gaps",
+                  "summary"
+                ],
+                "additionalProperties": false
+              },
+              "timings": {
+                "type": "object",
+                "properties": {
+                  "parseCvMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "embedMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "scoreMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "explainMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "totalMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "parseCvMs",
+                  "embedMs",
+                  "scoreMs",
+                  "explainMs",
+                  "totalMs"
+                ],
+                "additionalProperties": false
+              },
               "processingDurationMs": {
                 "type": "integer",
                 "minimum": 0,

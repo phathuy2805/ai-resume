@@ -13,7 +13,10 @@ import type {
   HrApplicationDetail,
   JobStatsRow,
 } from '../applications.repository.js';
-import { GetJobApplicationsQuerySchema } from '../applications.schema.js';
+import {
+  GetApplicationDetailResSchema,
+  GetJobApplicationsQuerySchema,
+} from '../applications.schema.js';
 import { ApplicationsService } from '../applications.service.js';
 import type { CvTextExtractor } from '../cv-text.extractor.js';
 
@@ -58,8 +61,18 @@ function makeDetail(overrides: Partial<HrApplicationDetail> = {}): HrApplication
         similarity: { score: 75, weight: 15, cosine: 0.878 },
         capped: false,
       },
-      explanation: { summary: 'Phù hợp tốt' },
-      timings: { totalMs: 1200 },
+      explanation: {
+        strengths: [{ point: 'Thành thạo NestJS', quote: '4 năm kinh nghiệm NestJS' }],
+        gaps: [],
+        summary: 'Phù hợp tốt',
+      },
+      timings: {
+        parseCvMs: 400,
+        embedMs: 200,
+        scoreMs: 350,
+        explainMs: 250,
+        totalMs: 1200,
+      },
       processingDurationMs: 1200,
       createdAt: now,
       updatedAt: now,
@@ -225,6 +238,7 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
 
       const res = await service.findDetailForHr(HR_A, APP_ID);
 
+      expect(GetApplicationDetailResSchema.safeParse(res).success).toBe(true);
       expect(res.interviewId).toBe(INTERVIEW_ID);
       expect(res.job).toEqual({ id: JOB_ID, title: 'Backend NestJS', cvPassThreshold: 70 });
       expect(res.screeningResult?.totalScore).toBe(84);

@@ -253,12 +253,28 @@ async function main() {
           capped: false,
         },
         explanation: {
+          strengths: [
+            {
+              point: 'Thành thạo NestJS, TypeScript, PostgreSQL và có 4 năm kinh nghiệm Backend.',
+              quote:
+                '4 năm kinh nghiệm NodeJS, NestJS, TypeScript, PostgreSQL, RESTful API',
+            },
+          ],
+          gaps: [
+            {
+              skill: 'Docker',
+              note: 'CV chưa đề cập kinh nghiệm triển khai hoặc đóng gói ứng dụng bằng Docker.',
+            },
+          ],
           summary: 'Ứng viên đáp ứng tốt đa số kỹ năng cốt lõi và vượt yêu cầu số năm kinh nghiệm.',
-          strengths: ['Thành thạo NestJS, TypeScript, PostgreSQL', '4 năm kinh nghiệm Backend'],
-          missingSkills: ['Docker', 'BullMQ'],
-          verifiedQuotes: ['4 năm kinh nghiệm xây dựng REST API với NestJS và PostgreSQL'],
         },
-        timings: { extractMs: 120, parseMs: 650, embedMs: 210, scoreMs: 420 },
+        timings: {
+          parseCvMs: 520,
+          embedMs: 210,
+          scoreMs: 390,
+          explainMs: 280,
+          totalMs: 1400,
+        },
         processingDurationMs: 1400,
       },
     },
@@ -306,13 +322,27 @@ async function main() {
           capped: false,
         },
         explanation: {
+          strengths: [
+            {
+              point: 'Có nền tảng NodeJS, TypeScript, RESTful API và Microservices.',
+              quote: '1.5 năm kinh nghiệm NodeJS, TypeScript, RESTful API, Microservices',
+            },
+          ],
+          gaps: [
+            { skill: 'NestJS', note: 'CV chưa thể hiện kinh nghiệm làm việc với NestJS.' },
+            { skill: 'PostgreSQL', note: 'CV chưa đề cập kinh nghiệm với PostgreSQL.' },
+            { skill: 'Docker', note: 'CV chưa đề cập kinh nghiệm sử dụng Docker.' },
+          ],
           summary:
             'Ứng viên có nền tảng NodeJS nhưng thiếu NestJS, PostgreSQL và chưa đủ 3 năm KN.',
-          strengths: ['Có kinh nghiệm NodeJS, TypeScript và REST API'],
-          missingSkills: ['NestJS', 'PostgreSQL', 'Docker'],
-          verifiedQuotes: ['1.5 năm phát triển backend bằng NodeJS/TypeScript'],
         },
-        timings: { extractMs: 95, parseMs: 610, embedMs: 190, scoreMs: 390 },
+        timings: {
+          parseCvMs: 480,
+          embedMs: 190,
+          scoreMs: 355,
+          explainMs: 260,
+          totalMs: 1285,
+        },
         processingDurationMs: 1285,
       },
     },
