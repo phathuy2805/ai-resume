@@ -24,6 +24,7 @@ import {
   GetJobApplicationsResDto,
   GetJobStatsResDto,
   MyApplicationResDto,
+  RescreenResDto,
 } from './applications.dto.js';
 import {
   AlreadyAppliedException,
@@ -33,6 +34,7 @@ import {
   CvFileTooLargeException,
   CvInvalidFileTypeException,
   InvalidDecisionStatusException,
+  InvalidRescreenStatusException,
   JobClosedException,
   JobNotFoundForApplyException,
   JobNotFoundForHrException,
@@ -251,6 +253,38 @@ export const ApiDecideApplicationDoc = () =>
     ApiConflictResponse({
       description: 'Hồ sơ không ở trạng thái SCREENED',
       examples: exampleOf(InvalidDecisionStatusException),
+    }),
+  );
+
+export const ApiRescreenApplicationDoc = () =>
+  applyDecorators(
+    ApiBearerAuth('JWT-auth'),
+    ApiOperation({
+      summary: 'HR yêu cầu AI chấm lại CV',
+      description:
+        'Chỉ nhận khi hồ sơ đang ở trạng thái SCREENED hoặc SCREENING_FAILED. Chuyển ngay sang SCREENING, xóa screeningError và đưa vào hàng đợi chấm nền; kết quả chấm mới ghi đè kết quả cũ. FE theo dõi trạng thái bằng cách tải lại danh sách / chi tiết.',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Mã định danh hồ sơ (Application UUID)',
+    }),
+    ZodResponse({
+      status: HttpStatus.ACCEPTED,
+      description: 'Đã nhận yêu cầu chấm lại, hồ sơ đang ở SCREENING',
+      type: RescreenResDto,
+    }) as MethodDecorator,
+    ApiBadRequestResponse({
+      description: 'ID không hợp lệ',
+    }),
+    UNAUTHORIZED,
+    HR_ONLY,
+    ApiNotFoundResponse({
+      description: 'Không tìm thấy hồ sơ',
+      examples: exampleOf(ApplicationNotFoundException),
+    }),
+    ApiConflictResponse({
+      description: 'Hồ sơ không ở trạng thái SCREENED hoặc SCREENING_FAILED',
+      examples: exampleOf(InvalidRescreenStatusException),
     }),
   );
 

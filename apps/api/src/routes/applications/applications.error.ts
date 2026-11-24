@@ -22,6 +22,7 @@ export enum ApplicationErrorCode {
   APPLICATION_NOT_FOUND = 'APPLICATION_NOT_FOUND',
   APPLICATION_FORBIDDEN = 'APPLICATION_FORBIDDEN',
   INVALID_DECISION_STATUS = 'INVALID_DECISION_STATUS',
+  INVALID_RESCREEN_STATUS = 'INVALID_RESCREEN_STATUS',
 }
 
 export const CvFileRequiredException = new BadRequestException({
@@ -72,6 +73,11 @@ export const ApplicationForbiddenException = new ForbiddenException({
 export const InvalidDecisionStatusException = new ConflictException({
   message: 'Chỉ có thể duyệt hoặc từ chối hồ sơ đang ở trạng thái SCREENED',
   code: ApplicationErrorCode.INVALID_DECISION_STATUS,
+});
+
+export const InvalidRescreenStatusException = new ConflictException({
+  message: 'Chỉ có thể chấm lại hồ sơ đang ở trạng thái SCREENED hoặc SCREENING_FAILED',
+  code: ApplicationErrorCode.INVALID_RESCREEN_STATUS,
 });
 
 /**

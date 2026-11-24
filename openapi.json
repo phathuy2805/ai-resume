@@ -1786,6 +1786,137 @@
         ]
       }
     },
+    "/api/applications/{id}/rescreen": {
+      "post": {
+        "description": "Chỉ nhận khi hồ sơ đang ở trạng thái SCREENED hoặc SCREENING_FAILED. Chuyển ngay sang SCREENING, xóa screeningError và đưa vào hàng đợi chấm nền; kết quả chấm mới ghi đè kết quả cũ. FE theo dõi trạng thái bằng cách tải lại danh sách / chi tiết.",
+        "operationId": "ApplicationsController_rescreenApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh hồ sơ (Application UUID)",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Đã nhận yêu cầu chấm lại, hồ sơ đang ở SCREENING",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/RescreenResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_FORBIDDEN": {
+                    "summary": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Bạn không có quyền truy cập hồ sơ của tin tuyển dụng này",
+                      "code": "APPLICATION_FORBIDDEN",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy hồ sơ",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_NOT_FOUND": {
+                    "summary": "Không tìm thấy hồ sơ ứng tuyển",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy hồ sơ ứng tuyển",
+                      "code": "APPLICATION_NOT_FOUND",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Hồ sơ không ở trạng thái SCREENED hoặc SCREENING_FAILED",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "INVALID_RESCREEN_STATUS": {
+                    "summary": "Chỉ có thể chấm lại hồ sơ đang ở trạng thái SCREENED hoặc SCREENING_FAILED",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Chỉ có thể chấm lại hồ sơ đang ở trạng thái SCREENED hoặc SCREENING_FAILED",
+                      "code": "INVALID_RESCREEN_STATUS",
+                      "timestamp": "2026-11-18T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "HR yêu cầu AI chấm lại CV",
+        "tags": [
+          "Applications"
+        ]
+      }
+    },
     "/api/applications/{id}/cv-url": {
       "get": {
         "operationId": "ApplicationsController_getApplicationCvUrl",
@@ -4974,6 +5105,39 @@
           "hrDecisionById",
           "hrDecisionAt",
           "hrNote"
+        ],
+        "additionalProperties": false
+      },
+      "RescreenResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh đơn ứng tuyển (UUID)"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUBMITTED",
+              "SCREENING",
+              "SCREENING_FAILED",
+              "SCREENED",
+              "SHORTLISTED",
+              "REJECTED",
+              "INTERVIEW_INVITED",
+              "INTERVIEWING",
+              "EVALUATED",
+              "PASSED",
+              "FAILED"
+            ],
+            "description": "Trạng thái đơn ứng tuyển"
+          }
+        },
+        "required": [
+          "id",
+          "status"
         ],
         "additionalProperties": false
       },

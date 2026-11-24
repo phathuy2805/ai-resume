@@ -6,6 +6,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Prisma } from '../../../generated/prisma/client.js';
 import { JobStatus } from '../../../shared/constants/job.constant.js';
+import type { ScreeningPipelineService } from '../../../shared/screening/screening-pipeline.service.js';
 import type { ApplicationStateService } from '../../../shared/services/application-state.service.js';
 import type { StorageService } from '../../../shared/services/storage.service.js';
 import { ApplicationErrorCode } from '../applications.error.js';
@@ -76,6 +77,7 @@ describe('ApplicationsService', () => {
     storage as unknown as StorageService,
     extractor as unknown as CvTextExtractor,
     applicationStateService as unknown as ApplicationStateService,
+    {} as ScreeningPipelineService,
   );
 
   beforeEach(() => {

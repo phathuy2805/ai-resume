@@ -194,6 +194,11 @@ export const DecisionResSchema = ApplicationSchema.pick({
   hrNote: z.string().nullable(),
 });
 
+export const RescreenResSchema = ApplicationSchema.pick({
+  id: true,
+  status: true,
+});
+
 export const ScoreRangeSchema = z.object({
   range: z.string().describe('Khoảng điểm (VD: 0-9, 10-19, ..., 90-100)'),
   count: z.number().int().min(0).describe('Số lượng hồ sơ trong khoảng điểm'),
@@ -230,5 +235,6 @@ export type JobApplicationListItemType = z.infer<typeof JobApplicationListItemSc
 export type GetJobApplicationsResType = z.infer<typeof GetJobApplicationsResSchema>;
 export type GetApplicationDetailResType = z.infer<typeof GetApplicationDetailResSchema>;
 export type DecisionResType = z.infer<typeof DecisionResSchema>;
+export type RescreenResType = z.infer<typeof RescreenResSchema>;
 export type GetJobStatsResType = z.infer<typeof GetJobStatsResSchema>;
 export type GetApplicationCvUrlResType = z.infer<typeof GetApplicationCvUrlResSchema>;

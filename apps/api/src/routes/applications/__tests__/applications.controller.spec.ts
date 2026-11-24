@@ -8,6 +8,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HttpExceptionFilter } from '../../../shared/filters/http-exception.filter.js';
 import { JobStatus } from '../../../shared/constants/job.constant.js';
+import { ScreeningPipelineService } from '../../../shared/screening/screening-pipeline.service.js';
 import { ApplicationStateService } from '../../../shared/services/application-state.service.js';
 import { StorageService } from '../../../shared/services/storage.service.js';
 import { CV_MAX_SIZE_BYTES } from '../applications.constant.js';
@@ -87,6 +88,7 @@ describe('ApplicationsController (HTTP)', () => {
           provide: ApplicationStateService,
           useValue: { recordInitial: () => Promise.resolve(), emitStatusChanged: () => undefined },
         },
+        { provide: ScreeningPipelineService, useValue: { rescreen: () => Promise.resolve() } },
         { provide: APP_PIPE, useClass: ZodValidationPipe },
         { provide: APP_FILTER, useClass: HttpExceptionFilter },
       ],

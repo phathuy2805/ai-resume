@@ -11,6 +11,7 @@ import {
   GetJobStatsResSchema,
   JobApplicationsParamSchema,
   MyApplicationResSchema,
+  RescreenResSchema,
   UploadCvFileSchema,
 } from './applications.schema.js';
 
@@ -26,5 +27,6 @@ export class GetJobApplicationsResDto extends createZodDto(GetJobApplicationsRes
 export class GetApplicationDetailResDto extends createZodDto(GetApplicationDetailResSchema) {}
 export class DecisionBodyDto extends createZodDto(DecisionBodySchema) {}
 export class DecisionResDto extends createZodDto(DecisionResSchema) {}
+export class RescreenResDto extends createZodDto(RescreenResSchema) {}
 export class GetJobStatsResDto extends createZodDto(GetJobStatsResSchema) {}
 export class GetApplicationCvUrlResDto extends createZodDto(GetApplicationCvUrlResSchema) {}
