@@ -27,7 +27,6 @@ describe('public API (src/index.ts)', () => {
       'embedJd',
       'embedText',
       'extractCvText',
-      'helloAI',
       'isAiError',
       'isCvExtractionError',
       'normalizeLevel',
