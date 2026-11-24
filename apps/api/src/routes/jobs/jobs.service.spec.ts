@@ -1,7 +1,8 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { JobAnalysisService } from '../../shared/ai/job-analysis.service.js';
 import { JobStatus } from '../../shared/constants/job.constant.js';
-import type { JobAnalysisTrigger } from './job-analysis.trigger.js';
+import { JobAnalysisTrigger } from './job-analysis.trigger.js';
 import type { PrismaJobWithCount } from './jobs.mapper.js';
 import type { JobsRepository } from './jobs.repository.js';
 import { JobsService } from './jobs.service.js';
@@ -42,21 +43,46 @@ function prismaJob(overrides: Partial<PrismaJobWithCount> = {}): PrismaJobWithCo
 describe('JobsService', () => {
   let repo: {
     findJobByIdWithCount: ReturnType<typeof vi.fn>;
+    createJob: ReturnType<typeof vi.fn>;
     closeJob: ReturnType<typeof vi.fn>;
     reopenJob: ReturnType<typeof vi.fn>;
   };
+  let trigger: { enqueue: ReturnType<typeof vi.fn> };
   let service: JobsService;
 
   beforeEach(() => {
     repo = {
       findJobByIdWithCount: vi.fn(),
+      createJob: vi.fn(),
       closeJob: vi.fn(),
       reopenJob: vi.fn(),
     };
+    trigger = { enqueue: vi.fn() };
     service = new JobsService(
       repo as unknown as JobsRepository,
-      { enqueue: vi.fn() } as unknown as JobAnalysisTrigger,
+      trigger as unknown as JobAnalysisTrigger,
     );
+  });
+
+  describe('create', () => {
+    it('creates a job and enqueues background JD analysis without blocking response', async () => {
+      repo.createJob.mockResolvedValue(prismaJob());
+
+      const job = await service.create(HR_ID, {
+        title: 'Backend NestJS',
+        description: 'Xây dựng API',
+        requiredSkills: ['NestJS'],
+        preferredSkills: [],
+        minYearsExperience: 2,
+        level: 'MIDDLE',
+        cvPassThreshold: 85,
+        interviewQuestionCount: 4,
+        rubricWeights: { technical: 50, communication: 20, relevance: 20, evidence: 10 },
+      });
+
+      expect(trigger.enqueue).toHaveBeenCalledWith(JOB_ID);
+      expect(job.id).toBe(JOB_ID);
+    });
   });
 
   describe('findMineById', () => {
@@ -136,5 +162,19 @@ describe('JobsService', () => {
       expect(repo.closeJob).toHaveBeenCalledWith(JOB_ID);
       expect(job.status).toBe(JobStatus.CLOSED);
     });
+  });
+});
+
+describe('JobAnalysisTrigger', () => {
+  it('enqueues JD analysis via JobAnalysisService and catches background errors safely', async () => {
+    const enqueueAnalyzeJob = vi.fn().mockRejectedValue(new Error('Gemini unavailable'));
+    const jobAnalysisService = {
+      enqueueAnalyzeJob,
+    } as unknown as JobAnalysisService;
+    const trigger = new JobAnalysisTrigger(jobAnalysisService);
+
+    expect(() => trigger.enqueue(JOB_ID)).not.toThrow();
+    await Promise.resolve();
+    expect(enqueueAnalyzeJob).toHaveBeenCalledWith(JOB_ID);
   });
 });
