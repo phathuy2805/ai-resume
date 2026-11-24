@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { ApplicationStatus } from '../../shared/constants/application-status.enum.js';
 import { JobStatus } from '../../shared/constants/job.constant.js';
@@ -7,12 +7,15 @@ import { isUniqueConstraintPrismaError } from '../../shared/helper.js';
 import type { ApplicationModel } from '../../shared/models/application.model.js';
 import { ApplicationStateService } from '../../shared/services/application-state.service.js';
 import { StorageService } from '../../shared/services/storage.service.js';
+import { RESCREENABLE_STATUSES } from '../../shared/screening/screening.constant.js';
+import { ScreeningPipelineService } from '../../shared/screening/screening-pipeline.service.js';
 import { CV_MIME_TYPE } from './applications.constant.js';
 import {
   AlreadyAppliedException,
   ApplicationForbiddenException,
   ApplicationNotFoundException,
   InvalidDecisionStatusException,
+  InvalidRescreenStatusException,
   JobClosedException,
   JobNotFoundForApplyException,
   JobNotFoundForHrException,
@@ -35,6 +38,7 @@ import type {
   GetJobApplicationsResType,
   GetJobStatsResType,
   MyApplicationResType,
+  RescreenResType,
 } from './applications.schema.js';
 import { CvTextExtractor } from './cv-text.extractor.js';
 
@@ -47,6 +51,7 @@ export class ApplicationsService {
     private readonly storage: StorageService,
     private readonly cvTextExtractor: CvTextExtractor,
     private readonly applicationStateService: ApplicationStateService,
+    private readonly screeningPipeline: ScreeningPipelineService,
   ) {}
 
   /** Kiểm tra job tồn tại và thuộc quyền sở hữu của HR đang đăng nhập. */
@@ -190,6 +195,35 @@ export class ApplicationsService {
     }
 
     return toDecisionDto(result);
+  }
+
+  /**
+   * HR bấm "Chấm lại" (W2-BE-01): chỉ nhận SCREENED hoặc SCREENING_FAILED.
+   * Chuyển SCREENING ngay (actorId = HR), xóa screeningError, việc chấm chạy ở nền.
+   */
+  async rescreen(userId: string, applicationId: string): Promise<RescreenResType> {
+    const context = await this.applicationsRepo.findDecisionContext(applicationId);
+    if (!context) {
+      throw ApplicationNotFoundException;
+    }
+    if (context.job.createdById !== userId) {
+      throw ApplicationForbiddenException;
+    }
+    if (!RESCREENABLE_STATUSES.includes(context.status as ApplicationStatus)) {
+      throw InvalidRescreenStatusException;
+    }
+
+    try {
+      await this.screeningPipeline.rescreen(applicationId, userId);
+    } catch (error) {
+      // Trạng thái vừa đổi giữa lúc kiểm tra và lúc chuyển (VD HR bấm 2 lần liền).
+      if (error instanceof ConflictException) {
+        throw InvalidRescreenStatusException;
+      }
+      throw error;
+    }
+
+    return { id: applicationId, status: ApplicationStatus.SCREENING };
   }
 
   async getJobStats(userId: string, jobId: string): Promise<GetJobStatsResType> {

@@ -5,6 +5,7 @@ import {
   ApplicationStatus,
 } from '../../../shared/constants/application-status.enum.js';
 import { SIGNED_URL_EXPIRES_SEC } from '../../../shared/constants/storage.constant.js';
+import type { ScreeningPipelineService } from '../../../shared/screening/screening-pipeline.service.js';
 import type { ApplicationStateService } from '../../../shared/services/application-state.service.js';
 import type { StorageService } from '../../../shared/services/storage.service.js';
 import { ApplicationErrorCode } from '../applications.error.js';
@@ -106,6 +107,7 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
   };
   let storage: { getSignedUrl: ReturnType<typeof vi.fn> };
   let stateService: { emitStatusChanged: ReturnType<typeof vi.fn> };
+  let pipeline: { rescreen: ReturnType<typeof vi.fn> };
   let service: ApplicationsService;
 
   beforeEach(() => {
@@ -125,12 +127,16 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
     stateService = {
       emitStatusChanged: vi.fn(),
     };
+    pipeline = {
+      rescreen: vi.fn().mockResolvedValue(undefined),
+    };
 
     service = new ApplicationsService(
       repo as unknown as ApplicationsRepository,
       storage as unknown as StorageService,
       {} as CvTextExtractor,
       stateService as unknown as ApplicationStateService,
+      pipeline as unknown as ScreeningPipelineService,
     );
   });
 
@@ -312,6 +318,79 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
       );
       expect(repo.applyDecision).not.toHaveBeenCalled();
       expect(stateService.emitStatusChanged).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('rescreen (W2-BE-01)', () => {
+    it.each([ApplicationStatus.SCREENED, ApplicationStatus.SCREENING_FAILED])(
+      'accepts %s, hands off to the pipeline with HR as actor and returns SCREENING',
+      async (status) => {
+        repo.findDecisionContext.mockResolvedValueOnce({
+          id: APP_ID,
+          status,
+          job: { createdById: HR_A },
+        });
+
+        const res = await service.rescreen(HR_A, APP_ID);
+
+        expect(pipeline.rescreen).toHaveBeenCalledWith(APP_ID, HR_A);
+        expect(res).toEqual({ id: APP_ID, status: ApplicationStatus.SCREENING });
+      },
+    );
+
+    it('returns 404 when application does not exist', async () => {
+      repo.findDecisionContext.mockResolvedValueOnce(null);
+
+      await expect(service.rescreen(HR_A, APP_ID)).rejects.toBeInstanceOf(NotFoundException);
+      expect(pipeline.rescreen).not.toHaveBeenCalled();
+    });
+
+    it('rejects HR B rescreening HR A application with 403', async () => {
+      repo.findDecisionContext.mockResolvedValueOnce({
+        id: APP_ID,
+        status: ApplicationStatus.SCREENED,
+        job: { createdById: HR_A },
+      });
+
+      await expect(service.rescreen(HR_B, APP_ID)).rejects.toBeInstanceOf(ForbiddenException);
+      expect(pipeline.rescreen).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ApplicationStatus.SUBMITTED,
+      ApplicationStatus.SCREENING,
+      ApplicationStatus.SHORTLISTED,
+      ApplicationStatus.REJECTED,
+    ])('rejects rescreen from %s with 409 INVALID_RESCREEN_STATUS', async (status) => {
+      repo.findDecisionContext.mockResolvedValueOnce({
+        id: APP_ID,
+        status,
+        job: { createdById: HR_A },
+      });
+
+      const err = await service.rescreen(HR_A, APP_ID).catch((e) => e);
+      expect(err).toBeInstanceOf(ConflictException);
+      expect((err.getResponse() as { code?: string }).code).toBe(
+        ApplicationErrorCode.INVALID_RESCREEN_STATUS,
+      );
+      expect(pipeline.rescreen).not.toHaveBeenCalled();
+    });
+
+    it('maps a state-machine conflict (status changed concurrently) to INVALID_RESCREEN_STATUS', async () => {
+      repo.findDecisionContext.mockResolvedValueOnce({
+        id: APP_ID,
+        status: ApplicationStatus.SCREENED,
+        job: { createdById: HR_A },
+      });
+      pipeline.rescreen.mockRejectedValueOnce(
+        new ConflictException('Không thể chuyển trạng thái hồ sơ từ SCREENING sang SCREENING'),
+      );
+
+      const err = await service.rescreen(HR_A, APP_ID).catch((e) => e);
+      expect(err).toBeInstanceOf(ConflictException);
+      expect((err.getResponse() as { code?: string }).code).toBe(
+        ApplicationErrorCode.INVALID_RESCREEN_STATUS,
+      );
     });
   });
 

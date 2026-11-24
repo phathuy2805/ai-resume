@@ -24,6 +24,7 @@ import {
   ApiGetJobApplicationsDoc,
   ApiGetJobStatsDoc,
   ApiGetMyApplicationsDoc,
+  ApiRescreenApplicationDoc,
 } from './applications.docs.js';
 import {
   ApplicationDto,
@@ -37,6 +38,7 @@ import {
   GetJobStatsResDto,
   JobApplicationsParamDto,
   MyApplicationResDto,
+  RescreenResDto,
 } from './applications.dto.js';
 import { ApplicationsService } from './applications.service.js';
 import { assertValidCvFile } from './cv-file.validator.js';
@@ -108,6 +110,17 @@ export class ApplicationsController {
     @Body() body: DecisionBodyDto,
   ): Promise<DecisionResDto> {
     return this.applicationsService.decide(hrId, params.id, body);
+  }
+
+  @Roles(Role.HR)
+  @Post('applications/:id/rescreen')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiRescreenApplicationDoc()
+  async rescreenApplication(
+    @CurrentUser('id') hrId: string,
+    @Param() params: ApplicationIdParamDto,
+  ): Promise<RescreenResDto> {
+    return this.applicationsService.rescreen(hrId, params.id);
   }
 
   @Roles(Role.HR)
