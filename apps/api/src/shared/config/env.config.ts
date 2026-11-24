@@ -21,6 +21,14 @@ const optionalString = z
   .optional()
   .transform((v) => v || undefined);
 
+/** Biến có giá trị mặc định: để trống trong .env (`KEY=`) vẫn rơi về `fallback`. */
+const optionalWithDefault = (fallback: string) =>
+  z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => v || fallback);
+
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -49,6 +57,13 @@ export const envSchema = z
     S3_REGION: z.string().min(1, 'S3_REGION là bắt buộc'),
     S3_ACCESS_KEY: optionalString,
     S3_SECRET_KEY: optionalString,
+    // Gemini AI & Hàng đợi (W2-BE-02)
+    GEMINI_API_KEY: optionalWithDefault('dev-gemini-api-key'),
+    GEMINI_MODEL_TEXT: optionalWithDefault('gemini-2.5-flash-lite'),
+    GEMINI_MODEL_EMBEDDING: optionalWithDefault('gemini-embedding-001'),
+    GEMINI_MODEL_AUDIO: optionalWithDefault('gemini-2.5-flash'),
+    AI_QUEUE_CONCURRENCY: z.coerce.number().int().min(1).default(2),
+    AI_CONSIDER_MARGIN: z.coerce.number().int().min(0).max(100).default(10),
   })
   .refine((env) => !env.S3_ACCESS_KEY === !env.S3_SECRET_KEY, {
     message: 'Phải khai báo cả S3_ACCESS_KEY và S3_SECRET_KEY, hoặc bỏ trống cả hai',

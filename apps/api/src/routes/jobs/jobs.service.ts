@@ -115,7 +115,7 @@ export class JobsService {
       createdById: userId,
     });
 
-    // this.jobAnalysisTrigger.enqueue(job.id);
+    this.jobAnalysisTrigger.enqueue(job.id);
     return toHrJob(job);
   }
 

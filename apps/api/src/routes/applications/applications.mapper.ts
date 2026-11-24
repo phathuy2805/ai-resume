@@ -1,4 +1,4 @@
-import type { ScoreBreakdown } from '@hireflow/ai';
+import type { Explanation, ScoreBreakdown, ScreeningTimings } from '@hireflow/ai';
 import {
   AiRecommendation,
   ApplicationStatus,
@@ -83,8 +83,8 @@ export function toApplicationDetailDto(app: HrApplicationDetail): GetApplication
       ? {
           totalScore: app.screeningResult.totalScore,
           breakdown: app.screeningResult.breakdown as unknown as ScoreBreakdown,
-          explanation: app.screeningResult.explanation,
-          timings: app.screeningResult.timings,
+          explanation: app.screeningResult.explanation as unknown as Explanation,
+          timings: app.screeningResult.timings as unknown as ScreeningTimings,
           processingDurationMs: app.screeningResult.processingDurationMs,
           createdAt: app.screeningResult.createdAt.toISOString(),
           updatedAt: app.screeningResult.updatedAt.toISOString(),

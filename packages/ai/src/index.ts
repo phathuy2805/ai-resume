@@ -88,11 +88,3 @@ export type {
   ScreenCvOptions,
 } from './screening.js';
 export type { Explanation, ExplanationStrength, ExplanationGap } from './explanation.js';
-
-/**
- * @deprecated Chỉ còn để apps/api (AppService) không bị lỗi.
- * Sẽ xóa khi BE tích hợp createAiClient (W2-BE-02).
- */
-export function helloAI(): string {
-  return 'Hello World!';
-}

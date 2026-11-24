@@ -1,4 +1,4 @@
-import type { ScoreBreakdown } from '@hireflow/ai';
+import type { Explanation, ScoreBreakdown, ScreeningTimings } from '@hireflow/ai';
 import { z } from 'zod';
 import {
   AiRecommendation,
@@ -109,11 +109,35 @@ export const ScoreBreakdownSchema = z.object({
   capped: z.boolean(),
 }) satisfies z.ZodType<ScoreBreakdown>;
 
+export const ExplanationStrengthSchema = z.object({
+  point: z.string().describe('Nhận xét điểm mạnh của ứng viên'),
+  quote: z.string().nullable().describe('Trích dẫn nguyên văn từ CV (null nếu không kiểm chứng được)'),
+});
+
+export const ExplanationGapSchema = z.object({
+  skill: z.string().describe('Tên kỹ năng bắt buộc còn thiếu'),
+  note: z.string().describe('Nhận xét về kỹ năng còn thiếu'),
+});
+
+export const ExplanationSchema = z.object({
+  strengths: z.array(ExplanationStrengthSchema).describe('Danh sách điểm mạnh kèm trích dẫn CV'),
+  gaps: z.array(ExplanationGapSchema).describe('Danh sách kỹ năng bắt buộc còn thiếu kèm nhận xét'),
+  summary: z.string().describe('Tóm tắt mức độ phù hợp của ứng viên'),
+}) satisfies z.ZodType<Explanation>;
+
+export const ScreeningTimingsSchema = z.object({
+  parseCvMs: z.number().int().min(0),
+  embedMs: z.number().int().min(0),
+  scoreMs: z.number().int().min(0),
+  explainMs: z.number().int().min(0),
+  totalMs: z.number().int().min(0),
+}) satisfies z.ZodType<ScreeningTimings>;
+
 export const ScreeningResultDetailSchema = z.object({
   totalScore: z.number().int().min(0).max(100),
   breakdown: ScoreBreakdownSchema,
-  explanation: z.unknown(),
-  timings: z.unknown(),
+  explanation: ExplanationSchema,
+  timings: ScreeningTimingsSchema,
   processingDurationMs: z.number().int().min(0),
   createdAt: z.string(),
   updatedAt: z.string(),
