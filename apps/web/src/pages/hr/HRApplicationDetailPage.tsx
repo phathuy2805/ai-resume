@@ -16,11 +16,9 @@ import {
   Sparkles,
   XCircle,
 } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { getCvUrl, rescreenApplication } from '@/api/applications';
-import { queryKeys } from '@/api/queryKeys';
+import { getCvUrl } from '@/api/applications';
 import { AiRecommendationBadge, ApplicationStatusBadge } from '@/components/common/StatusBadges';
 import {
   AlertDialog,
@@ -37,20 +35,27 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useApplication, useDecideApplication } from '@/hooks/useApplicationDetail';
+import { useRescreenApplication } from '@/hooks/useJobApplications';
 import { toApiError } from '@/lib/apiError';
 import { HR_STATUS, scoreTone } from '@/lib/applicationStatus';
 import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
+/** Khớp giới hạn của POST /applications/:id/decision. */
+const HR_NOTE_MAX_LENGTH = 1000;
+
+/** 400: id trên URL không phải UUID. Các lỗi còn lại (mạng, 5xx) là tạm thời, có thể thử lại. */
+const NOT_VIEWABLE_STATUSES = [400, 403, 404];
+
 export default function HRApplicationDetailPage() {
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const applicationQuery = useApplication(id);
   const application = applicationQuery.data;
 
   const decideMutation = useDecideApplication(id, application?.job?.id);
+  const rescreenMutation = useRescreenApplication(application?.job?.id ?? '');
 
   // Decision Modal State
   const [decisionType, setDecisionType] = useState<'APPROVE' | 'REJECT' | null>(null);
@@ -58,7 +63,6 @@ export default function HRApplicationDetailPage() {
 
   // CV URL loading state
   const [loadingCv, setLoadingCv] = useState(false);
-  const [isRescreening, setIsRescreening] = useState(false);
 
   if (applicationQuery.isLoading) {
     return (
@@ -75,7 +79,32 @@ export default function HRApplicationDetailPage() {
     );
   }
 
-  if (applicationQuery.isError || !application) {
+  const errorStatus = applicationQuery.isError
+    ? toApiError(applicationQuery.error).status
+    : undefined;
+  const isNotViewable = errorStatus !== undefined && NOT_VIEWABLE_STATUSES.includes(errorStatus);
+
+  if (!application && !isNotViewable) {
+    return (
+      <Card className="flex flex-col items-center justify-center p-12 text-center">
+        <AlertCircle className="h-10 w-10 text-destructive mb-3" />
+        <h2 className="text-lg font-semibold text-foreground">Không thể tải hồ sơ ứng viên</h2>
+        <p className="mt-1 text-sm text-muted-foreground mb-4">
+          {toApiError(applicationQuery.error).message}
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            <ArrowLeft className="mr-1.5 h-4 w-4" /> Quay lại
+          </Button>
+          <Button onClick={() => void applicationQuery.refetch()}>
+            <RotateCcw className="mr-1.5 h-4 w-4" /> Thử lại
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!application || isNotViewable) {
     return (
       <Card className="flex flex-col items-center justify-center p-12 text-center">
         <AlertCircle className="h-10 w-10 text-destructive mb-3" />
@@ -137,26 +166,6 @@ export default function HRApplicationDetailPage() {
     }
   };
 
-  const handleRescreen = async () => {
-    try {
-      setIsRescreening(true);
-      await rescreenApplication(id);
-      toast.success('Đã gửi yêu cầu chấm lại CV');
-      await Promise.all([
-        applicationQuery.refetch(),
-        application?.job.id
-          ? queryClient.invalidateQueries({
-              queryKey: queryKeys.applications.byJob(application.job.id),
-            })
-          : Promise.resolve(),
-      ]);
-    } catch (error) {
-      toast.error(toApiError(error).message || 'Không thể yêu cầu chấm lại CV');
-    } finally {
-      setIsRescreening(false);
-    }
-  };
-
   const handleConfirmDecision = async () => {
     if (!decisionType) return;
     try {
@@ -166,8 +175,13 @@ export default function HRApplicationDetailPage() {
       });
       setDecisionType(null);
       setDecisionNote('');
-    } catch {
-      // Error handled by mutation hook
+    } catch (error) {
+      // Toast và tải lại dữ liệu nằm ở hook. 409 thì quyết định này không còn hợp lệ nên đóng hộp;
+      // lỗi khác giữ hộp mở để HR không mất ghi chú.
+      if (toApiError(error).status === 409) {
+        setDecisionType(null);
+        setDecisionNote('');
+      }
     }
   };
 
@@ -194,6 +208,24 @@ export default function HRApplicationDetailPage() {
           <ArrowLeft className="h-4 w-4" /> Quay lại danh sách ứng viên
         </Button>
       </div>
+
+      {/* Làm mới nền bị lỗi tạm thời: giữ dữ liệu đang có, chỉ báo là có thể đã cũ. */}
+      {applicationQuery.isError && (
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"
+        >
+          <span>Không cập nhật được dữ liệu mới nhất. Thông tin bên dưới có thể đã cũ.</span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={applicationQuery.isFetching}
+            onClick={() => void applicationQuery.refetch()}
+          >
+            Thử lại
+          </Button>
+        </div>
+      )}
 
       {/* KHỐI 1: Tổng quan (Header Card) */}
       <Card className="p-6">
@@ -230,8 +262,8 @@ export default function HRApplicationDetailPage() {
           </div>
 
           {/* Score & AI Recommendation & CV Button */}
-          <div className="flex flex-wrap items-center gap-3 md:flex-col md:items-end">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 md:shrink-0 md:flex-col md:items-end">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Score Display */}
               {!isPendingAi && !isFailedAi && totalScore !== null ? (
                 <div className="flex flex-col items-end">
@@ -257,7 +289,7 @@ export default function HRApplicationDetailPage() {
               {/* AI Recommendation Badge */}
               {aiRecommendation && !isPendingAi && !isFailedAi ? (
                 <div className="flex flex-col items-end gap-1">
-                  <AiRecommendationBadge value={aiRecommendation} />
+                  <AiRecommendationBadge value={aiRecommendation} prefix="Đề xuất AI:" />
                 </div>
               ) : null}
             </div>
@@ -319,11 +351,11 @@ export default function HRApplicationDetailPage() {
             <Button
               variant="destructive"
               size="sm"
-              disabled={isRescreening}
-              onClick={handleRescreen}
+              disabled={rescreenMutation.isPending}
+              onClick={() => rescreenMutation.mutate(id)}
               className="gap-1.5 self-start sm:self-center"
             >
-              {isRescreening ? (
+              {rescreenMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <RotateCcw className="h-4 w-4" />
@@ -805,6 +837,7 @@ export default function HRApplicationDetailPage() {
               onChange={(e) => setDecisionNote(e.target.value)}
               placeholder="Nhập lý do hoặc ghi chú nội bộ cho quyết định này..."
               rows={3}
+              maxLength={HR_NOTE_MAX_LENGTH}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>

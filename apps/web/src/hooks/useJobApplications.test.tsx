@@ -1,72 +1,113 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, cleanup, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { toast } from 'sonner';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as applicationsApi from '@/api/applications';
-import { useJobApplications } from './useJobApplications';
+import { queryKeys } from '@/api/queryKeys';
+import { ApiError } from '@/types/api';
+import type { ApplicationStatus } from '@/types/applications';
+import { useJobApplications, useRescreenApplication } from './useJobApplications';
 
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+function setup() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
+  return { client, wrapper };
 }
+
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe('useJobApplications', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
+    vi.useFakeTimers();
   });
 
-  it('bật refetchInterval = 5000 khi có hồ sơ đang SUBMITTED hoặc SCREENING', async () => {
-    vi.spyOn(applicationsApi, 'getJobApplications').mockResolvedValue({
+  function mockList(status: ApplicationStatus) {
+    return vi.spyOn(applicationsApi, 'getJobApplications').mockResolvedValue({
       data: [
         {
           id: 'app-1',
           candidateName: 'Ứng viên 1',
           totalScore: null,
           aiRecommendation: null,
-          status: 'SCREENING',
+          status,
           createdAt: '2026-11-20T00:00:00Z',
         },
       ],
       meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
     });
+  }
 
-    const { result } = renderHook(() => useJobApplications('job-1'), {
-      wrapper: createWrapper(),
-    });
+  it.each(['SUBMITTED', 'SCREENING'] as const)(
+    'tự làm mới mỗi 5 giây khi còn hồ sơ %s',
+    async (status) => {
+      const list = mockList(status);
+      renderHook(() => useJobApplications('job-1'), { wrapper: setup().wrapper });
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      await act(() => vi.advanceTimersByTimeAsync(100));
+      expect(list).toHaveBeenCalledTimes(1);
+      await act(() => vi.advanceTimersByTimeAsync(4500));
+      expect(list).toHaveBeenCalledTimes(1);
+      await act(() => vi.advanceTimersByTimeAsync(1000));
+      expect(list).toHaveBeenCalledTimes(2);
+    },
+  );
 
-    expect(result.current.data?.data[0].status).toBe('SCREENING');
+  it('dừng tự làm mới khi mọi hồ sơ đã chấm xong', async () => {
+    const list = mockList('SCREENING');
+    renderHook(() => useJobApplications('job-1'), { wrapper: setup().wrapper });
+    await act(() => vi.advanceTimersByTimeAsync(100));
+
+    list.mockClear();
+    mockList('SCREENED');
+    await act(() => vi.advanceTimersByTimeAsync(6000));
+    expect(list).toHaveBeenCalledTimes(1);
+    await act(() => vi.advanceTimersByTimeAsync(30_000));
+    expect(list).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useRescreenApplication', () => {
+  function setupRescreen() {
+    const { client, wrapper } = setup();
+    client.setQueryData(queryKeys.applications.byJob('job-1', { page: 1 }), {});
+    client.setQueryData(queryKeys.applications.detail('app-1'), {});
+    client.setQueryData(queryKeys.applications.detail('app-2'), {});
+    const { result } = renderHook(() => useRescreenApplication('job-1'), { wrapper });
+    const isStale = (key: readonly unknown[]) => client.getQueryState(key)?.isInvalidated;
+    return { result, isStale };
+  }
+
+  it('thành công: làm mới danh sách và trang chi tiết của đúng hồ sơ đó', async () => {
+    vi.spyOn(toast, 'success').mockReturnValue('');
+    vi.spyOn(applicationsApi, 'rescreenApplication').mockResolvedValue();
+    const { result, isStale } = setupRescreen();
+
+    await act(() => result.current.mutateAsync('app-1'));
+
+    expect(isStale(queryKeys.applications.byJob('job-1', { page: 1 }))).toBe(true);
+    expect(isStale(queryKeys.applications.detail('app-1'))).toBe(true);
+    expect(isStale(queryKeys.applications.detail('app-2'))).toBe(false);
   });
 
-  it('tắt refetchInterval (false) khi tất cả hồ sơ đã chấm xong (SCREENED)', async () => {
-    vi.spyOn(applicationsApi, 'getJobApplications').mockResolvedValue({
-      data: [
-        {
-          id: 'app-1',
-          candidateName: 'Ứng viên 1',
-          totalScore: 85,
-          aiRecommendation: 'PASS',
-          status: 'SCREENED',
-          createdAt: '2026-11-20T00:00:00Z',
-        },
-      ],
-      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
-    });
+  it('lỗi 409: vẫn làm mới danh sách và trang chi tiết', async () => {
+    const toastError = vi.spyOn(toast, 'error').mockReturnValue('');
+    vi.spyOn(applicationsApi, 'rescreenApplication').mockRejectedValue(
+      new ApiError('SCREENED', { kind: 'http', status: 409 }),
+    );
+    const { result, isStale } = setupRescreen();
 
-    const { result } = renderHook(() => useJobApplications('job-1'), {
-      wrapper: createWrapper(),
-    });
+    await act(() => result.current.mutateAsync('app-1').catch(() => undefined));
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.data[0].status).toBe('SCREENED');
+    expect(isStale(queryKeys.applications.byJob('job-1', { page: 1 }))).toBe(true);
+    expect(isStale(queryKeys.applications.detail('app-1'))).toBe(true);
+    expect(toastError).toHaveBeenCalledWith(
+      'Hồ sơ đang được chấm hoặc đã có quyết định nên không thể chấm lại',
+    );
   });
 });

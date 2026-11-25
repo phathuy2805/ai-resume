@@ -15,6 +15,8 @@ export function useApplication(id: string) {
     queryKey: queryKeys.applications.detail(id),
     queryFn: ({ signal }) => getApplication(id, signal),
     enabled: Boolean(id),
+    // Trang chi tiết tự hiện lỗi; tránh toast lặp lại mỗi 5 giây khi đang tự làm mới.
+    meta: { errorMode: 'local' },
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       return status === 'SUBMITTED' || status === 'SCREENING' ? 5000 : false;
@@ -31,6 +33,13 @@ export function useDecideApplication(
   > = {},
 ) {
   const client = useQueryClient();
+  const refresh = () =>
+    Promise.all([
+      client.invalidateQueries({ queryKey: queryKeys.applications.detail(applicationId) }),
+      jobId
+        ? client.invalidateQueries({ queryKey: queryKeys.applications.byJob(jobId) })
+        : undefined,
+    ]);
 
   return useMutation({
     ...options,
@@ -41,25 +50,19 @@ export function useDecideApplication(
           ? 'Đã duyệt hồ sơ và gửi lời mời phỏng vấn'
           : 'Đã loại hồ sơ ứng viên';
       toast.success(msg);
-      await client.invalidateQueries({ queryKey: queryKeys.applications.detail(applicationId) });
-      if (jobId) {
-        await client.invalidateQueries({ queryKey: queryKeys.applications.byJob(jobId) });
-      }
+      await refresh();
       await options.onSuccess?.(data, variables, onMutateResult, mutationContext);
     },
     onError: async (error, variables, onMutateResult, mutationContext) => {
-      const apiErr = toApiError(error);
-      const isConflict = apiErr.status === 409;
+      const apiError = toApiError(error);
+      // 409: hồ sơ không còn SCREENED (đã quyết định, hoặc đang được chấm lại ở nơi khác).
       toast.error(
-        apiErr.message ||
-          (isConflict ? 'Hồ sơ đã được quyết định trước đó' : 'Không thể lưu quyết định hồ sơ'),
+        apiError.status === 409
+          ? 'Hồ sơ đã được quyết định hoặc đang được chấm lại. Dữ liệu đã được tải lại.'
+          : apiError.message,
       );
-      // Invalidate on conflict to sync state
-      await client.invalidateQueries({ queryKey: queryKeys.applications.detail(applicationId) });
-      if (jobId) {
-        await client.invalidateQueries({ queryKey: queryKeys.applications.byJob(jobId) });
-      }
-      options.onError?.(error, variables, onMutateResult, mutationContext);
+      await refresh();
+      await options.onError?.(error, variables, onMutateResult, mutationContext);
     },
   });
 }
