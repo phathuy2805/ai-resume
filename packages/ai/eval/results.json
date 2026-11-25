@@ -1,0 +1,4273 @@
+{
+  "generatedAt": "2026-11-25T02:08:41.019Z",
+  "models": {
+    "text": "gemini-3.5-flash-lite",
+    "embedding": "gemini-embedding-001"
+  },
+  "referenceDate": "2026-11-01",
+  "candidateThresholds": [
+    50,
+    60,
+    70,
+    80
+  ],
+  "selectedThreshold": 80,
+  "devThresholdSweep": [
+    {
+      "threshold": 50,
+      "total": 13,
+      "tp": 5,
+      "fp": 3,
+      "fn": 0,
+      "tn": 5,
+      "accuracy": 0.7692,
+      "precision": 0.625,
+      "recall": 1,
+      "f1": 0.7692,
+      "mae": 6.15
+    },
+    {
+      "threshold": 60,
+      "total": 13,
+      "tp": 5,
+      "fp": 3,
+      "fn": 0,
+      "tn": 5,
+      "accuracy": 0.7692,
+      "precision": 0.625,
+      "recall": 1,
+      "f1": 0.7692,
+      "mae": 6.15
+    },
+    {
+      "threshold": 70,
+      "total": 13,
+      "tp": 5,
+      "fp": 3,
+      "fn": 0,
+      "tn": 5,
+      "accuracy": 0.7692,
+      "precision": 0.625,
+      "recall": 1,
+      "f1": 0.7692,
+      "mae": 6.15
+    },
+    {
+      "threshold": 80,
+      "total": 13,
+      "tp": 4,
+      "fp": 0,
+      "fn": 1,
+      "tn": 8,
+      "accuracy": 0.9231,
+      "precision": 1,
+      "recall": 0.8,
+      "f1": 0.8889,
+      "mae": 6.15
+    }
+  ],
+  "testOverall": {
+    "threshold": 80,
+    "total": 27,
+    "tp": 10,
+    "fp": 0,
+    "fn": 0,
+    "tn": 17,
+    "accuracy": 1,
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "mae": 8.3
+  },
+  "testByJd": {
+    "JD_BE": {
+      "threshold": 80,
+      "total": 9,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "accuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "mae": 7.89
+    },
+    "JD_DA": {
+      "threshold": 80,
+      "total": 9,
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "accuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "mae": 6.67
+    },
+    "JD_MKT": {
+      "threshold": 80,
+      "total": 9,
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "accuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "mae": 10.33
+    }
+  },
+  "testByConfidence": {
+    "sure": {
+      "threshold": 80,
+      "total": 22,
+      "tp": 8,
+      "fp": 0,
+      "fn": 0,
+      "tn": 14,
+      "accuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "mae": 7.73
+    },
+    "unsure": {
+      "threshold": 80,
+      "total": 5,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "accuracy": 1,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "mae": 10.8
+    }
+  },
+  "allUnsure": {
+    "threshold": 80,
+    "total": 9,
+    "tp": 2,
+    "fp": 0,
+    "fn": 1,
+    "tn": 6,
+    "accuracy": 0.8889,
+    "precision": 1,
+    "recall": 0.6667,
+    "f1": 0.8,
+    "mae": 9.56
+  },
+  "testMisclassified": [],
+  "stability": {
+    "targetMaxDiff": 5,
+    "cases": [
+      {
+        "cvFile": "cv_be_01.pdf",
+        "jdId": "JD_BE",
+        "scores": [
+          96,
+          96,
+          96
+        ],
+        "min": 96,
+        "max": 96,
+        "maxDiff": 0,
+        "withinTarget": true
+      },
+      {
+        "cvFile": "cv_be_05.pdf",
+        "jdId": "JD_BE",
+        "scores": [
+          75,
+          74,
+          75
+        ],
+        "min": 74,
+        "max": 75,
+        "maxDiff": 1,
+        "withinTarget": true
+      },
+      {
+        "cvFile": "cv_da_01.pdf",
+        "jdId": "JD_DA",
+        "scores": [
+          95,
+          94,
+          92
+        ],
+        "min": 92,
+        "max": 95,
+        "maxDiff": 3,
+        "withinTarget": true
+      },
+      {
+        "cvFile": "cv_da_06.pdf",
+        "jdId": "JD_DA",
+        "scores": [
+          86,
+          84,
+          84
+        ],
+        "min": 84,
+        "max": 86,
+        "maxDiff": 2,
+        "withinTarget": true
+      },
+      {
+        "cvFile": "cv_mkt_01.pdf",
+        "jdId": "JD_MKT",
+        "scores": [
+          92,
+          91,
+          91
+        ],
+        "min": 91,
+        "max": 92,
+        "maxDiff": 1,
+        "withinTarget": true
+      }
+    ],
+    "overallMaxDiff": 3,
+    "allWithinTarget": true
+  },
+  "performance": {
+    "sampleCount": 40,
+    "avgTotalMs": 44925,
+    "avgParseCvMs": 17556,
+    "avgEmbedMs": 498,
+    "avgScoreMs": 7623,
+    "avgExplainMs": 19248,
+    "avgInputTokens": 2613,
+    "avgOutputTokens": 774,
+    "avgTotalTokens": 3387
+  },
+  "pairs": [
+    {
+      "key": "cv_be_01.pdf::JD_BE",
+      "cvFile": "cv_be_01.pdf",
+      "jdId": "JD_BE",
+      "split": "dev",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 92,
+      "labelReason": "Đáp ứng vượt trội hơn 4 năm kinh nghiệm NodeJS, thành thạo NestJS, TypeScript, PostgreSQL và Docker",
+      "expectedMissingSkills": [],
+      "aiScore": 96,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 80,
+          "weight": 10,
+          "matched": [
+            "Redis",
+            "BullMQ",
+            "AWS S3",
+            "Microservices"
+          ],
+          "missing": [
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4.5,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 90,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm dày dặn trong việc thiết kế và xây dựng các dịch vụ backend với NestJS, TypeScript, PostgreSQL và Docker, hoàn toàn phù hợp với các trách nhiệm cốt lõi của công việc ở cấp độ senior."
+        },
+        "similarity": {
+          "score": 100,
+          "weight": 15,
+          "cosine": 0.922
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có thời gian kinh nghiệm vượt yêu cầu và đáp ứng tốt các công nghệ backend cốt lõi như TypeScript, NodeJS và NestJS.",
+            "quote": "Senior Backend Engineer with 4.5 years of hands-on experience designing and building scalable microservices and RESTful APIs using TypeScript, NodeJS, and NestJS"
+          },
+          {
+            "point": "Ứng viên chứng minh được năng lực thiết kế cơ sở dữ liệu quan hệ PostgreSQL và tối ưu hóa truy vấn hiệu quả.",
+            "quote": "Designed PostgreSQL schema, optimized complex relational queries, and reduced query latency by 45% using efficient indexing and connection pooling"
+          },
+          {
+            "point": "Ứng viên có kỹ năng đóng gói ứng dụng với Docker hỗ trợ triển khai hạ tầng.",
+            "quote": "Containerized backend services with Docker and Docker Compose for automated CI/CD deployments on AWS"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên đáp ứng toàn bộ các kỹ năng bắt buộc và một phần lớn kỹ năng ưu tiên của vị trí. Với kinh nghiệm thực tế và các dự án backend đã thực hiện, ứng viên phù hợp với yêu cầu công việc ở cấp độ senior."
+      },
+      "timings": {
+        "parseCvMs": 6436,
+        "embedMs": 582,
+        "scoreMs": 1374,
+        "explainMs": 6959,
+        "totalMs": 15351
+      },
+      "tokens": {
+        "inputTokens": 2760,
+        "outputTokens": 821,
+        "totalTokens": 3581,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:52:57.869Z"
+    },
+    {
+      "key": "cv_be_02.pdf::JD_BE",
+      "cvFile": "cv_be_02.pdf",
+      "jdId": "JD_BE",
+      "split": "dev",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 95,
+      "labelReason": "Hơn 5 năm kinh nghiệm dẫn dắt backend, thành thạo NestJS, kiến trúc microservices và cơ sở dữ liệu PostgreSQL",
+      "expectedMissingSkills": [],
+      "aiScore": 88,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 40,
+          "weight": 10,
+          "matched": [
+            "Redis",
+            "GraphQL"
+          ],
+          "missing": [
+            "BullMQ",
+            "AWS S3",
+            "Microservices"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 6,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 80,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc dày dặn trong vai trò Backend Engineer với NodeJS, NestJS, TypeScript và PostgreSQL, phù hợp với các trách nhiệm cốt lõi của công việc ở cấp độ cao."
+        },
+        "similarity": {
+          "score": 91,
+          "weight": 15,
+          "cosine": 0.905
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng đầy đủ các kỹ năng cốt lõi bắt buộc như NodeJS, NestJS, PostgreSQL và Docker.",
+            "quote": null
+          },
+          {
+            "point": "Ứng viên có kinh nghiệm thực tế ở cấp độ cao và từng dẫn dắt đội ngũ kỹ thuật trong việc phát triển hệ thống.",
+            "quote": "Led a cross-functional team of 6 engineers developing NestJS cloud backend for SaaS HR applications"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên có sự phù hợp rất tốt với vị trí công việc nhờ đáp ứng hoàn toàn các yêu cầu kỹ năng bắt buộc và vượt mức kinh nghiệm tối thiểu. Hồ sơ thể hiện rõ năng lực chuyên môn vững vàng trong mảng backend với NodeJS, NestJS và cơ sở dữ liệu quan hệ."
+      },
+      "timings": {
+        "parseCvMs": 4545,
+        "embedMs": 549,
+        "scoreMs": 1443,
+        "explainMs": 4750,
+        "totalMs": 11287
+      },
+      "tokens": {
+        "inputTokens": 2637,
+        "outputTokens": 795,
+        "totalTokens": 3432,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:54:57.884Z"
+    },
+    {
+      "key": "cv_be_03.pdf::JD_BE",
+      "cvFile": "cv_be_03.pdf",
+      "jdId": "JD_BE",
+      "split": "test",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 88,
+      "labelReason": "Có hơn 3.5 năm kinh nghiệm vững vàng với NodeJS, NestJS, thiết kế cơ sở dữ liệu PostgreSQL và Docker",
+      "expectedMissingSkills": [],
+      "aiScore": 89,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 40,
+          "weight": 10,
+          "matched": [
+            "Redis",
+            "BullMQ"
+          ],
+          "missing": [
+            "AWS S3",
+            "Microservices",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.6,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 80,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc ở vị trí tương đương, thực hiện các nhiệm vụ xây dựng API, xử lý background job và cơ sở dữ liệu phù hợp với yêu cầu công việc."
+        },
+        "similarity": {
+          "score": 100,
+          "weight": 15,
+          "cosine": 0.922
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng đầy đủ các kỹ năng bắt buộc về NodeJS cho công việc này.",
+            "quote": "NodeJS"
+          },
+          {
+            "point": "Kỹ năng về NestJS được thể hiện rõ trong phần kỹ năng và kinh nghiệm làm việc.",
+            "quote": "NestJS"
+          },
+          {
+            "point": "Ứng viên có kinh nghiệm làm việc với cơ sở dữ liệu quan hệ PostgreSQL theo yêu cầu.",
+            "quote": "PostgreSQL"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên có mức độ phù hợp cao với vị trí tuyển dụng khi đáp ứng đầy đủ toàn bộ các kỹ năng bắt buộc và đạt thời gian kinh nghiệm yêu cầu. Các dự án trước đây của ứng viên có liên quan trực tiếp đến việc xây dựng API, xử lý cơ sở dữ liệu và hàng đợi nền."
+      },
+      "timings": {
+        "parseCvMs": 2211,
+        "embedMs": 566,
+        "scoreMs": 991,
+        "explainMs": 18131,
+        "totalMs": 21900
+      },
+      "tokens": {
+        "inputTokens": 2857,
+        "outputTokens": 789,
+        "totalTokens": 3646,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:55:22.390Z"
+    },
+    {
+      "key": "cv_be_04.pdf::JD_BE",
+      "cvFile": "cv_be_04.pdf",
+      "jdId": "JD_BE",
+      "split": "test",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 96,
+      "labelReason": "Tech Lead hơn 6 năm kinh nghiệm, làm chủ toàn bộ tech stack NodeJS, NestJS, tối ưu hóa PostgreSQL tải cao",
+      "expectedMissingSkills": [],
+      "aiScore": 93,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 40,
+          "weight": 10,
+          "matched": [
+            "Redis",
+            "Microservices"
+          ],
+          "missing": [
+            "BullMQ",
+            "AWS S3",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 6.2,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 100,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc dày dặn ở vị trí tương đương, trực tiếp xây dựng và tối ưu hệ thống backend quy mô lớn sử dụng NestJS, TypeScript, PostgreSQL và Docker đáp ứng đầy đủ các yêu cầu của công việc."
+        },
+        "similarity": {
+          "score": 96,
+          "weight": 15,
+          "cosine": 0.913
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng đầy đủ các kỹ năng cốt lõi bắt buộc cho công việc như NodeJS, NestJS, TypeScript, PostgreSQL, RESTful API và Docker.",
+            "quote": "NodeJS • NestJS • TypeScript • PostgreSQL • RESTful API • Docker • Redis • Microservices • AWS •"
+          },
+          {
+            "point": "Thời gian kinh nghiệm làm việc thực tế vượt mức yêu cầu tối thiểu của vị trí.",
+            "quote": "Kỹ sư phần mềm Backend với hơn 6 năm kinh nghiệm trong việc xây dựng hệ thống phân tán, xử lý tải cao và"
+          },
+          {
+            "point": "Ứng viên có kinh nghiệm thực tế trong việc thiết kế và xây dựng các dịch vụ backend quy mô lớn.",
+            "quote": "Chịu trách nhiệm kiến trúc dịch vụ Backend cốt lõi bằng NestJS/TypeScript phục vụ hơn 500 doanh nghiệp logistics"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên phù hợp với vị trí tuyển dụng nhờ đáp ứng toàn bộ các kỹ năng bắt buộc và sở hữu hơn 6 năm kinh nghiệm làm việc ở vai trò tương đương. Hệ thống đánh giá mức độ tương thích cao và không có kỹ năng bắt buộc nào bị thiếu."
+      },
+      "timings": {
+        "parseCvMs": 10839,
+        "embedMs": 545,
+        "scoreMs": 7697,
+        "explainMs": 2956,
+        "totalMs": 22037
+      },
+      "tokens": {
+        "inputTokens": 2880,
+        "outputTokens": 958,
+        "totalTokens": 3838,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:55:46.991Z"
+    },
+    {
+      "key": "cv_be_05.pdf::JD_BE",
+      "cvFile": "cv_be_05.pdf",
+      "jdId": "JD_BE",
+      "split": "dev",
+      "label": "không phù hợp",
+      "confidence": "chưa chắc",
+      "expectedScore": 66,
+      "labelReason": "Có 4 năm kinh nghiệm NodeJS và PostgreSQL tốt nhưng chưa có minh chứng sử dụng framework NestJS",
+      "expectedMissingSkills": [
+        "NestJS"
+      ],
+      "aiScore": 75,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 83,
+          "weight": 35,
+          "matched": [
+            "NodeJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ],
+          "missing": [
+            "NestJS"
+          ]
+        },
+        "preferredSkills": {
+          "score": 20,
+          "weight": 10,
+          "matched": [
+            "Redis"
+          ],
+          "missing": [
+            "BullMQ",
+            "AWS S3",
+            "Microservices",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 60,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc ở vai trò tương tự với NodeJS, TypeScript, PostgreSQL và Docker, nhưng ở cấp độ thấp hơn và chưa có các dự án phức tạp như tích hợp AI LLM hay tối ưu CI/CD theo yêu cầu."
+        },
+        "similarity": {
+          "score": 89,
+          "weight": 15,
+          "cosine": 0.901
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu về số năm kinh nghiệm và có nền tảng về phát triển API.",
+            "quote": "Backend Developer with 4 years of solid experience in developing RESTful APIs and distributed services using Node.js"
+          },
+          {
+            "point": "Ứng viên có kinh nghiệm thiết kế cơ sở dữ liệu quan hệ và tối ưu truy vấn.",
+            "quote": "Modeled and maintained PostgreSQL databases, writing complex queries and optimizing slow transaction endpoints"
+          },
+          {
+            "point": "Ứng viên có kỹ năng đóng gói ứng dụng với Docker phục vụ cho việc triển khai.",
+            "quote": "Configured Dockerfiles and multi-stage container builds for testing and staging deployments"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NestJS",
+            "note": "CV không đề cập đến kinh nghiệm làm việc với khung phần mềm này."
+          }
+        ],
+        "summary": "Ứng viên có kinh nghiệm thực tế phù hợp về thời gian làm việc và nắm giữ các kỹ năng cơ bản như NodeJS, TypeScript, PostgreSQL cùng với Docker. Tuy nhiên, hồ sơ còn thiếu một số yêu cầu kỹ thuật bắt buộc và các kỹ năng ưu tiên để đảm nhận tốt vị trí."
+      },
+      "timings": {
+        "parseCvMs": 1903,
+        "embedMs": 383,
+        "scoreMs": 1203,
+        "explainMs": 7144,
+        "totalMs": 10633
+      },
+      "tokens": {
+        "inputTokens": 2356,
+        "outputTokens": 675,
+        "totalTokens": 3031,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:56:00.167Z"
+    },
+    {
+      "key": "cv_be_06.pdf::JD_BE",
+      "cvFile": "cv_be_06.pdf",
+      "jdId": "JD_BE",
+      "split": "dev",
+      "label": "phù hợp",
+      "confidence": "chưa chắc",
+      "expectedScore": 74,
+      "labelReason": "Kinh nghiệm vừa chạm ngưỡng 3 năm (3 năm 2 tháng), đáp ứng đầy đủ toàn bộ kỹ năng kỹ thuật NodeJS, NestJS, TypeScript và PostgreSQL",
+      "expectedMissingSkills": [],
+      "aiScore": 79,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Redis",
+            "BullMQ",
+            "AWS S3",
+            "Microservices",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.2,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 60,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc ở vị trí tương đương với NodeJS, NestJS và PostgreSQL, đáp ứng một phần các trách nhiệm chính của công việc ở cấp độ cao hơn."
+        },
+        "similarity": {
+          "score": 96,
+          "weight": 15,
+          "cosine": 0.912
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu kỹ thuật về NodeJS, NestJS và PostgreSQL được nêu trong công việc.",
+            "quote": "Xây dựng các module quản lý người dùng và thanh toán bằng framework NestJS kết hợp PostgreSQL"
+          },
+          {
+            "point": "Ứng viên có kỹ năng đóng gói ứng dụng với Docker đúng như yêu cầu.",
+            "quote": "Đóng gói dịch vụ với Docker và triển khai lên máy chủ VPS Ubuntu"
+          },
+          {
+            "point": "Ứng viên đáp ứng được thời gian kinh nghiệm làm việc thực tế theo yêu cầu cấp độ.",
+            "quote": "Lập trình viên Backend có hơn 3 năm kinh nghiệm làm việc thực tế với NodeJS, NestJS"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên đáp ứng đầy đủ các kỹ năng bắt buộc và có thời gian kinh nghiệm phù hợp với yêu cầu công việc. Tuy nhiên, ứng viên chưa có kinh nghiệm với các kỹ năng ưu tiên như Redis hay AWS S3."
+      },
+      "timings": {
+        "parseCvMs": 8854,
+        "embedMs": 332,
+        "scoreMs": 2563,
+        "explainMs": 19182,
+        "totalMs": 30931
+      },
+      "tokens": {
+        "inputTokens": 2515,
+        "outputTokens": 655,
+        "totalTokens": 3170,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:56:33.648Z"
+    },
+    {
+      "key": "cv_be_07.pdf::JD_BE",
+      "cvFile": "cv_be_07.pdf",
+      "jdId": "JD_BE",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chưa chắc",
+      "expectedScore": 62,
+      "labelReason": "Kỹ sư phần mềm .NET backend 4 năm chuyển sang, mới tiếp cận NodeJS/TypeScript ở mức cơ bản và chưa có NestJS",
+      "expectedMissingSkills": [
+        "NestJS"
+      ],
+      "aiScore": 73,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 83,
+          "weight": 35,
+          "matched": [
+            "NodeJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ],
+          "missing": [
+            "NestJS"
+          ]
+        },
+        "preferredSkills": {
+          "score": 20,
+          "weight": 10,
+          "matched": [
+            "Microservices"
+          ],
+          "missing": [
+            "Redis",
+            "BullMQ",
+            "AWS S3",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4.4,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 60,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc liên quan đến Backend Engineering, sử dụng NodeJS, TypeScript, PostgreSQL và Docker nhưng chưa đề cập đến việc sử dụng NestJS hay xử lý khối lượng công việc ở cấp độ senior."
+        },
+        "similarity": {
+          "score": 77,
+          "weight": 15,
+          "cosine": 0.881
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu về số năm kinh nghiệm làm việc trong lĩnh vực phát triển phần mềm.",
+            "quote": "Kỹ sư phần mềm hơn 4 năm kinh nghiệm chuyên môn với nền tảng Backend vững chắc"
+          },
+          {
+            "point": "Hồ sơ thể hiện rõ các kỹ năng kỹ thuật quan trọng như NodeJS, TypeScript, PostgreSQL và Docker.",
+            "quote": null
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NestJS",
+            "note": "CV không đề cập đến kinh nghiệm làm việc với framework NestJS."
+          }
+        ],
+        "summary": "Ứng viên đáp ứng một phần các yêu cầu cốt lõi của công việc với kinh nghiệm thực tế về NodeJS, TypeScript và PostgreSQL nhưng còn thiếu kỹ năng NestJS. Nhìn chung, hồ sơ phù hợp với một phần định hướng kỹ thuật của vị trí này."
+      },
+      "timings": {
+        "parseCvMs": 13077,
+        "embedMs": 576,
+        "scoreMs": 4697,
+        "explainMs": 5565,
+        "totalMs": 23915
+      },
+      "tokens": {
+        "inputTokens": 2516,
+        "outputTokens": 646,
+        "totalTokens": 3162,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:57:00.106Z"
+    },
+    {
+      "key": "cv_be_08.pdf::JD_BE",
+      "cvFile": "cv_be_08.pdf",
+      "jdId": "JD_BE",
+      "split": "dev",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 20,
+      "labelReason": "Lập trình viên Frontend có 9 tháng kinh nghiệm React và tích hợp REST API nhưng chưa có minh chứng về NodeJS, NestJS, TypeScript, PostgreSQL và Docker",
+      "expectedMissingSkills": [
+        "NodeJS",
+        "NestJS",
+        "TypeScript",
+        "PostgreSQL",
+        "Docker"
+      ],
+      "aiScore": 13,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 17,
+          "weight": 35,
+          "matched": [
+            "RESTful API"
+          ],
+          "missing": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "Docker"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Redis",
+            "BullMQ",
+            "AWS S3",
+            "Microservices",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 27,
+          "weight": 15,
+          "candidateYears": 0.8,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc tập trung hoàn toàn vào phát triển frontend và không có dự án backend nào phù hợp với các trách nhiệm cốt lõi của vị trí."
+        },
+        "similarity": {
+          "score": 20,
+          "weight": 15,
+          "cosine": 0.784
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có kinh nghiệm làm việc với giao diện lập trình ứng dụng thông qua việc tích hợp các REST API.",
+            "quote": "Integrated third-party REST APIs provided by the backend team"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NodeJS",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng NodeJS."
+          },
+          {
+            "skill": "NestJS",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng NestJS."
+          },
+          {
+            "skill": "TypeScript",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng TypeScript."
+          },
+          {
+            "skill": "PostgreSQL",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng PostgreSQL."
+          },
+          {
+            "skill": "Docker",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng Docker."
+          }
+        ],
+        "summary": "Ứng viên có mức độ phù hợp thấp với công việc vì thiếu hơn một nửa số kỹ năng bắt buộc và tập trung hoàn toàn vào phát triển frontend. Kinh nghiệm thực tế hiện tại chưa đáp ứng được các yêu cầu cốt lõi về kỹ thuật backend của vị trí này."
+      },
+      "timings": {
+        "parseCvMs": 1828,
+        "embedMs": 392,
+        "scoreMs": 1077,
+        "explainMs": 5735,
+        "totalMs": 9032
+      },
+      "tokens": {
+        "inputTokens": 2312,
+        "outputTokens": 668,
+        "totalTokens": 2980,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:57:11.676Z"
+    },
+    {
+      "key": "cv_be_09.pdf::JD_BE",
+      "cvFile": "cv_be_09.pdf",
+      "jdId": "JD_BE",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 5,
+      "labelReason": "Nhân viên hành chính nhân sự, hoàn toàn lệch ngành và thiếu toàn bộ kỹ năng lập trình bắt buộc",
+      "expectedMissingSkills": [
+        "NodeJS",
+        "NestJS",
+        "TypeScript",
+        "PostgreSQL",
+        "RESTful API",
+        "Docker"
+      ],
+      "aiScore": 15,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Redis",
+            "BullMQ",
+            "AWS S3",
+            "Microservices",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm trong lĩnh vực hành chính nhân sự, không có kỹ năng và kinh nghiệm làm việc liên quan đến lập trình backend."
+        },
+        "similarity": {
+          "score": 3,
+          "weight": 15,
+          "cosine": 0.755
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên tốt nghiệp chuyên ngành Quản trị Văn phòng theo thông tin học vấn trong hồ sơ.",
+            "quote": "Cử nhân Quản trị Văn phòng"
+          },
+          {
+            "point": "Ứng viên đáp ứng yêu cầu về số năm kinh nghiệm làm việc theo mục tiêu và tổng quan.",
+            "quote": "3 năm kinh nghiệm phụ trách quản lý hồ sơ nhân"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NodeJS",
+            "note": "Hồ sơ không thể hiện kỹ năng NodeJS."
+          },
+          {
+            "skill": "NestJS",
+            "note": "Hồ sơ không thể hiện kỹ năng NestJS."
+          },
+          {
+            "skill": "TypeScript",
+            "note": "Hồ sơ không thể hiện kỹ năng TypeScript."
+          },
+          {
+            "skill": "PostgreSQL",
+            "note": "Hồ sơ không thể hiện kỹ năng PostgreSQL."
+          },
+          {
+            "skill": "RESTful API",
+            "note": "Hồ sơ không thể hiện kỹ năng RESTful API."
+          },
+          {
+            "skill": "Docker",
+            "note": "Hồ sơ không thể hiện kỹ năng Docker."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa các kỹ năng bắt buộc cho vị trí này. Toàn bộ kinh nghiệm và kỹ năng của ứng viên thuộc lĩnh vực hành chính nhân sự và không phù hợp với yêu cầu kỹ thuật của công việc backend engineering."
+      },
+      "timings": {
+        "parseCvMs": 19891,
+        "embedMs": 531,
+        "scoreMs": 11387,
+        "explainMs": 30800,
+        "totalMs": 62609
+      },
+      "tokens": {
+        "inputTokens": 2551,
+        "outputTokens": 752,
+        "totalTokens": 3303,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:58:16.832Z"
+    },
+    {
+      "key": "cv_be_10.pdf::JD_BE",
+      "cvFile": "cv_be_10.pdf",
+      "jdId": "JD_BE",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 5,
+      "labelReason": "Chuyên viên thiết kế đồ họa hình ảnh, không có kỹ năng về phát triển phần mềm và cơ sở dữ liệu",
+      "expectedMissingSkills": [
+        "NodeJS",
+        "NestJS",
+        "TypeScript",
+        "PostgreSQL",
+        "RESTful API",
+        "Docker"
+      ],
+      "aiScore": 17,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Redis",
+            "BullMQ",
+            "AWS S3",
+            "Microservices",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.2,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc hoàn toàn trong lĩnh vực thiết kế đồ họa, không có kinh nghiệm hoặc dự án nào liên quan đến phát triển backend."
+        },
+        "similarity": {
+          "score": 13,
+          "weight": 15,
+          "cosine": 0.773
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có thời gian kinh nghiệm làm việc đáp ứng yêu cầu công việc.",
+            "quote": "Graphic Designer"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NodeJS",
+            "note": "Hồ sơ không đề cập đến kỹ năng NodeJS."
+          },
+          {
+            "skill": "NestJS",
+            "note": "Hồ sơ không đề cập đến kỹ năng NestJS."
+          },
+          {
+            "skill": "TypeScript",
+            "note": "Hồ sơ không đề cập đến kỹ năng TypeScript."
+          },
+          {
+            "skill": "PostgreSQL",
+            "note": "Hồ sơ không đề cập đến kỹ năng PostgreSQL."
+          },
+          {
+            "skill": "RESTful API",
+            "note": "Hồ sơ không đề cập đến kỹ năng RESTful API."
+          },
+          {
+            "skill": "Docker",
+            "note": "Hồ sơ không đề cập đến kỹ năng Docker."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa số kỹ năng bắt buộc và có kinh nghiệm hoàn toàn trong lĩnh vực thiết kế đồ họa, không phù hợp với vị trí kỹ sư backend. Do đó, hồ sơ này không đáp ứng các yêu cầu cốt lõi của công việc."
+      },
+      "timings": {
+        "parseCvMs": 1582,
+        "embedMs": 383,
+        "scoreMs": 1779,
+        "explainMs": 33836,
+        "totalMs": 37579
+      },
+      "tokens": {
+        "inputTokens": 2452,
+        "outputTokens": 683,
+        "totalTokens": 3135,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:58:56.956Z"
+    },
+    {
+      "key": "cv_da_01.pdf::JD_DA",
+      "cvFile": "cv_da_01.pdf",
+      "jdId": "JD_DA",
+      "split": "dev",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 90,
+      "labelReason": "Có 3.5 năm kinh nghiệm phân tích dữ liệu, thành thạo truy vấn SQL nâng cao, lập trình Python và xây dựng PowerBI",
+      "expectedMissingSkills": [],
+      "aiScore": 95,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics",
+            "NumPy"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 80,
+          "weight": 10,
+          "matched": [
+            "Tableau",
+            "Pandas",
+            "ETL",
+            "BigQuery"
+          ],
+          "missing": [
+            "Data Modeling"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.5,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 90,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc thực tế ở vị trí tương đương, thực hiện tốt các nhiệm vụ phân tích dữ liệu, viết truy vấn SQL phức tạp, sử dụng Python và xây dựng báo cáo trên PowerBI khớp với yêu cầu công việc."
+        },
+        "similarity": {
+          "score": 94,
+          "weight": 15,
+          "cosine": 0.91
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có khả năng viết và tối ưu hóa các truy vấn SQL phức tạp phục vụ cho công việc trích xuất dữ liệu.",
+            "quote": "Engineered complex SQL queries across BigQuery data warehouse (5TB+) to track fulfillment SLAs and delivery bottlenecks"
+          },
+          {
+            "point": "Ứng viên có kinh nghiệm thiết kế và xây dựng các bảng điều khiển trực quan hóa trên PowerBI.",
+            "quote": "Built and maintained 12+ real-time executive PowerBI dashboards with advanced DAX measures, saving operations 15 hours of manual reporting per week"
+          },
+          {
+            "point": "Ứng viên sử dụng thành thạo Python để thực hiện phân tích thống kê chuyên sâu.",
+            "quote": "Conducted statistical hypothesis testing and customer retention cohort analysis using Python (Pandas, SciPy)"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên đáp ứng đầy đủ các kỹ năng bắt buộc và có thời gian kinh nghiệm vượt mức yêu cầu tối thiểu của vị trí. Các dự án trước đây thể hiện sự phù hợp cao với các nhiệm vụ phân tích dữ liệu, truy vấn SQL và xây dựng báo cáo."
+      },
+      "timings": {
+        "parseCvMs": 11913,
+        "embedMs": 542,
+        "scoreMs": 1374,
+        "explainMs": 41396,
+        "totalMs": 55224
+      },
+      "tokens": {
+        "inputTokens": 2618,
+        "outputTokens": 804,
+        "totalTokens": 3422,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T13:59:54.734Z"
+    },
+    {
+      "key": "cv_da_02.pdf::JD_DA",
+      "cvFile": "cv_da_02.pdf",
+      "jdId": "JD_DA",
+      "split": "test",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 94,
+      "labelReason": "Có 4.5 năm kinh nghiệm Data Analyst ngành chứng khoán/ví điện tử, thành thạo SQL, Python, Statistics và PowerBI",
+      "expectedMissingSkills": [],
+      "aiScore": 86,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 83,
+          "weight": 35,
+          "matched": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics"
+          ],
+          "missing": [
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 60,
+          "weight": 10,
+          "matched": [
+            "Tableau",
+            "BigQuery",
+            "Data Modeling"
+          ],
+          "missing": [
+            "Pandas",
+            "ETL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4.5,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 90,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc dày dặn trong lĩnh vực phân tích dữ liệu, sử dụng thành thạo SQL, Python và PowerBI để xây dựng báo cáo và mô hình thống kê phù hợp với yêu cầu công việc ở cấp độ trung cấp."
+        },
+        "similarity": {
+          "score": 90,
+          "weight": 15,
+          "cosine": 0.903
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên thể hiện sự thành thạo trong các kỹ năng cốt lõi như tối ưu hóa SQL, lập trình thống kê Python và trực quan hóa dữ liệu trên PowerBI.",
+            "quote": "Expert in advanced SQL optimization, statistical programming in Python, predictive modeling, and developing enterprise-scale business intelligence dashboards in PowerBI and Tableau"
+          },
+          {
+            "point": "Thời gian kinh nghiệm thực tế vượt mức yêu cầu tối thiểu của vị trí.",
+            "quote": "Senior Data Analyst with 4.5 years of experience translating massive datasets into strategic commercial growth"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NumPy",
+            "note": "Hồ sơ không đề cập đến kỹ năng NumPy trong phần kỹ năng hoặc nội dung kinh nghiệm."
+          }
+        ],
+        "summary": "Ứng viên đáp ứng tốt phần lớn các yêu cầu kỹ năng bắt buộc và có kinh nghiệm làm việc dày dặn trong lĩnh vực phân tích dữ liệu. Tuy nhiên, hồ sơ còn thiếu kỹ năng NumPy theo yêu cầu."
+      },
+      "timings": {
+        "parseCvMs": 5871,
+        "embedMs": 557,
+        "scoreMs": 4693,
+        "explainMs": 1601,
+        "totalMs": 12722
+      },
+      "tokens": {
+        "inputTokens": 2540,
+        "outputTokens": 755,
+        "totalTokens": 3295,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:00:09.991Z"
+    },
+    {
+      "key": "cv_da_03.pdf::JD_DA",
+      "cvFile": "cv_da_03.pdf",
+      "jdId": "JD_DA",
+      "split": "test",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 86,
+      "labelReason": "Có hơn 3 năm kinh nghiệm phân tích dữ liệu E-commerce, thành thạo SQL, Python Pandas và thiết kế Dashboard PowerBI",
+      "expectedMissingSkills": [],
+      "aiScore": 86,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 83,
+          "weight": 35,
+          "matched": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics"
+          ],
+          "missing": [
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 40,
+          "weight": 10,
+          "matched": [
+            "Pandas",
+            "ETL"
+          ],
+          "missing": [
+            "Tableau",
+            "BigQuery",
+            "Data Modeling"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.2,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 90,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc thực tế phù hợp với vị trí tuyển dụng, thực hiện đầy đủ các nhiệm vụ phân tích dữ liệu, viết truy vấn SQL phức tạp, sử dụng Python và thiết kế dashboard trên PowerBI."
+        },
+        "similarity": {
+          "score": 99,
+          "weight": 15,
+          "cosine": 0.919
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu viết và tối ưu hóa các truy vấn SQL phức tạp cho công việc.",
+            "quote": "Viết truy vấn SQL phức tạp kết nối nhiều nguồn dữ liệu trên PostgreSQL và Snowflake để"
+          },
+          {
+            "point": "Ứng viên có kỹ năng thiết kế bảng điều khiển trực quan hóa trên PowerBI theo yêu cầu.",
+            "quote": "Thiết kế và chuẩn hóa 8 Dashboard PowerBI theo dõi doanh thu theo thời gian thực phục"
+          },
+          {
+            "point": "Ứng viên sử dụng thành thạo Python cho phân tích dữ liệu và thống kê.",
+            "quote": "Sử dụng Python để làm sạch dữ liệu lớn và chạy kiểm định thống kê đánh giá hiệu quả thử"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NumPy",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng NumPy trong phần kỹ năng hoặc kinh nghiệm."
+          }
+        ],
+        "summary": "Ứng viên có mức độ phù hợp cao với công việc nhờ đáp ứng hầu hết các kỹ năng bắt buộc và có kinh nghiệm thực tế liên quan trực tiếp đến phân tích dữ liệu. Tuy nhiên, hồ sơ còn thiếu một kỹ năng bắt buộc là NumPy."
+      },
+      "timings": {
+        "parseCvMs": 84107,
+        "embedMs": 545,
+        "scoreMs": 7999,
+        "explainMs": 88149,
+        "totalMs": 180799
+      },
+      "tokens": {
+        "inputTokens": 2613,
+        "outputTokens": 739,
+        "totalTokens": 3352,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:03:13.330Z"
+    },
+    {
+      "key": "cv_da_04.pdf::JD_DA",
+      "cvFile": "cv_da_04.pdf",
+      "jdId": "JD_DA",
+      "split": "test",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 95,
+      "labelReason": "Hơn 5 năm kinh nghiệm phân tích dữ liệu tài chính ngân hàng, làm chủ SQL tối ưu, mô hình thống kê Python và PowerBI",
+      "expectedMissingSkills": [],
+      "aiScore": 82,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 83,
+          "weight": 35,
+          "matched": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics"
+          ],
+          "missing": [
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 40,
+          "weight": 10,
+          "matched": [
+            "Tableau",
+            "Data Modeling"
+          ],
+          "missing": [
+            "Pandas",
+            "ETL",
+            "BigQuery"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 5.3,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 80,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm thực tế phù hợp với vai trò phân tích dữ liệu ở cấp độ trung cấp, bao gồm việc sử dụng SQL, Python và PowerBI để trích xuất, xử lý dữ liệu và xây dựng mô hình."
+        },
+        "similarity": {
+          "score": 95,
+          "weight": 15,
+          "cosine": 0.912
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt hầu hết các kỹ năng cốt lõi cho vị trí công việc bao gồm SQL, Python, PowerBI, Data Analysis và Statistics.",
+            "quote": "SQL • Python • PowerBI • Data Analysis • Statistics"
+          },
+          {
+            "point": "Ứng viên có kinh nghiệm thực tế trong việc sử dụng Python để phân tích và xây dựng mô hình dữ liệu.",
+            "quote": "Xây dựng các mô hình phân loại khách hàng tiềm năng và dự báo tỷ lệ nợ xấu bằng thuật toán thống kê trên Python"
+          },
+          {
+            "point": "Ứng viên thể hiện khả năng thiết kế và duy trì bảng điều khiển trên PowerBI cho các mục đích kinh doanh.",
+            "quote": "Phát triển hệ thống PowerBI Dashboard theo dõi dòng tiền và hiệu quả danh mục cho vay tín dụng"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NumPy",
+            "note": "CV không đề cập đến kỹ năng NumPy trong phần kỹ năng chuyên môn."
+          }
+        ],
+        "summary": "Ứng viên có mức độ phù hợp cao với vị trí công việc nhờ đáp ứng tốt các yêu cầu về kinh nghiệm làm việc và đa số kỹ năng chuyên môn chính. Hồ sơ thể hiện rõ các năng lực về SQL, Python và PowerBI nhưng thiếu một kỹ năng yêu cầu là NumPy."
+      },
+      "timings": {
+        "parseCvMs": 2121,
+        "embedMs": 567,
+        "scoreMs": 2947,
+        "explainMs": 13825,
+        "totalMs": 19461
+      },
+      "tokens": {
+        "inputTokens": 2709,
+        "outputTokens": 823,
+        "totalTokens": 3532,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:03:35.325Z"
+    },
+    {
+      "key": "cv_da_05.pdf::JD_DA",
+      "cvFile": "cv_da_05.pdf",
+      "jdId": "JD_DA",
+      "split": "dev",
+      "label": "không phù hợp",
+      "confidence": "chưa chắc",
+      "expectedScore": 65,
+      "labelReason": "Có 3.5 năm kinh nghiệm BI rất tốt về SQL và PowerBI nhưng chưa có minh chứng lập trình phân tích dữ liệu với Python",
+      "expectedMissingSkills": [
+        "Python"
+      ],
+      "aiScore": 74,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 67,
+          "weight": 35,
+          "matched": [
+            "SQL",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics"
+          ],
+          "missing": [
+            "Python",
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 60,
+          "weight": 10,
+          "matched": [
+            "Tableau",
+            "ETL",
+            "Data Modeling"
+          ],
+          "missing": [
+            "Pandas",
+            "BigQuery"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.5,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 70,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc đúng chuyên môn phân tích dữ liệu, thực hiện các nhiệm vụ truy vấn SQL và xây dựng dashboard tương đồng với yêu cầu công việc."
+        },
+        "similarity": {
+          "score": 83,
+          "weight": 15,
+          "cosine": 0.891
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu về số năm kinh nghiệm với 3,5 năm làm việc trong lĩnh vực phân tích dữ liệu.",
+            "quote": "Dedicated BI Analyst with 3.5 years of experience specializing in advanced SQL, relational data modeling, and developing"
+          },
+          {
+            "point": "Ứng viên có kỹ năng viết truy vấn SQL phức tạp để trích xuất dữ liệu kho hàng và doanh thu từ cơ sở dữ liệu.",
+            "quote": "• Wrote advanced SQL queries across PostgreSQL database to extract monthly store inventory and sales revenue data"
+          },
+          {
+            "point": "Ứng viên có năng lực thiết kế bảng điều khiển trực quan hóa trên PowerBI theo yêu cầu công việc.",
+            "quote": "• Designed comprehensive PowerBI dashboards with customized DAX formulas for regional retail managers"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "Python",
+            "note": "Hồ sơ không đề cập đến kỹ năng sử dụng ngôn ngữ lập trình Python."
+          },
+          {
+            "skill": "NumPy",
+            "note": "Hồ sơ thiếu thông tin về kỹ năng làm việc với thư viện NumPy."
+          }
+        ],
+        "summary": "Ứng viên có kinh nghiệm làm việc phù hợp và đáp ứng được phần lớn các kỹ năng kỹ thuật cốt lõi như SQL, PowerBI, phân tích dữ liệu và thống kê. Tuy nhiên, hồ sơ hiện tại thiếu một số kỹ năng bắt buộc theo yêu cầu công việc là Python và NumPy."
+      },
+      "timings": {
+        "parseCvMs": 2524,
+        "embedMs": 399,
+        "scoreMs": 1563,
+        "explainMs": 21133,
+        "totalMs": 25619
+      },
+      "tokens": {
+        "inputTokens": 2358,
+        "outputTokens": 739,
+        "totalTokens": 3097,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:06:30.058Z"
+    },
+    {
+      "key": "cv_da_06.pdf::JD_DA",
+      "cvFile": "cv_da_06.pdf",
+      "jdId": "JD_DA",
+      "split": "test",
+      "label": "phù hợp",
+      "confidence": "chưa chắc",
+      "expectedScore": 75,
+      "labelReason": "Kinh nghiệm vừa chạm ngưỡng 2 năm (2 năm 3 tháng), làm chủ đầy đủ các kỹ năng bắt buộc SQL, Python, PowerBI và Statistics",
+      "expectedMissingSkills": [],
+      "aiScore": 86,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics",
+            "NumPy"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 20,
+          "weight": 10,
+          "matched": [
+            "Pandas"
+          ],
+          "missing": [
+            "Tableau",
+            "ETL",
+            "BigQuery",
+            "Data Modeling"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 2.3,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 80,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc đúng vai trò Phân tích dữ liệu với các nhiệm vụ thực tế liên quan đến SQL, Python và PowerBI phù hợp với yêu cầu công việc ở mức độ trung cấp."
+        },
+        "similarity": {
+          "score": 93,
+          "weight": 15,
+          "cosine": 0.909
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu trích xuất dữ liệu từ cơ sở dữ liệu bằng SQL.",
+            "quote": "Truy vấn dữ liệu vận chuyển hàng hóa từ cơ sở dữ liệu PostgreSQL bằng SQL"
+          },
+          {
+            "point": "Ứng viên có kỹ năng sử dụng Python để xử lý dữ liệu thực tế.",
+            "quote": "Làm sạch và chuẩn hóa dữ liệu bị thiếu bằng thư viện Python Pandas"
+          },
+          {
+            "point": "Ứng viên có kinh nghiệm xây dựng báo cáo và bảng điều khiển trực quan trên PowerBI.",
+            "quote": "Tạo các biểu đồ Dashboard trực quan trên PowerBI theo dõi thời gian giao hàng trung bình"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên đáp ứng đầy đủ toàn bộ các kỹ năng bắt buộc cho vị trí công việc và có thời gian kinh nghiệm phù hợp. Hồ sơ thể hiện rõ các kỹ năng chuyên môn cốt lõi về phân tích dữ liệu, lập trình và trực quan hóa."
+      },
+      "timings": {
+        "parseCvMs": 3700,
+        "embedMs": 369,
+        "scoreMs": 5087,
+        "explainMs": 1585,
+        "totalMs": 10741
+      },
+      "tokens": {
+        "inputTokens": 2461,
+        "outputTokens": 642,
+        "totalTokens": 3103,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:06:43.349Z"
+    },
+    {
+      "key": "cv_da_07.pdf::JD_DA",
+      "cvFile": "cv_da_07.pdf",
+      "jdId": "JD_DA",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chưa chắc",
+      "expectedScore": 60,
+      "labelReason": "Chuyên viên IT Business Analyst có hiểu biết nghiệp vụ và SQL cơ bản nhưng thiếu kỹ năng lập trình Python và thống kê",
+      "expectedMissingSkills": [
+        "Python",
+        "Statistics"
+      ],
+      "aiScore": 55,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 50,
+          "weight": 35,
+          "matched": [
+            "SQL",
+            "PowerBI",
+            "Data Analysis"
+          ],
+          "missing": [
+            "Python",
+            "Statistics",
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Tableau",
+            "Pandas",
+            "ETL",
+            "BigQuery",
+            "Data Modeling"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.2,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 40,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm sử dụng SQL và PowerBI nhưng công việc chủ yếu tập trung vào vai trò Phân tích Nghiệp vụ và thu thập yêu cầu thay vì phân tích dữ liệu chuyên sâu hay sử dụng Python."
+        },
+        "similarity": {
+          "score": 80,
+          "weight": 15,
+          "cosine": 0.886
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu về số năm kinh nghiệm làm việc thực tế cho vị trí này.",
+            "quote": "Chuyên viên Phân tích Nghiệp vụ (Business Analyst) với hơn 3 năm kinh nghiệm"
+          },
+          {
+            "point": "Ứng viên có kỹ năng sử dụng SQL phù hợp với yêu cầu công việc.",
+            "quote": "Sử dụng SQL để kiểm tra dữ liệu thực tế trên cơ sở dữ liệu phục vụ xác minh yêu cầu nghiệp vụ"
+          },
+          {
+            "point": "Ứng viên có kinh nghiệm làm việc với PowerBI đáp ứng một phần yêu cầu chuyên môn.",
+            "quote": "Tự xây dựng các dashboard PowerBI nội bộ để theo dõi tiến độ dự án và năng suất đội ngũ"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "Python",
+            "note": "CV không đề cập đến kỹ năng Python."
+          },
+          {
+            "skill": "Statistics",
+            "note": "CV không hiển thị kinh nghiệm về thống kê chuyên sâu."
+          },
+          {
+            "skill": "NumPy",
+            "note": "CV không có thông tin về thư viện NumPy."
+          }
+        ],
+        "summary": "Ứng viên có kinh nghiệm làm việc vượt yêu cầu về thời gian và đáp ứng một số kỹ năng cơ bản như SQL và PowerBI. Tuy nhiên, hồ sơ còn thiếu nhiều kỹ năng kỹ thuật quan trọng theo yêu cầu như Python, Statistics và NumPy."
+      },
+      "timings": {
+        "parseCvMs": 10389,
+        "embedMs": 388,
+        "scoreMs": 36318,
+        "explainMs": 1583,
+        "totalMs": 48678
+      },
+      "tokens": {
+        "inputTokens": 2489,
+        "outputTokens": 750,
+        "totalTokens": 3239,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:07:34.575Z"
+    },
+    {
+      "key": "cv_da_08.pdf::JD_DA",
+      "cvFile": "cv_da_08.pdf",
+      "jdId": "JD_DA",
+      "split": "dev",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 15,
+      "labelReason": "Chuyên viên kinh doanh B2B phần mềm, không có kỹ năng kỹ thuật về truy vấn SQL, Python hay phân tích dữ liệu",
+      "expectedMissingSkills": [
+        "SQL",
+        "Python",
+        "PowerBI",
+        "Data Analysis",
+        "Statistics"
+      ],
+      "aiScore": 15,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics",
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Tableau",
+            "Pandas",
+            "ETL",
+            "BigQuery",
+            "Data Modeling"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc tập trung hoàn toàn vào lĩnh vực kinh doanh và bán hàng B2B, không có kinh nghiệm hoặc dự án liên quan đến phân tích dữ liệu, SQL, Python hay PowerBI."
+        },
+        "similarity": {
+          "score": 0,
+          "weight": 15,
+          "cosine": 0.728
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có bốn năm kinh nghiệm làm việc trong lĩnh vực kinh doanh doanh nghiệp.",
+            "quote": "Target-driven B2B Sales Executive with 4 years of experience in enterprise software sales"
+          },
+          {
+            "point": "Hồ sơ thể hiện thành tích phát triển đối tác và hoàn thành chỉ tiêu doanh thu.",
+            "quote": "Acquired 40+ corporate partners and achieved 125% of annual revenue quota consistently"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SQL",
+            "note": "CV không đề cập đến kỹ năng SQL."
+          },
+          {
+            "skill": "Python",
+            "note": "CV không có kinh nghiệm hoặc kỹ năng về Python."
+          },
+          {
+            "skill": "PowerBI",
+            "note": "Hồ sơ không hiển thị công cụ trực quan hóa PowerBI."
+          },
+          {
+            "skill": "Data Analysis",
+            "note": "Ứng viên thiếu kinh nghiệm liên quan đến phân tích dữ liệu."
+          },
+          {
+            "skill": "Statistics",
+            "note": "Không có thông tin về kỹ năng thống kê trong CV."
+          },
+          {
+            "skill": "NumPy",
+            "note": "CV hoàn toàn không đề cập đến thư viện NumPy."
+          }
+        ],
+        "summary": "Ứng viên hiện tại thiếu hơn một nửa số kỹ năng bắt buộc của vị trí công việc. Do toàn bộ kinh nghiệm tập trung vào mảng kinh doanh và bán hàng B2B thay vì phân tích dữ liệu, ứng viên không đáp ứng các yêu cầu chuyên môn của vị trí này."
+      },
+      "timings": {
+        "parseCvMs": 32686,
+        "embedMs": 396,
+        "scoreMs": 25404,
+        "explainMs": 1873,
+        "totalMs": 60359
+      },
+      "tokens": {
+        "inputTokens": 2295,
+        "outputTokens": 736,
+        "totalTokens": 3031,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:08:37.462Z"
+    },
+    {
+      "key": "cv_da_09.pdf::JD_DA",
+      "cvFile": "cv_da_09.pdf",
+      "jdId": "JD_DA",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 8,
+      "labelReason": "Nhân viên sáng tạo nội dung mạng xã hội, hoàn toàn không có kỹ năng truy vấn dữ liệu và lập trình thống kê",
+      "expectedMissingSkills": [
+        "SQL",
+        "Python",
+        "PowerBI",
+        "Data Analysis",
+        "Statistics"
+      ],
+      "aiScore": 16,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics",
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Tableau",
+            "Pandas",
+            "ETL",
+            "BigQuery",
+            "Data Modeling"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 2,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm trong lĩnh vực sáng tạo nội dung truyền thông, hoàn toàn không có kinh nghiệm hoặc dự án nào liên quan đến phân tích dữ liệu, SQL, Python hay PowerBI."
+        },
+        "similarity": {
+          "score": 5,
+          "weight": 15,
+          "cosine": 0.759
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đạt yêu cầu về số năm kinh nghiệm làm việc thực tế trong lĩnh vực chuyên môn của mình.",
+            "quote": "Nhà sáng tạo nội dung truyền thông năng động với 2 năm kinh nghiệm viết bài PR, quản"
+          },
+          {
+            "point": "Ứng viên có nền tảng học vấn phù hợp với chuyên ngành Báo chí & Truyền thông.",
+            "quote": "Cử nhân Báo chí & Truyền thông"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SQL",
+            "note": "CV không thể hiện kỹ năng hoặc kinh nghiệm làm việc với SQL."
+          },
+          {
+            "skill": "Python",
+            "note": "CV không có thông tin về việc sử dụng ngôn ngữ lập trình Python."
+          },
+          {
+            "skill": "PowerBI",
+            "note": "CV không đề cập đến công cụ trực quan hóa dữ liệu PowerBI."
+          },
+          {
+            "skill": "Data Analysis",
+            "note": "Hồ sơ của ứng viên không chứa kinh nghiệm liên quan đến phân tích dữ liệu."
+          },
+          {
+            "skill": "Statistics",
+            "note": "Không tìm thấy kỹ năng hoặc dự án nào liên quan đến thống kê trong CV."
+          },
+          {
+            "skill": "NumPy",
+            "note": "CV hoàn toàn không đề cập đến thư viện NumPy."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa các kỹ năng bắt buộc cho vị trí này và toàn bộ kinh nghiệm đều tập trung vào sáng tạo nội dung truyền thông thay vì phân tích dữ liệu. Do đó, hồ sơ này không phù hợp với các yêu cầu cốt lõi của công việc."
+      },
+      "timings": {
+        "parseCvMs": 2059,
+        "embedMs": 561,
+        "scoreMs": 1045,
+        "explainMs": 45947,
+        "totalMs": 49612
+      },
+      "tokens": {
+        "inputTokens": 2492,
+        "outputTokens": 804,
+        "totalTokens": 3296,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:09:29.613Z"
+    },
+    {
+      "key": "cv_da_10.pdf::JD_DA",
+      "cvFile": "cv_da_10.pdf",
+      "jdId": "JD_DA",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 5,
+      "labelReason": "Trưởng nhóm chăm sóc khách hàng tổng đài, lệch ngành và không có kỹ năng phân tích định lượng dữ liệu",
+      "expectedMissingSkills": [
+        "SQL",
+        "Python",
+        "PowerBI",
+        "Data Analysis",
+        "Statistics"
+      ],
+      "aiScore": 16,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics",
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Tableau",
+            "Pandas",
+            "ETL",
+            "BigQuery",
+            "Data Modeling"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc trong lĩnh vực dịch vụ khách hàng, không có công việc hoặc dự án nào liên quan đến phân tích dữ liệu hay các kỹ năng kỹ thuật yêu cầu cho vị trí."
+        },
+        "similarity": {
+          "score": 5,
+          "weight": 15,
+          "cosine": 0.759
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng yêu cầu về thời gian kinh nghiệm tổng thể với ba năm làm việc trong lĩnh vực dịch vụ khách hàng.",
+            "quote": "Trưởng nhóm Dịch vụ Khách hàng với 3 năm kinh nghiệm trong việc tiếp nhận cuộc gọi tổng đài, xử lý khiếu nại khách"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SQL",
+            "note": "Hồ sơ của ứng viên không thể hiện kỹ năng SQL."
+          },
+          {
+            "skill": "Python",
+            "note": "Hồ sơ của ứng viên không có thông tin về ngôn ngữ lập trình Python."
+          },
+          {
+            "skill": "PowerBI",
+            "note": "Hồ sơ của ứng viên không đề cập đến công cụ PowerBI."
+          },
+          {
+            "skill": "Data Analysis",
+            "note": "Hồ sơ của ứng viên thiếu kinh nghiệm liên quan đến phân tích dữ liệu."
+          },
+          {
+            "skill": "Statistics",
+            "note": "Hồ sơ của ứng viên không cho thấy kiến thức hoặc kỹ năng về thống kê."
+          },
+          {
+            "skill": "NumPy",
+            "note": "Hồ sơ của ứng viên không có kỹ năng về thư viện NumPy."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa số kỹ năng bắt buộc cho vị trí này và không có kinh nghiệm thực tế trong lĩnh vực phân tích dữ liệu. Toàn bộ kinh nghiệm làm việc tập trung vào mảng dịch vụ khách hàng và tổng đài, do đó mức độ phù hợp với công việc rất thấp."
+      },
+      "timings": {
+        "parseCvMs": 7273,
+        "embedMs": 571,
+        "scoreMs": 1416,
+        "explainMs": 3010,
+        "totalMs": 12269
+      },
+      "tokens": {
+        "inputTokens": 2560,
+        "outputTokens": 804,
+        "totalTokens": 3364,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:09:44.432Z"
+    },
+    {
+      "key": "cv_mkt_01.pdf::JD_MKT",
+      "cvFile": "cv_mkt_01.pdf",
+      "jdId": "JD_MKT",
+      "split": "dev",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 91,
+      "labelReason": "Có 3.5 năm kinh nghiệm Digital Marketing, thành thạo SEO kỹ thuật, Google Ads, Meta Ads và Google Analytics 4",
+      "expectedMissingSkills": [],
+      "aiScore": 92,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 60,
+          "weight": 10,
+          "matched": [
+            "Copywriting",
+            "Email Marketing",
+            "A/B Testing"
+          ],
+          "missing": [
+            "TikTok Ads",
+            "Canva"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.5,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 90,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc thực tế trùng khớp với các trách nhiệm cốt lõi của công việc như quảng cáo trả phí, SEO, phân tích dữ liệu và tối ưu chuyển đổi ở quy mô lớn."
+        },
+        "similarity": {
+          "score": 87,
+          "weight": 15,
+          "cosine": 0.897
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có năng lực quản lý ngân sách và tối ưu hóa hiệu quả các chiến dịch quảng cáo trả phí trên Google và Meta.",
+            "quote": "Managed monthly ad budget of $25,000+ across Google Ads and Meta Ads, maintaining an average ROAS of 4.2x"
+          },
+          {
+            "point": "Kinh nghiệm thực hiện chiến lược SEO kỹ thuật giúp gia tăng lưu lượng truy cập tự nhiên cho website.",
+            "quote": "Executed technical SEO strategy and on-page optimization, increasing organic search traffic by 120% YoY"
+          },
+          {
+            "point": "Kỹ năng thiết lập theo dõi dữ liệu trên Google Analytics 4 đáp ứng tốt yêu cầu đo lường và báo cáo.",
+            "quote": "Configured Google Analytics 4 (GA4) event tracking and Google Tag Manager for full funnel e-commerce attribution"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên đáp ứng đầy đủ tất cả các kỹ năng yêu cầu và có kinh nghiệm thực tế vượt mức thời gian tối thiểu. Hồ sơ hoàn toàn phù hợp với vị trí công việc nhờ kinh nghiệm vững chắc về quảng cáo hiệu suất, SEO và phân tích dữ liệu."
+      },
+      "timings": {
+        "parseCvMs": 34585,
+        "embedMs": 554,
+        "scoreMs": 26363,
+        "explainMs": 58526,
+        "totalMs": 120028
+      },
+      "tokens": {
+        "inputTokens": 2774,
+        "outputTokens": 844,
+        "totalTokens": 3618,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:11:47.000Z"
+    },
+    {
+      "key": "cv_mkt_02.pdf::JD_MKT",
+      "cvFile": "cv_mkt_02.pdf",
+      "jdId": "JD_MKT",
+      "split": "test",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 95,
+      "labelReason": "Hơn 4.5 năm kinh nghiệm Performance Marketing, quản lý ngân sách lớn, tối ưu xuất sắc Google Ads, Meta Ads và SEO",
+      "expectedMissingSkills": [],
+      "aiScore": 87,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 40,
+          "weight": 10,
+          "matched": [
+            "TikTok Ads",
+            "Email Marketing"
+          ],
+          "missing": [
+            "Copywriting",
+            "Canva",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4.7,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 80,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc dày dặn trong lĩnh vực quảng cáo trả phí và SEO, đáp ứng tốt các trách nhiệm chính của vị trí."
+        },
+        "similarity": {
+          "score": 85,
+          "weight": 15,
+          "cosine": 0.895
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng đầy đủ tất cả các kỹ năng bắt buộc của vị trí.",
+            "quote": "SEO • Google Ads • Meta Ads • Content Marketing • Google Analytics"
+          },
+          {
+            "point": "Ứng viên có thời gian kinh nghiệm vượt mức yêu cầu tối thiểu.",
+            "quote": "Performance Marketing Leader with over 4.5 years of expertise in driving customer acquisition and scaling digital revenue"
+          },
+          {
+            "point": "Ứng viên có kinh nghiệm thực tế triển khai các chiến dịch quảng cáo trả phí.",
+            "quote": "Spearheaded end-to-end paid acquisition campaigns across Google Search/Display and Facebook Ads, generating 15,000+"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên đáp ứng hoàn toàn các yêu cầu về kỹ năng bắt buộc và có thời gian kinh nghiệm vượt mức tối thiểu cho vị trí này. Các dự án trước đây hoàn toàn phù hợp với các trách nhiệm chính công việc."
+      },
+      "timings": {
+        "parseCvMs": 28896,
+        "embedMs": 560,
+        "scoreMs": 1339,
+        "explainMs": 1769,
+        "totalMs": 32564
+      },
+      "tokens": {
+        "inputTokens": 2676,
+        "outputTokens": 739,
+        "totalTokens": 3415,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:12:22.107Z"
+    },
+    {
+      "key": "cv_mkt_03.pdf::JD_MKT",
+      "cvFile": "cv_mkt_03.pdf",
+      "jdId": "JD_MKT",
+      "split": "test",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 88,
+      "labelReason": "Có 3 năm kinh nghiệm thực chiến đa kênh, làm chủ kỹ thuật SEO website, chạy quảng cáo Ads và đo lường GA4",
+      "expectedMissingSkills": [],
+      "aiScore": 93,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 80,
+          "weight": 10,
+          "matched": [
+            "Copywriting",
+            "Email Marketing",
+            "Canva",
+            "A/B Testing"
+          ],
+          "missing": [
+            "TikTok Ads"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 80,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc thực tế phù hợp với vai trò Digital Marketing trung cấp, nắm bắt tốt các nhiệm vụ cốt lõi như quảng cáo trả phí, SEO và phân tích dữ liệu."
+        },
+        "similarity": {
+          "score": 98,
+          "weight": 15,
+          "cosine": 0.917
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có kinh nghiệm thực tế trong việc vận hành chiến dịch quảng cáo trả phí và tối ưu hóa ROAS như yêu cầu công việc.",
+            "quote": "Quản lý và vận hành chiến dịch quảng cáo Google Ads và Meta Ads với ngân sách 300 triệu đồng/tháng, đạt ROAS trung bình 3.8x"
+          },
+          {
+            "point": "Kỹ năng SEO được chứng minh qua việc cải thiện thứ hạng từ khóa thành công trên Google.",
+            "quote": "Thực hiện tối ưu hóa SEO tổng thể website, đẩy hơn 100 từ khóa ngành thời trang vào Top 5 Google tìm kiếm"
+          },
+          {
+            "point": "Ứng viên sử dụng thành thạo Google Analytics để đo lường dữ liệu và tối ưu hóa hiệu quả chuyển đổi.",
+            "quote": "Sử dụng Google Analytics 4 theo dõi hành vi mua sắm, phát hiện điểm rơi phễu và tối ưu tỷ lệ chuyển đổi (CR) tăng 25%"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên đáp ứng đầy đủ các yêu cầu cốt lõi về kỹ năng kỹ thuật và có 3 năm kinh nghiệm thực tế phù hợp cho vị trí. Các kỹ năng bổ trợ và khả năng triển khai chiến dịch, phân tích dữ liệu đều bám sát mô tả công việc."
+      },
+      "timings": {
+        "parseCvMs": 1819,
+        "embedMs": 584,
+        "scoreMs": 10631,
+        "explainMs": 8221,
+        "totalMs": 21255
+      },
+      "tokens": {
+        "inputTokens": 2748,
+        "outputTokens": 737,
+        "totalTokens": 3485,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:12:45.891Z"
+    },
+    {
+      "key": "cv_mkt_04.pdf::JD_MKT",
+      "cvFile": "cv_mkt_04.pdf",
+      "jdId": "JD_MKT",
+      "split": "test",
+      "label": "phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 96,
+      "labelReason": "Hơn 5 năm kinh nghiệm Growth Marketing, dẫn dắt toàn diện chiến lược SEO, Google Ads, Facebook Ads và tối ưu chuyển đổi",
+      "expectedMissingSkills": [],
+      "aiScore": 81,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "TikTok Ads",
+            "Copywriting",
+            "Email Marketing",
+            "Canva",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 5.4,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 70,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc dày dặn trong lĩnh vực Digital Marketing với các nhiệm vụ tương đồng như triển khai quảng cáo trả phí và phân tích số liệu, tuy nhiên mô tả công việc chưa đề cập chi tiết đến mảng SEO và sáng tạo nội dung."
+        },
+        "similarity": {
+          "score": 91,
+          "weight": 15,
+          "cosine": 0.905
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên sở hữu đầy đủ các kỹ năng cốt lõi về quảng cáo hiệu suất, SEO, nội dung và phân tích dữ liệu yêu cầu cho công việc.",
+            "quote": null
+          },
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu về số năm kinh nghiệm làm việc trong lĩnh vực này.",
+            "quote": "Chuyên gia Digital Marketing với hơn 5 năm kinh nghiệm dẫn dắt các chiến dịch tăng trưởng số lượng người dùng cho các sản phẩm công nghệ và du lịch"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên đáp ứng toàn bộ các kỹ năng bắt buộc của vị trí và có hơn 5 năm kinh nghiệm làm việc thực tế trong lĩnh vực Digital Marketing. Tuy nhiên, hồ sơ chưa thể hiện các kỹ năng ưu tiên và cần bổ sung thêm chi tiết về mảng SEO cũng như sáng tạo nội dung trong quá trình làm việc."
+      },
+      "timings": {
+        "parseCvMs": 61517,
+        "embedMs": 574,
+        "scoreMs": 23339,
+        "explainMs": 37431,
+        "totalMs": 122861
+      },
+      "tokens": {
+        "inputTokens": 2837,
+        "outputTokens": 808,
+        "totalTokens": 3645,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:23:58.467Z"
+    },
+    {
+      "key": "cv_mkt_05.pdf::JD_MKT",
+      "cvFile": "cv_mkt_05.pdf",
+      "jdId": "JD_MKT",
+      "split": "dev",
+      "label": "không phù hợp",
+      "confidence": "chưa chắc",
+      "expectedScore": 65,
+      "labelReason": "Có 3.5 năm kinh nghiệm Content Marketing, SEO và Meta Ads tốt nhưng chưa có kinh nghiệm thực tế với Google Ads",
+      "expectedMissingSkills": [
+        "Google Ads"
+      ],
+      "aiScore": 74,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 80,
+          "weight": 35,
+          "matched": [
+            "SEO",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ],
+          "missing": [
+            "Google Ads"
+          ]
+        },
+        "preferredSkills": {
+          "score": 40,
+          "weight": 10,
+          "matched": [
+            "Copywriting",
+            "Canva"
+          ],
+          "missing": [
+            "TikTok Ads",
+            "Email Marketing",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.5,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 60,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm thực hiện các chiến dịch quảng cáo và tối ưu hóa nội dung tương đồng với yêu cầu công việc, tuy nhiên chưa đề cập đến việc triển khai quảng cáo Google Ads và lập kế hoạch chiến dịch tổng thể."
+        },
+        "similarity": {
+          "score": 79,
+          "weight": 15,
+          "cosine": 0.883
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có kinh nghiệm thực hiện quản lý các chiến dịch quảng cáo trả phí Meta.",
+            "quote": "Authored high-converting creative copies and managed Meta ad sets for lifestyle product releases"
+          },
+          {
+            "point": "Ứng viên thể hiện năng lực tối ưu hóa SEO và nghiên cứu từ khóa.",
+            "quote": "Conducted keyword research and optimized 40+ blog articles for on-page SEO, increasing organic traffic by 60%"
+          },
+          {
+            "point": "Ứng viên có kỹ năng sử dụng Google Analytics để theo dõi lưu lượng và chuyển đổi.",
+            "quote": "Tracked user engagement and social conversion funnels using Google Analytics 4"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "Google Ads",
+            "note": "Hồ sơ của ứng viên chưa đề cập đến kỹ năng hoặc kinh nghiệm làm việc với Google Ads."
+          }
+        ],
+        "summary": "Ứng viên đáp ứng tốt phần lớn các yêu cầu cốt lõi của công việc với kinh nghiệm về SEO, Meta Ads, Content Marketing và Google Analytics, đồng thời đáp ứng đủ số năm kinh nghiệm. Tuy nhiên, hồ sơ vẫn còn thiếu kỹ năng Google Ads theo yêu cầu."
+      },
+      "timings": {
+        "parseCvMs": 64564,
+        "embedMs": 430,
+        "scoreMs": 17993,
+        "explainMs": 1969,
+        "totalMs": 84957
+      },
+      "tokens": {
+        "inputTokens": 2419,
+        "outputTokens": 687,
+        "totalTokens": 3106,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:25:25.961Z"
+    },
+    {
+      "key": "cv_mkt_06.pdf::JD_MKT",
+      "cvFile": "cv_mkt_06.pdf",
+      "jdId": "JD_MKT",
+      "split": "test",
+      "label": "phù hợp",
+      "confidence": "chưa chắc",
+      "expectedScore": 74,
+      "labelReason": "Kinh nghiệm vừa chạm ngưỡng 2 năm (2 năm 2 tháng), đáp ứng đầy đủ kỹ năng thực chiến SEO, Google Ads, Meta Ads và Google Analytics",
+      "expectedMissingSkills": [],
+      "aiScore": 88,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 100,
+          "weight": 35,
+          "matched": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ],
+          "missing": []
+        },
+        "preferredSkills": {
+          "score": 40,
+          "weight": 10,
+          "matched": [
+            "Copywriting",
+            "Canva"
+          ],
+          "missing": [
+            "TikTok Ads",
+            "Email Marketing",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 2.2,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 80,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm thực tế ở vị trí tương đương, trực tiếp triển khai các chiến dịch quảng cáo trả phí và tối ưu hóa SEO, đáp ứng tốt các trách nhiệm chính của công việc."
+        },
+        "similarity": {
+          "score": 95,
+          "weight": 15,
+          "cosine": 0.912
+        },
+        "capped": false
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có năng lực thực tế trong việc quản lý và tối ưu hóa các chiến dịch quảng cáo trả phí.",
+            "quote": "Trực tiếp quản lý và tối ưu hóa ngân sách quảng cáo Meta Ads và Google Ads Search 40 triệu đồng/tháng"
+          },
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu về tối ưu hóa on-page/off-page SEO.",
+            "quote": "Viết bài chuẩn SEO và tối ưu hóa bài viết blog trên nền tảng WordPress"
+          },
+          {
+            "point": "Số năm kinh nghiệm của ứng viên đáp ứng yêu cầu công việc.",
+            "quote": "Chuyên viên Digital Marketing có hơn 2 năm kinh nghiệm thực chiến đa kênh"
+          }
+        ],
+        "gaps": [],
+        "summary": "Ứng viên đáp ứng đầy đủ các kỹ năng bắt buộc và có thời gian kinh nghiệm phù hợp với yêu cầu tuyển dụng. Hồ sơ thể hiện khả năng thực hiện tốt các công việc chuyên môn về quảng cáo trả phí và tối ưu hóa SEO."
+      },
+      "timings": {
+        "parseCvMs": 3030,
+        "embedMs": 359,
+        "scoreMs": 9774,
+        "explainMs": 4576,
+        "totalMs": 17739
+      },
+      "tokens": {
+        "inputTokens": 2534,
+        "outputTokens": 631,
+        "totalTokens": 3165,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:26:50.115Z"
+    },
+    {
+      "key": "cv_mkt_07.pdf::JD_MKT",
+      "cvFile": "cv_mkt_07.pdf",
+      "jdId": "JD_MKT",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chưa chắc",
+      "expectedScore": 58,
+      "labelReason": "Có 3 năm kinh nghiệm PR sự kiện và Content Marketing nhưng chưa có minh chứng về SEO, Google Ads và Google Analytics",
+      "expectedMissingSkills": [
+        "SEO",
+        "Google Ads",
+        "Google Analytics"
+      ],
+      "aiScore": 45,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 40,
+          "weight": 35,
+          "matched": [
+            "Meta Ads",
+            "Content Marketing"
+          ],
+          "missing": [
+            "SEO",
+            "Google Ads",
+            "Google Analytics"
+          ]
+        },
+        "preferredSkills": {
+          "score": 20,
+          "weight": 10,
+          "matched": [
+            "Copywriting"
+          ],
+          "missing": [
+            "TikTok Ads",
+            "Email Marketing",
+            "Canva",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 30,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm trong lĩnh vực truyền thông và quan hệ công chúng nhưng thiếu vắng các kỹ năng cốt lõi và nhiệm vụ thực tế về quảng cáo trả phí, SEO cũng như đo lường hiệu suất kỹ thuật số theo yêu cầu của công việc."
+        },
+        "similarity": {
+          "score": 43,
+          "weight": 15,
+          "cosine": 0.823
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng yêu cầu về sáng tạo nội dung tiếp thị nhờ kinh nghiệm làm Content Marketing.",
+            "quote": "Có thế mạnh sáng tạo Content Marketing xuất sắc, quản trị hình ảnh"
+          },
+          {
+            "point": "Ứng viên có kỹ năng nền tảng về quảng cáo trả phí trên nền tảng Meta.",
+            "quote": "Meta Ads cơ bản"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SEO",
+            "note": "Hồ sơ không đề cập đến kinh nghiệm nghiên cứu từ khóa hay tối ưu hóa SEO."
+          },
+          {
+            "skill": "Google Ads",
+            "note": "Hồ sơ hoàn toàn thiếu vắng kinh nghiệm triển khai chiến dịch Google Ads."
+          },
+          {
+            "skill": "Google Analytics",
+            "note": "Hồ sơ không cho thấy khả năng đo lường và theo dõi bằng Google Analytics."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa số kỹ năng cốt lõi theo yêu cầu của công việc bao gồm SEO, Google Ads và Google Analytics. Do đó, mức độ phù hợp với vị trí này chưa cao dù ứng viên có ưu thế về Content Marketing và kinh nghiệm làm việc."
+      },
+      "timings": {
+        "parseCvMs": 4995,
+        "embedMs": 351,
+        "scoreMs": 36274,
+        "explainMs": 6205,
+        "totalMs": 47825
+      },
+      "tokens": {
+        "inputTokens": 2569,
+        "outputTokens": 614,
+        "totalTokens": 3183,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:28:08.055Z"
+    },
+    {
+      "key": "cv_mkt_08.pdf::JD_MKT",
+      "cvFile": "cv_mkt_08.pdf",
+      "jdId": "JD_MKT",
+      "split": "dev",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 5,
+      "labelReason": "Kỹ sư lập trình nhúng phần cứng vi điều khiển C/C++, hoàn toàn lệch ngành và thiếu toàn bộ kỹ năng tiếp thị số",
+      "expectedMissingSkills": [
+        "SEO",
+        "Google Ads",
+        "Meta Ads",
+        "Content Marketing",
+        "Google Analytics"
+      ],
+      "aiScore": 15,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "TikTok Ads",
+            "Copywriting",
+            "Email Marketing",
+            "Canva",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm trong lĩnh vực lập trình nhúng và phần mềm, không có kinh nghiệm hoặc dự án nào liên quan đến Digital Marketing, SEO hay quảng cáo trả phí."
+        },
+        "similarity": {
+          "score": 0,
+          "weight": 15,
+          "cosine": 0.75
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng yêu cầu về số năm kinh nghiệm làm việc với thời gian 4 năm trong lĩnh vực chuyên môn của mình.",
+            "quote": "Embedded Software Engineer with 4 years of experience programming microcontrollers, IoT hardware devices"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SEO",
+            "note": "Hồ sơ của ứng viên không thể hiện kỹ năng hoặc kinh nghiệm liên quan đến SEO."
+          },
+          {
+            "skill": "Google Ads",
+            "note": "Hồ sơ của ứng viên không có thông tin về kỹ năng Google Ads."
+          },
+          {
+            "skill": "Meta Ads",
+            "note": "Hồ sơ của ứng viên thiếu kinh nghiệm làm việc với Meta Ads."
+          },
+          {
+            "skill": "Content Marketing",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng Content Marketing."
+          },
+          {
+            "skill": "Google Analytics",
+            "note": "Hồ sơ của ứng viên không có kỹ năng sử dụng Google Analytics."
+          }
+        ],
+        "summary": "Ứng viên có lý lịch hoàn toàn tập trung vào lĩnh vực lập trình nhúng và phần mềm, không phù hợp với yêu cầu tuyển dụng trong ngành Digital Marketing. Do ứng viên thiếu hơn một nửa các kỹ năng bắt buộc của vị trí, hồ sơ chưa đáp ứng được tiêu chí đánh giá."
+      },
+      "timings": {
+        "parseCvMs": 4078,
+        "embedMs": 591,
+        "scoreMs": 11007,
+        "explainMs": 2099,
+        "totalMs": 17775
+      },
+      "tokens": {
+        "inputTokens": 2426,
+        "outputTokens": 724,
+        "totalTokens": 3150,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:28:28.373Z"
+    },
+    {
+      "key": "cv_mkt_09.pdf::JD_MKT",
+      "cvFile": "cv_mkt_09.pdf",
+      "jdId": "JD_MKT",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 5,
+      "labelReason": "Kế toán tổng hợp doanh nghiệp, không có kiến thức hoặc kỹ năng về Digital Marketing và quảng cáo trực tuyến",
+      "expectedMissingSkills": [
+        "SEO",
+        "Google Ads",
+        "Meta Ads",
+        "Content Marketing",
+        "Google Analytics"
+      ],
+      "aiScore": 17,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "TikTok Ads",
+            "Copywriting",
+            "Email Marketing",
+            "Canva",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4.5,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc hoàn toàn trong lĩnh vực kế toán, không có kinh nghiệm hoặc dự án liên quan đến Digital Marketing và các trách nhiệm của công việc."
+        },
+        "similarity": {
+          "score": 10,
+          "weight": 15,
+          "cosine": 0.768
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu về thời gian kinh nghiệm tổng thể với hơn 4 năm làm việc.",
+            "quote": null
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SEO",
+            "note": "Hồ sơ không có thông tin về kỹ năng SEO."
+          },
+          {
+            "skill": "Google Ads",
+            "note": "Hồ sơ không đề cập đến kỹ năng Google Ads."
+          },
+          {
+            "skill": "Meta Ads",
+            "note": "Hồ sơ không hiển thị kỹ năng Meta Ads."
+          },
+          {
+            "skill": "Content Marketing",
+            "note": "Hồ sơ thiếu kinh nghiệm hoặc kỹ năng liên quan đến Content Marketing."
+          },
+          {
+            "skill": "Google Analytics",
+            "note": "Hồ sơ không có kỹ năng Google Analytics."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa số kỹ năng bắt buộc và toàn bộ kinh nghiệm làm việc đều thuộc lĩnh vực kế toán thay vì Digital Marketing. Do đó, hồ sơ hiện chưa phù hợp với các yêu cầu cốt lõi của công việc."
+      },
+      "timings": {
+        "parseCvMs": 25447,
+        "embedMs": 361,
+        "scoreMs": 1210,
+        "explainMs": 4197,
+        "totalMs": 31216
+      },
+      "tokens": {
+        "inputTokens": 2623,
+        "outputTokens": 699,
+        "totalTokens": 3322,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:29:02.141Z"
+    },
+    {
+      "key": "cv_mkt_10.pdf::JD_MKT",
+      "cvFile": "cv_mkt_10.pdf",
+      "jdId": "JD_MKT",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 8,
+      "labelReason": "Chuyên viên kiểm thử phần mềm QA Tester, không liên quan đến nghiệp vụ marketing và truyền thông số",
+      "expectedMissingSkills": [
+        "SEO",
+        "Google Ads",
+        "Meta Ads",
+        "Content Marketing",
+        "Google Analytics"
+      ],
+      "aiScore": 17,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "TikTok Ads",
+            "Copywriting",
+            "Email Marketing",
+            "Canva",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 2.8,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc hoàn toàn trong lĩnh vực kiểm thử phần mềm, không có kinh nghiệm thực tế hoặc dự án nào liên quan đến các trách nhiệm cốt lõi của Digital Marketing như quảng cáo trả phí, SEO hay sáng tạo nội dung."
+        },
+        "similarity": {
+          "score": 15,
+          "weight": 15,
+          "cosine": 0.775
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng yêu cầu về thời gian kinh nghiệm làm việc chung.",
+            "quote": "Chuyên viên kiểm thử phần mềm (QA Tester) với gần 3 năm kinh nghiệm kiểm thử thủ công (Manual Testing) các ứng"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SEO",
+            "note": "Hồ sơ không có thông tin về kỹ năng SEO."
+          },
+          {
+            "skill": "Google Ads",
+            "note": "Hồ sơ không có thông tin về kỹ năng Google Ads."
+          },
+          {
+            "skill": "Meta Ads",
+            "note": "Hồ sơ không có thông tin về kỹ năng Meta Ads."
+          },
+          {
+            "skill": "Content Marketing",
+            "note": "Hồ sơ không có thông tin về kỹ năng Content Marketing."
+          },
+          {
+            "skill": "Google Analytics",
+            "note": "Hồ sơ không có thông tin về kỹ năng Google Analytics."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa số kỹ năng bắt buộc cho vị trí này. Toàn bộ kinh nghiệm làm việc trước đây thuộc lĩnh vực kiểm thử phần mềm, chưa phù hợp với các trách nhiệm cốt lõi của công việc tiếp thị số."
+      },
+      "timings": {
+        "parseCvMs": 5951,
+        "embedMs": 526,
+        "scoreMs": 2574,
+        "explainMs": 17993,
+        "totalMs": 27043
+      },
+      "tokens": {
+        "inputTokens": 2592,
+        "outputTokens": 717,
+        "totalTokens": 3309,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:29:31.725Z"
+    },
+    {
+      "key": "cv_be_02.pdf::JD_DA",
+      "cvFile": "cv_be_02.pdf",
+      "jdId": "JD_DA",
+      "split": "dev",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 15,
+      "labelReason": "Chuyên sâu lập trình backend và hệ thống, không có kỹ năng phân tích dữ liệu, thống kê và PowerBI",
+      "expectedMissingSkills": [
+        "Python",
+        "PowerBI",
+        "Data Analysis",
+        "Statistics"
+      ],
+      "aiScore": 20,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics",
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Tableau",
+            "Pandas",
+            "ETL",
+            "BigQuery",
+            "Data Modeling"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 6,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 10,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc chủ yếu trong lĩnh vực phát triển phần mềm backend (NodeJS, NestJS, PostgreSQL), không có kinh nghiệm thực tế hoặc dự án liên quan đến phân tích dữ liệu, Python, PowerBI hay thống kê."
+        },
+        "similarity": {
+          "score": 15,
+          "weight": 15,
+          "cosine": 0.775
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có hơn 5 năm kinh nghiệm làm việc trong lĩnh vực công nghệ phần mềm.",
+            "quote": "Results-driven Backend Engineer with over 5.5 years of expertise in full enterprise software lifecycle"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SQL",
+            "note": "CV không đề cập đến kỹ năng SQL."
+          },
+          {
+            "skill": "Python",
+            "note": "CV không đề cập đến kỹ năng Python."
+          },
+          {
+            "skill": "PowerBI",
+            "note": "CV không đề cập đến kỹ năng PowerBI."
+          },
+          {
+            "skill": "Data Analysis",
+            "note": "CV không có kinh nghiệm hoặc kỹ năng về Data Analysis."
+          },
+          {
+            "skill": "Statistics",
+            "note": "CV không có nội dung thể hiện kỹ năng Statistics."
+          },
+          {
+            "skill": "NumPy",
+            "note": "CV không đề cập đến thư viện NumPy."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa số kỹ năng bắt buộc cho vị trí này do kinh nghiệm tập trung vào phát triển phần mềm backend. Hồ sơ không đáp ứng được các yêu cầu chuyên môn về phân tích dữ liệu."
+      },
+      "timings": {
+        "parseCvMs": 43412,
+        "embedMs": 569,
+        "scoreMs": 11677,
+        "explainMs": 4193,
+        "totalMs": 59851
+      },
+      "tokens": {
+        "inputTokens": 2639,
+        "outputTokens": 892,
+        "totalTokens": 3531,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:35:32.399Z"
+    },
+    {
+      "key": "cv_da_02.pdf::JD_MKT",
+      "cvFile": "cv_da_02.pdf",
+      "jdId": "JD_MKT",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 12,
+      "labelReason": "Chuyên viên phân tích dữ liệu, hoàn toàn không có kỹ năng chạy quảng cáo Google Ads, Meta Ads và SEO",
+      "expectedMissingSkills": [
+        "SEO",
+        "Google Ads",
+        "Meta Ads",
+        "Content Marketing",
+        "Google Analytics"
+      ],
+      "aiScore": 22,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "TikTok Ads",
+            "Copywriting",
+            "Email Marketing",
+            "Canva",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4.5,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 10,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc trong lĩnh vực phân tích dữ liệu và BI, không có kinh nghiệm thực hiện các chiến dịch Digital Marketing, SEO hay quảng cáo trả phí theo yêu cầu của công việc."
+        },
+        "similarity": {
+          "score": 29,
+          "weight": 15,
+          "cosine": 0.8
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu về số năm kinh nghiệm làm việc với tổng thời gian 4.5 năm.",
+            "quote": "Senior Data Analyst with 4.5 years of experience translating massive datasets into strategic commercial growth"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SEO",
+            "note": "Hồ sơ của ứng viên không thể hiện kỹ năng hoặc kinh nghiệm liên quan đến tối ưu hóa SEO."
+          },
+          {
+            "skill": "Google Ads",
+            "note": "Hồ sơ của ứng viên không có kinh nghiệm triển khai các chiến dịch Google Ads."
+          },
+          {
+            "skill": "Meta Ads",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng chạy quảng cáo Meta Ads."
+          },
+          {
+            "skill": "Content Marketing",
+            "note": "Hồ sơ của ứng viên thiếu kinh nghiệm sáng tạo nội dung tiếp thị hay Content Marketing."
+          },
+          {
+            "skill": "Google Analytics",
+            "note": "Hồ sơ của ứng viên không hiển thị kinh nghiệm sử dụng công cụ Google Analytics."
+          }
+        ],
+        "summary": "Ứng viên không phù hợp với vị trí này do thiếu toàn bộ các kỹ năng bắt buộc và kinh nghiệm chuyên môn liên quan đến Digital Marketing. Do ứng viên thiếu hơn một nửa số kỹ năng bắt buộc, hồ sơ bị giới hạn điểm đánh giá và có định hướng chuyên môn hoàn toàn khác biệt so với yêu cầu công việc."
+      },
+      "timings": {
+        "parseCvMs": 60839,
+        "embedMs": 399,
+        "scoreMs": 1815,
+        "explainMs": 27261,
+        "totalMs": 90314
+      },
+      "tokens": {
+        "inputTokens": 2614,
+        "outputTokens": 841,
+        "totalTokens": 3455,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:38:04.047Z"
+    },
+    {
+      "key": "cv_mkt_02.pdf::JD_BE",
+      "cvFile": "cv_mkt_02.pdf",
+      "jdId": "JD_BE",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 5,
+      "labelReason": "Ứng viên ngành tiếp thị số, không có kỹ năng lập trình phần mềm, NodeJS, NestJS và cơ sở dữ liệu",
+      "expectedMissingSkills": [
+        "NodeJS",
+        "NestJS",
+        "TypeScript",
+        "PostgreSQL",
+        "RESTful API",
+        "Docker"
+      ],
+      "aiScore": 15,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Redis",
+            "BullMQ",
+            "AWS S3",
+            "Microservices",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4.7,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc trong lĩnh vực marketing, hoàn toàn không liên quan đến công việc phát triển backend hay lập trình."
+        },
+        "similarity": {
+          "score": 0,
+          "weight": 15,
+          "cosine": 0.749
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có thời gian kinh nghiệm làm việc đáp ứng yêu cầu chung của vị trí.",
+            "quote": "Performance Marketing Leader with over 4.5 years of expertise in driving customer acquisition and scaling digital revenue"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NodeJS",
+            "note": "Hồ sơ của ứng viên không thể hiện kỹ năng NodeJS."
+          },
+          {
+            "skill": "NestJS",
+            "note": "Hồ sơ của ứng viên thiếu hoàn toàn kinh nghiệm về NestJS."
+          },
+          {
+            "skill": "TypeScript",
+            "note": "Hồ sơ của ứng viên không có thông tin về TypeScript."
+          },
+          {
+            "skill": "PostgreSQL",
+            "note": "Hồ sơ của ứng viên không đề cập đến cơ sở dữ liệu PostgreSQL."
+          },
+          {
+            "skill": "RESTful API",
+            "note": "Hồ sơ của ứng viên không có kỹ năng RESTful API."
+          },
+          {
+            "skill": "Docker",
+            "note": "Hồ sơ của ứng viên thiếu kinh nghiệm sử dụng Docker."
+          }
+        ],
+        "summary": "Ứng viên có kinh nghiệm làm việc trong lĩnh vực marketing nhưng hoàn toàn không phù hợp với công việc phát triển backend. Do ứng viên thiếu hơn một nửa số kỹ năng bắt buộc, hồ sơ bị giới hạn điểm và không đáp ứng yêu cầu chuyên môn của vị trí."
+      },
+      "timings": {
+        "parseCvMs": 13558,
+        "embedMs": 564,
+        "scoreMs": 1215,
+        "explainMs": 3204,
+        "totalMs": 18541
+      },
+      "tokens": {
+        "inputTokens": 2638,
+        "outputTokens": 832,
+        "totalTokens": 3470,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:38:25.138Z"
+    },
+    {
+      "key": "cv_be_04.pdf::JD_MKT",
+      "cvFile": "cv_be_04.pdf",
+      "jdId": "JD_MKT",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 8,
+      "labelReason": "Chuyên gia kỹ thuật phần mềm backend, thiếu hoàn toàn kiến thức tiếp thị số, SEO và quản lý quảng cáo",
+      "expectedMissingSkills": [
+        "SEO",
+        "Google Ads",
+        "Meta Ads",
+        "Content Marketing",
+        "Google Analytics"
+      ],
+      "aiScore": 15,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "TikTok Ads",
+            "Copywriting",
+            "Email Marketing",
+            "Canva",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 6.2,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm trong lĩnh vực kỹ thuật phần mềm và phát triển backend, hoàn toàn không liên quan đến các trách nhiệm cốt lõi của công việc Digital Marketing."
+        },
+        "similarity": {
+          "score": 1,
+          "weight": 15,
+          "cosine": 0.753
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng yêu cầu về thời gian kinh nghiệm làm việc tổng thể với hơn sáu năm.",
+            "quote": "Kỹ sư phần mềm Backend với hơn 6 năm kinh nghiệm trong việc xây dựng hệ thống phân tán, xử lý tải cao và microservices"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SEO",
+            "note": "Hồ sơ không đề cập đến kỹ năng SEO."
+          },
+          {
+            "skill": "Google Ads",
+            "note": "Hồ sơ không có thông tin về Google Ads."
+          },
+          {
+            "skill": "Meta Ads",
+            "note": "Hồ sơ không ghi nhận kỹ năng Meta Ads."
+          },
+          {
+            "skill": "Content Marketing",
+            "note": "Hồ sơ hoàn toàn thiếu kinh nghiệm về Content Marketing."
+          },
+          {
+            "skill": "Google Analytics",
+            "note": "Hồ sơ không thể hiện năng lực sử dụng Google Analytics."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa số kỹ năng bắt buộc và có kinh nghiệm chuyên môn hoàn toàn không liên quan đến lĩnh vực tiếp thị số. Do đó, mức độ phù hợp với công việc này ở mức rất thấp."
+      },
+      "timings": {
+        "parseCvMs": 14309,
+        "embedMs": 563,
+        "scoreMs": 7845,
+        "explainMs": 123408,
+        "totalMs": 146125
+      },
+      "tokens": {
+        "inputTokens": 2880,
+        "outputTokens": 909,
+        "totalTokens": 3789,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:40:53.806Z"
+    },
+    {
+      "key": "cv_da_04.pdf::JD_BE",
+      "cvFile": "cv_da_04.pdf",
+      "jdId": "JD_BE",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 18,
+      "labelReason": "Chuyên về SQL và phân tích dữ liệu tài chính, chưa có minh chứng về PostgreSQL hay xây dựng backend NodeJS/NestJS, TypeScript, RESTful API và Docker",
+      "expectedMissingSkills": [
+        "NodeJS",
+        "NestJS",
+        "TypeScript",
+        "PostgreSQL",
+        "RESTful API",
+        "Docker"
+      ],
+      "aiScore": 20,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Redis",
+            "BullMQ",
+            "AWS S3",
+            "Microservices",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 5.3,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 10,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc tập trung vào lĩnh vực phân tích dữ liệu và SQL trong ngành tài chính, không có kinh nghiệm thực tế về phát triển backend với NodeJS, NestJS hay xây dựng hệ thống theo mô tả công việc."
+        },
+        "similarity": {
+          "score": 19,
+          "weight": 15,
+          "cosine": 0.782
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có hơn 5 năm kinh nghiệm làm việc trong lĩnh vực phân tích dữ liệu, được thể hiện qua việc xây dựng các mô hình phân loại.",
+            "quote": "Xây dựng các mô hình phân loại khách hàng tiềm năng và dự báo tỷ lệ nợ xấu bằng thuật toán thống kê trên Python"
+          },
+          {
+            "point": "Ứng viên có kỹ năng xử lý dữ liệu và tối ưu hóa truy vấn thông qua kinh nghiệm làm việc với SQL.",
+            "quote": "Tối ưu hóa hơn 100 thủ tục lưu trữ SQL (Stored Procedures), giảm 50% thời gian xử lý dữ liệu cuối ngày"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NodeJS",
+            "note": "CV không đề cập đến kỹ năng NodeJS."
+          },
+          {
+            "skill": "NestJS",
+            "note": "CV không đề cập đến kỹ năng NestJS."
+          },
+          {
+            "skill": "TypeScript",
+            "note": "CV không đề cập đến kỹ năng TypeScript."
+          },
+          {
+            "skill": "PostgreSQL",
+            "note": "CV không đề cập đến kỹ năng PostgreSQL."
+          },
+          {
+            "skill": "RESTful API",
+            "note": "CV không đề cập đến kỹ năng RESTful API."
+          },
+          {
+            "skill": "Docker",
+            "note": "CV không đề cập đến kỹ năng Docker."
+          }
+        ],
+        "summary": "Ứng viên có kinh nghiệm làm việc dài hạn trong lĩnh vực phân tích dữ liệu nhưng hoàn toàn thiếu các kỹ năng kỹ thuật backend cốt lõi theo yêu cầu của công việc. Do thiếu hơn một nửa số kỹ năng bắt buộc, ứng viên chưa đáp ứng được các tiêu chí kỹ thuật của vị trí này."
+      },
+      "timings": {
+        "parseCvMs": 2361,
+        "embedMs": 573,
+        "scoreMs": 2008,
+        "explainMs": 50961,
+        "totalMs": 55903
+      },
+      "tokens": {
+        "inputTokens": 2774,
+        "outputTokens": 939,
+        "totalTokens": 3713,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:44:18.142Z"
+    },
+    {
+      "key": "cv_mkt_04.pdf::JD_DA",
+      "cvFile": "cv_mkt_04.pdf",
+      "jdId": "JD_DA",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 22,
+      "labelReason": "Có kinh nghiệm phân tích hiệu quả marketing bằng Google Analytics nhưng chưa có minh chứng về SQL, Python, PowerBI và Statistics",
+      "expectedMissingSkills": [
+        "SQL",
+        "Python",
+        "PowerBI",
+        "Statistics"
+      ],
+      "aiScore": 18,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics",
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Tableau",
+            "Pandas",
+            "ETL",
+            "BigQuery",
+            "Data Modeling"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 5.4,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc trong lĩnh vực Digital Marketing, không có kỹ năng và kinh nghiệm liên quan đến phân tích dữ liệu, SQL hay Python như yêu cầu của công việc."
+        },
+        "similarity": {
+          "score": 23,
+          "weight": 15,
+          "cosine": 0.788
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có hơn 5 năm kinh nghiệm làm việc, đáp ứng tốt yêu cầu về thâm niên của vị trí.",
+            "quote": "Chuyên gia Digital Marketing với hơn 5 năm kinh nghiệm dẫn dắt các chiến dịch tăng trưởng số lượng người dùng cho"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SQL",
+            "note": "Hồ sơ không đề cập đến kỹ năng viết và tối ưu hóa các truy vấn SQL."
+          },
+          {
+            "skill": "Python",
+            "note": "Hồ sơ không có thông tin về việc sử dụng ngôn ngữ lập trình Python."
+          },
+          {
+            "skill": "PowerBI",
+            "note": "Hồ sơ thiếu kỹ năng xây dựng bảng điều khiển trực quan hóa trên PowerBI."
+          },
+          {
+            "skill": "Data Analysis",
+            "note": "Hồ sơ tập trung vào lĩnh vực digital marketing thay vì phân tích dữ liệu."
+          },
+          {
+            "skill": "Statistics",
+            "note": "Hồ sơ không thể hiện năng lực thực hiện phân tích thống kê chuyên sâu."
+          },
+          {
+            "skill": "NumPy",
+            "note": "Hồ sơ không đề cập đến thư viện tính toán NumPy."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa số kỹ năng bắt buộc của công việc, đặc biệt là các kỹ năng cốt lõi về phân tích dữ liệu và lập trình. Do đó, hồ sơ này không phù hợp với các yêu cầu chuyên môn của vị trí."
+      },
+      "timings": {
+        "parseCvMs": 1989,
+        "embedMs": 569,
+        "scoreMs": 4763,
+        "explainMs": 20406,
+        "totalMs": 27726
+      },
+      "tokens": {
+        "inputTokens": 2745,
+        "outputTokens": 892,
+        "totalTokens": 3637,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:44:48.425Z"
+    },
+    {
+      "key": "cv_be_03.pdf::JD_DA",
+      "cvFile": "cv_be_03.pdf",
+      "jdId": "JD_DA",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 20,
+      "labelReason": "Lập trình viên backend, có kiến thức cơ sở dữ liệu nhưng không có kinh nghiệm trực quan hóa PowerBI và phân tích dữ liệu thống kê",
+      "expectedMissingSkills": [
+        "Python",
+        "PowerBI",
+        "Data Analysis",
+        "Statistics"
+      ],
+      "aiScore": 20,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SQL",
+            "Python",
+            "PowerBI",
+            "Data Analysis",
+            "Statistics",
+            "NumPy"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Tableau",
+            "Pandas",
+            "ETL",
+            "BigQuery",
+            "Data Modeling"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.6,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 10,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc tập trung hoàn toàn vào phát triển Backend và cơ sở dữ liệu với Node.js và PostgreSQL, không có kinh nghiệm về phân tích dữ liệu, Python, PowerBI hay thống kê theo yêu cầu của công việc."
+        },
+        "similarity": {
+          "score": 19,
+          "weight": 15,
+          "cosine": 0.782
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng tốt yêu cầu về số năm kinh nghiệm làm việc trong lĩnh vực kỹ thuật phần mềm.",
+            "quote": "Kỹ sư Backend hơn 3.5 năm kinh nghiệm chuyên sâu với hệ sinh thái JavaScript/ TypeScript (NodeJS, NestJS)"
+          },
+          {
+            "point": "Ứng viên có kỹ năng làm việc với cơ sở dữ liệu quan hệ được nêu trong hồ sơ.",
+            "quote": "Có thế mạnh thiết kế cơ sở dữ liệu quan hệ PostgreSQL, tối ưu hóa truy vấn SQL phức tạp"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SQL",
+            "note": "Hồ sơ không thể hiện kinh nghiệm thực tế về SQL theo yêu cầu của công việc phân tích dữ liệu."
+          },
+          {
+            "skill": "Python",
+            "note": "Hồ sơ không đề cập đến ngôn ngữ lập trình Python."
+          },
+          {
+            "skill": "PowerBI",
+            "note": "Hồ sơ không có thông tin về công cụ PowerBI."
+          },
+          {
+            "skill": "Data Analysis",
+            "note": "Hồ sơ thiếu kinh nghiệm thực hiện phân tích dữ liệu."
+          },
+          {
+            "skill": "Statistics",
+            "note": "Hồ sơ không hiển thị kiến thức hoặc kỹ năng về thống kê."
+          },
+          {
+            "skill": "NumPy",
+            "note": "Hồ sơ không đề cập đến thư viện NumPy."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa số kỹ năng bắt buộc cho vị trí này do kinh nghiệm tập trung vào phát triển Backend với Node.js và PostgreSQL thay vì phân tích dữ liệu. Do đó, mức độ phù hợp với công việc ở mức thấp."
+      },
+      "timings": {
+        "parseCvMs": 4443,
+        "embedMs": 556,
+        "scoreMs": 3535,
+        "explainMs": 37172,
+        "totalMs": 45707
+      },
+      "tokens": {
+        "inputTokens": 2865,
+        "outputTokens": 1031,
+        "totalTokens": 3896,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:51:23.739Z"
+    },
+    {
+      "key": "cv_da_03.pdf::JD_BE",
+      "cvFile": "cv_da_03.pdf",
+      "jdId": "JD_BE",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 16,
+      "labelReason": "Chuyên viên phân tích số liệu, không có kinh nghiệm lập trình backend với NodeJS/NestJS và xây dựng kiến trúc API",
+      "expectedMissingSkills": [
+        "NodeJS",
+        "NestJS",
+        "TypeScript",
+        "RESTful API",
+        "Docker"
+      ],
+      "aiScore": 27,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 17,
+          "weight": 35,
+          "matched": [
+            "PostgreSQL"
+          ],
+          "missing": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "RESTful API",
+            "Docker"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Redis",
+            "BullMQ",
+            "AWS S3",
+            "Microservices",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3.2,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 10,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc tập trung vào lĩnh vực phân tích dữ liệu và SQL chứ không phải phát triển backend, do đó không có sự trùng lặp với các trách nhiệm cốt lõi của công việc."
+        },
+        "similarity": {
+          "score": 26,
+          "weight": 15,
+          "cosine": 0.795
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có kỹ năng làm việc với PostgreSQL, đáp ứng một phần yêu cầu về cơ sở dữ liệu.",
+            "quote": "Viết truy vấn SQL phức tạp kết nối nhiều nguồn dữ liệu trên PostgreSQL và Snowflake để"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NodeJS",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng NodeJS."
+          },
+          {
+            "skill": "NestJS",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng NestJS."
+          },
+          {
+            "skill": "TypeScript",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng TypeScript."
+          },
+          {
+            "skill": "RESTful API",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng RESTful API."
+          },
+          {
+            "skill": "Docker",
+            "note": "Hồ sơ của ứng viên không đề cập đến kỹ năng Docker."
+          }
+        ],
+        "summary": "Ứng viên có kinh nghiệm chuyên môn về phân tích dữ liệu và SQL nhưng thiếu hơn một nửa số kỹ năng bắt buộc cho vị trí kỹ sư backend, bao gồm NodeJS, NestJS, TypeScript, RESTful API và Docker. Do đó, điểm số tổng thể bị giới hạn và ứng viên không phù hợp với các trách nhiệm cốt lõi của công việc."
+      },
+      "timings": {
+        "parseCvMs": 89004,
+        "embedMs": 563,
+        "scoreMs": 5538,
+        "explainMs": 1837,
+        "totalMs": 96943
+      },
+      "tokens": {
+        "inputTokens": 2684,
+        "outputTokens": 798,
+        "totalTokens": 3482,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-24T14:53:03.259Z"
+    },
+    {
+      "key": "cv_mkt_03.pdf::JD_BE",
+      "cvFile": "cv_mkt_03.pdf",
+      "jdId": "JD_BE",
+      "split": "test",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 5,
+      "labelReason": "Chuyên môn về tiếp thị kỹ thuật số, lệch hoàn toàn so với yêu cầu phát triển phần mềm backend",
+      "expectedMissingSkills": [
+        "NodeJS",
+        "NestJS",
+        "TypeScript",
+        "PostgreSQL",
+        "RESTful API",
+        "Docker"
+      ],
+      "aiScore": 16,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "NodeJS",
+            "NestJS",
+            "TypeScript",
+            "PostgreSQL",
+            "RESTful API",
+            "Docker"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "Redis",
+            "BullMQ",
+            "AWS S3",
+            "Microservices",
+            "GraphQL"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 3,
+          "requiredYears": 3
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm làm việc trong lĩnh vực Digital Marketing, hoàn toàn không liên quan đến công việc phát triển phần mềm và các trách nhiệm backend yêu cầu."
+        },
+        "similarity": {
+          "score": 4,
+          "weight": 15,
+          "cosine": 0.757
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên đáp ứng đủ số năm kinh nghiệm chung yêu cầu cho công việc.",
+            "quote": "Chuyên viên Digital Marketing với 3 năm kinh nghiệm thực chiến trong các chiến dịch tiếp thị số đa kênh"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "NodeJS",
+            "note": "Hồ sơ không đề cập đến kỹ năng NodeJS."
+          },
+          {
+            "skill": "NestJS",
+            "note": "Hồ sơ không đề cập đến kỹ năng NestJS."
+          },
+          {
+            "skill": "TypeScript",
+            "note": "Hồ sơ không đề cập đến kỹ năng TypeScript."
+          },
+          {
+            "skill": "PostgreSQL",
+            "note": "Hồ sơ không đề cập đến kỹ năng PostgreSQL."
+          },
+          {
+            "skill": "RESTful API",
+            "note": "Hồ sơ không đề cập đến kỹ năng RESTful API."
+          },
+          {
+            "skill": "Docker",
+            "note": "Hồ sơ không đề cập đến kỹ năng Docker."
+          }
+        ],
+        "summary": "Ứng viên thiếu hơn một nửa số kỹ năng bắt buộc và toàn bộ kinh nghiệm đều nằm trong lĩnh vực Digital Marketing, không phù hợp với các trách nhiệm backend. Do đó, mức độ phù hợp với công việc ở mức rất thấp."
+      },
+      "timings": {
+        "parseCvMs": 1861,
+        "embedMs": 390,
+        "scoreMs": 843,
+        "explainMs": 1716,
+        "totalMs": 4811
+      },
+      "tokens": {
+        "inputTokens": 2696,
+        "outputTokens": 724,
+        "totalTokens": 3420,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-25T02:06:33.553Z"
+    },
+    {
+      "key": "cv_be_01.pdf::JD_MKT",
+      "cvFile": "cv_be_01.pdf",
+      "jdId": "JD_MKT",
+      "split": "dev",
+      "label": "không phù hợp",
+      "confidence": "chắc",
+      "expectedScore": 6,
+      "labelReason": "Kỹ sư phần mềm backend, hoàn toàn không có kỹ năng tiếp thị số, SEO, quảng cáo trực tuyến và sáng tạo nội dung",
+      "expectedMissingSkills": [
+        "SEO",
+        "Google Ads",
+        "Meta Ads",
+        "Content Marketing",
+        "Google Analytics"
+      ],
+      "aiScore": 15,
+      "breakdown": {
+        "requiredSkills": {
+          "score": 0,
+          "weight": 35,
+          "matched": [],
+          "missing": [
+            "SEO",
+            "Google Ads",
+            "Meta Ads",
+            "Content Marketing",
+            "Google Analytics"
+          ]
+        },
+        "preferredSkills": {
+          "score": 0,
+          "weight": 10,
+          "matched": [],
+          "missing": [
+            "TikTok Ads",
+            "Copywriting",
+            "Email Marketing",
+            "Canva",
+            "A/B Testing"
+          ]
+        },
+        "experienceYears": {
+          "score": 100,
+          "weight": 15,
+          "candidateYears": 4.5,
+          "requiredYears": 2
+        },
+        "relevance": {
+          "score": 0,
+          "weight": 25,
+          "comment": "Ứng viên có kinh nghiệm chuyên sâu về lập trình backend, không có liên quan đến các kỹ năng và trách nhiệm của vị trí Digital Marketing."
+        },
+        "similarity": {
+          "score": 0,
+          "weight": 15,
+          "cosine": 0.749
+        },
+        "capped": true
+      },
+      "explanation": {
+        "strengths": [
+          {
+            "point": "Ứng viên có số năm kinh nghiệm thực tế vượt yêu cầu tối thiểu của vị trí.",
+            "quote": "Senior Backend Engineer with 4.5 years of hands-on experience designing and building"
+          }
+        ],
+        "gaps": [
+          {
+            "skill": "SEO",
+            "note": "CV không đề cập đến kỹ năng SEO."
+          },
+          {
+            "skill": "Google Ads",
+            "note": "CV không thể hiện kinh nghiệm làm việc với Google Ads."
+          },
+          {
+            "skill": "Meta Ads",
+            "note": "Hồ sơ không có thông tin về Meta Ads."
+          },
+          {
+            "skill": "Content Marketing",
+            "note": "Không tìm thấy kinh nghiệm liên quan đến Content Marketing trong CV."
+          },
+          {
+            "skill": "Google Analytics",
+            "note": "Ứng viên thiếu kinh nghiệm sử dụng Google Analytics."
+          }
+        ],
+        "summary": "Ứng viên không phù hợp với vị trí này do hồ sơ tập trung hoàn toàn vào lĩnh vực lập trình backend và thiếu hơn một nửa số kỹ năng cốt lõi được yêu cầu cho công việc Digital Marketing. Điểm số bị giới hạn vì không có kỹ năng chuyên môn nào phù hợp với yêu cầu tuyển dụng."
+      },
+      "timings": {
+        "parseCvMs": 1781,
+        "embedMs": 548,
+        "scoreMs": 3114,
+        "explainMs": 1605,
+        "totalMs": 7049
+      },
+      "tokens": {
+        "inputTokens": 2817,
+        "outputTokens": 852,
+        "totalTokens": 3669,
+        "llmCalls": 3
+      },
+      "evaluatedAt": "2026-11-25T02:06:43.169Z"
+    }
+  ]
+}
