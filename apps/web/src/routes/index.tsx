@@ -10,10 +10,11 @@ import CandidateInterviewPlaceholderPage from '@/pages/candidate/CandidateInterv
 import CandidateJobsPage from '@/pages/candidate/CandidateJobsPage';
 import CandidateJobDetailPage from '@/pages/candidate/CandidateJobDetailPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import HRApplicationDetailPage from '@/pages/hr/HRApplicationDetailPage';
+import HRCandidatesPage from '@/pages/hr/HRCandidatesPage';
 import HRCreateJobPage from '@/pages/hr/HRCreateJobPage';
 import HREditJobPage from '@/pages/hr/HREditJobPage';
 import HRJobDetailPage from '@/pages/hr/HRJobDetailPage';
-import HRCandidatesPage from '@/pages/hr/HRCandidatesPage';
 import HRJobsPage from '@/pages/hr/HRJobsPage';
 import HRStatsPage from '@/pages/hr/HRStatsPage';
 import { GuestRoute, ProtectedRoute } from './guards';
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
           { path: 'jobs', element: <HRJobsPage /> },
           { path: 'candidates', element: <HRCandidatesPage /> },
           { path: 'jobs/:jobId/candidates', element: <HRCandidatesPage /> },
+          { path: 'applications/:id', element: <HRApplicationDetailPage /> },
           { path: 'stats', element: <HRStatsPage /> },
           { path: 'jobs/new', element: <HRCreateJobPage /> },
           { path: 'jobs/:id', element: <HRJobDetailPage /> },

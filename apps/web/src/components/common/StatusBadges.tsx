@@ -26,13 +26,20 @@ export function ApplicationStatusBadge({ status }: { status: ApplicationStatus }
 
 const recommendationIcon = { PASS: ThumbsUp, CONSIDER: HelpCircle, REJECT: ThumbsDown };
 
-export function AiRecommendationBadge({ value }: { value: AiRecommendation }) {
+export function AiRecommendationBadge({
+  value,
+  prefix,
+}: {
+  value: AiRecommendation;
+  /** VD "Đề xuất AI:" khi badge đứng riêng, không có tiêu đề cột. */
+  prefix?: string;
+}) {
   const { label, variant } = AI_RECOMMENDATION[value];
   const Icon = recommendationIcon[value];
   return (
     <Badge variant={variant}>
       <Icon />
-      {label}
+      {prefix ? `${prefix} ${label}` : label}
     </Badge>
   );
 }

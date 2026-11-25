@@ -35,17 +35,29 @@ export function useRescreenApplication(
   options: Omit<UseMutationOptions<void, Error, string>, 'mutationFn'> = {},
 ) {
   const client = useQueryClient();
+  // Làm mới cả trang chi tiết: còn cache cũ (SCREENING_FAILED) thì trang đó không tự refetch.
+  const refresh = (applicationId: string) =>
+    Promise.all([
+      client.invalidateQueries({ queryKey: queryKeys.applications.byJob(jobId) }),
+      client.invalidateQueries({ queryKey: queryKeys.applications.detail(applicationId) }),
+    ]);
   return useMutation({
     ...options,
     mutationFn: rescreenApplication,
-    onSuccess: async (...args) => {
-      await client.invalidateQueries({ queryKey: ['applications', jobId] });
+    onSuccess: async (data, applicationId, ...rest) => {
       toast.success('Đã gửi yêu cầu chấm lại CV');
-      await options.onSuccess?.(...args);
+      await refresh(applicationId);
+      await options.onSuccess?.(data, applicationId, ...rest);
     },
-    onError: (error, ...rest) => {
-      toast.error(toApiError(error).message || 'Không thể yêu cầu chấm lại CV');
-      options.onError?.(error, ...rest);
+    onError: async (error, applicationId, ...rest) => {
+      const apiError = toApiError(error);
+      toast.error(
+        apiError.status === 409
+          ? 'Hồ sơ đang được chấm hoặc đã có quyết định nên không thể chấm lại'
+          : apiError.message,
+      );
+      await refresh(applicationId);
+      await options.onError?.(error, applicationId, ...rest);
     },
   });
 }
