@@ -29,7 +29,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
-    "try": "tsdown && node --env-file-if-exists=.env scripts/try.mjs"
+    "try": "tsdown && node --env-file-if-exists=.env scripts/try.mjs",
+    "eval": "tsdown && node --env-file-if-exists=.env eval/run.ts"
   },
   "devDependencies": {
     "@types/pdfkit": "^0.17.7",
