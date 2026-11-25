@@ -433,6 +433,16 @@ Kết quả (`ScreeningOutput`) và chỗ BE lưu:
 - Tóm tắt 2 câu, khớp mức điểm; cặp bị chặn điểm có nêu "thiếu hơn một nửa số kỹ năng bắt buộc".
 - Trung bình ~5,9 s mỗi CV; bước giải thích ~1,7–2,1 s, ~1.100–1.600 token.
 
+## Đánh giá độ chính xác (W2-AI-04)
+
+Chạy `npm run eval -w packages/ai` trên toàn bộ 40 cặp CV–JD của `fixtures/labels.csv` (13 dev, 27 test; `gemini-3.5-flash-lite` + `gemini-embedding-001`, ngày tham chiếu `2026-11-01`). Quy ước 2 nhãn: `score >= ngưỡng` là "phù hợp", ngược lại là "không phù hợp" (`CONSIDER` tính là không phù hợp). Chi tiết đầy đủ nằm tại `eval/results.md` và `eval/results.json`.
+
+- **Chọn ngưỡng trên tập dev (`50 / 60 / 70 / 80`):** ngưỡng **`80`** đạt F1 cao nhất (**88,9%**, Accuracy 92,3%, Precision 100%, Recall 80,0%; các ngưỡng 50/60/70 đều F1 76,9% do 3 cặp borderline thiếu 1 kỹ năng bắt buộc đạt 74–75 điểm). → Đề xuất cập nhật `cvPassThreshold` mặc định thành **`80`**.
+- **Kết quả trên tập test (27 cặp, ngưỡng 80):** Accuracy **100,0%**, Precision **100,0%**, Recall **100,0%**, F1 **100,0%** (TP=10, FP=0, FN=0, TN=17), MAE so với `expected_score` = **8,30 điểm**. Cả 3 JD (`JD_BE`, `JD_DA`, `JD_MKT`) và nhóm `confidence = chưa chắc` trên tập test (5 cặp) đều đạt 100%; tính chung cả dev + test ở nhóm `chưa chắc` (9 cặp) đạt Accuracy 88,9%, F1 80,0%.
+- **Độ ổn định (5 CV × 3 lần chạy):** độ lệch lớn nhất **±3 điểm** (`cv_be_01`: 0, `cv_be_05`: 1, `cv_da_01`: 3, `cv_da_06`: 2, `cv_mkt_01`: 1) — đạt mục tiêu `≤ ±5`.
+- **Chi phí & thời gian:** trung bình **3.387 tokens** LLM mỗi CV (2.613 input + 774 output; embedding không trả `tokenCount`). Thời gian trung bình 40 cặp ghi nhận `44,9 s` do nhiều đợt `503 UNAVAILABLE` giờ cao điểm kích hoạt retry; ở lượt không gặp `503` (các lượt đo độ ổn định), mỗi CV mất khoảng **4,2–7,4 s**.
+- **Hạn chế:** nhãn do 1 người gán, bộ dữ liệu nhỏ (30 CV / 40 cặp), và toàn bộ CV là dữ liệu giả lập.
+
 ## Scripts
 
 Chạy từ thư mục gốc repo:
@@ -456,6 +466,7 @@ Chạy từ thư mục gốc repo:
 | `npm run try -w packages/ai -- score [all]` | `scoreCv` trên 13 cặp CV ↔ JD tập dev của `labels.csv` (`all`: 40 cặp), so với `expected_score` và nhãn theo ngưỡng của job |
 | `npm run try -w packages/ai -- score repeat <cv> [số lần] [--full]` | Chấm một CV nhiều lần (mặc định 3), kiểm tra chênh ≤ 5; `--full` parse + embed lại mỗi lần |
 | `npm run try -w packages/ai -- screen [dev \| <cv...>]` | `screenCv` trên 3 cặp dev (phù hợp / borderline / khác ngành); `dev`: 13 cặp tập dev; hoặc CV chỉ định (ghép JD theo `labels.csv`). In giải thích, tự kiểm tra 2–4 điểm mạnh, `gaps` khớp `breakdown`, không lộ thông tin cá nhân |
+| `npm run eval -w packages/ai` | Chạy đánh giá độ chính xác trên 40 cặp `fixtures/labels.csv` + đo độ ổn định 5 CV × 3 lần (có cache trung gian `.cache/eval-cache.json` để resume khi gặp giới hạn quota), xuất `eval/results.md` và `eval/results.json` |
 
 `npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT` (demo `embed` và `score` cần thêm `GEMINI_MODEL_EMBEDDING`). Free tier dễ chạm giới hạn số lần gọi mỗi phút:
 tăng `TRY_DELAY_MS` (vd. `$env:TRY_DELAY_MS='12000'`) nếu gặp `AI_RATE_LIMIT`.

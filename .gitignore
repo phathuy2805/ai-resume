@@ -19,5 +19,9 @@ skills-lock.json
 src/generated
 generated
 
+# Eval intermediate cache
+packages/ai/eval/.cache
+
 # Markdown files
 *.md
+!packages/ai/eval/results.md
