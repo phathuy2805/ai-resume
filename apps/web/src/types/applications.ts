@@ -175,3 +175,17 @@ export interface CvUrlResult {
   url: string;
   expiresInSec: number;
 }
+
+/** GET /jobs/:jobId/stats — tổng hợp hồ sơ của một job (W2-BE-04). */
+export interface JobStats {
+  totalApplications: number;
+  byStatus: Record<ApplicationStatus, number>;
+  /** 10 khoảng điểm cố định: "0-9", "10-19", …, "90-100". */
+  scoreDistribution: { range: string; count: number }[];
+  /** `unrated`: hồ sơ chưa có đề xuất AI (chưa chấm xong hoặc chấm lỗi). */
+  byRecommendation: { PASS: number; CONSIDER: number; REJECT: number; unrated: number };
+  /** PASS / số hồ sơ đã chấm, dạng 0–1. */
+  aiPassRate: number;
+  /** Tỷ lệ HR đồng ý với AI (chỉ tính PASS/REJECT đã có quyết định), dạng 0–1; null khi chưa có. */
+  hrAgreementRate: number | null;
+}

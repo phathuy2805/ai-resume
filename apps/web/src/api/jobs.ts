@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/axios';
 import type { ApiResponse, PaginatedResponse } from '@/types/api';
 import type { Job, PublicJob, JobsParams, CreateJobRequest, UpdateJobRequest } from '@/types/jobs';
+import type { JobStats } from '@/types/applications';
 import { paginated, unwrap } from './response';
 
 export async function getJobs(
@@ -48,5 +49,15 @@ export async function closeJob(id: string): Promise<Job> {
 export async function reopenJob(id: string): Promise<Job> {
   return unwrap(
     (await apiClient.patch<ApiResponse<Job>>(`/jobs/${encodeURIComponent(id)}/reopen`)).data,
+  );
+}
+/** HR-only aggregates for one of their own jobs. */
+export async function getJobStats(jobId: string, signal?: AbortSignal): Promise<JobStats> {
+  return unwrap(
+    (
+      await apiClient.get<ApiResponse<JobStats>>(`/jobs/${encodeURIComponent(jobId)}/stats`, {
+        signal,
+      })
+    ).data,
   );
 }
