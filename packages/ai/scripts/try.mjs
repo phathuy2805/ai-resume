@@ -19,6 +19,8 @@
 //   npm run try -w packages/ai -- screen       # screenCv trên 3 cặp dev: phù hợp / borderline / khác ngành (W2-AI-03)
 //   npm run try -w packages/ai -- screen dev   # như trên với cả 13 cặp tập dev
 //   npm run try -w packages/ai -- screen cv_be_06.pdf [...]   # CV chỉ định, ghép JD theo labels.csv
+//   npm run try -w packages/ai -- questions    # generateQuestionPlan trên 3 cặp dev (5 / 4 / 3 câu) (W3-AI-01)
+//   npm run try -w packages/ai -- questions cv_be_06.pdf [...]   # CV chỉ định, ghép JD theo labels.csv
 //
 // Chỉ chỉnh prompt dựa trên tập dev. "parse-cv all" chỉ dùng để xác nhận sau khi đã chốt prompt.
 // Nghỉ giữa các lần gọi Gemini: TRY_DELAY_MS (mặc định 2000) để không vượt quota.
@@ -40,6 +42,7 @@ import {
   embedJd,
   embedText,
   extractCvText,
+  generateQuestionPlan,
   scoreCv,
   screenCv,
   ScreeningStepError,
@@ -961,6 +964,96 @@ async function screenDemo() {
   if (failedChecks > 0) process.exitCode = 1;
 }
 
+// ── Demo questions: generateQuestionPlan trên fixtures (W3-AI-01) ───────
+
+/** Từ ngữ về thông tin cá nhân không được hỏi (so sau khi bỏ dấu). */
+const FORBIDDEN_TOPICS = /\b(tuoi|gioi tinh|gia dinh|que quan|ket hon|vo chong|con cai|ton giao)\b/;
+const foldText = (text) =>
+  text.normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/gi, 'd').toLowerCase();
+const wordCount = (text) => text.split(/\s+/).filter(Boolean).length;
+
+async function questionsDemo() {
+  const delayMs = Number(process.env.TRY_DELAY_MS ?? 2000);
+  const rows = screenRows(process.argv.slice(3));
+  const counts = [5, 4, 3];
+
+  const jds = {};
+  for (const name of new Set(rows.map((row) => jdNameOf(row.jd_id)))) {
+    const jd = readFixtureJd(name);
+    const parsedJd = await parseJd(ai, {
+      title: jd.title,
+      description: descriptionOf(jd),
+      requiredSkills: jd.requiredSkills,
+      preferredSkills: jd.preferredSkills,
+      minYearsExperience: jd.minYearsExperience,
+      level: jd.level,
+    });
+    jds[name] = { title: jd.title, parsedJd };
+    await sleep(delayMs);
+  }
+
+  for (const [i, row] of rows.entries()) {
+    if (i > 0) await sleep(delayMs);
+    const jd = jds[jdNameOf(row.jd_id)];
+    const bytes = new Uint8Array(readFileSync(path.join(FIXTURES_DIR, 'cvs', row.cv_file)));
+    const { text } = await extractCvText(bytes, { logger: quietLogger });
+    const parsedCv = await parseCv(ai, text, { referenceDate: FIXTURE_REFERENCE_DATE });
+    await sleep(delayMs);
+
+    // Kỹ năng bắt buộc còn thiếu, tính như breakdown.requiredSkills.missing (không gọi Gemini).
+    const have = new Set(normalizeSkills(parsedCv.skills).map((skill) => skill.toLowerCase()));
+    const missingSkills = normalizeSkills(jd.parsedJd.requiredSkills).filter(
+      (skill) => !have.has(skill.toLowerCase()),
+    );
+    const count = counts[i % counts.length];
+
+    const started = Date.now();
+    const plan = await generateQuestionPlan(ai, {
+      parsedJd: jd.parsedJd,
+      parsedCv,
+      missingSkills,
+      count,
+      jobTitle: jd.title,
+    });
+    const ms = Date.now() - started;
+
+    console.log(
+      `\n── ${row.cv_file} ↔ ${row.jd_id} (${row.label}): ${count} câu, ${ms} ms` +
+        `\n   Kỹ năng bắt buộc còn thiếu: ${missingSkills.join(', ') || '(không)'}`,
+    );
+    for (const item of plan) {
+      console.log(
+        `   ${item.order}. [${item.type} · ${item.targetSkill}] ${item.question} (${wordCount(item.question)} từ)`,
+      );
+    }
+
+    const missingKeys = new Set(missingSkills.map((skill) => skill.toLowerCase()));
+    check(plan.length === count, `đúng ${count} câu`, String(plan.length));
+    check(
+      plan.every((item, index) => item.order === index + 1),
+      'order liên tục 1..count',
+    );
+    check(
+      plan.every((item) => wordCount(item.question) < 30),
+      'mọi câu dưới 30 từ',
+    );
+    check(
+      missingSkills.length === 0 ||
+        plan.some((item) => missingKeys.has(item.targetSkill.toLowerCase())),
+      'có câu về kỹ năng còn thiếu',
+    );
+    check(
+      plan.some((item) => item.type === 'EXPERIENCE'),
+      'có câu EXPERIENCE (dựa trên CV)',
+    );
+    check(
+      plan.every((item) => !FORBIDDEN_TOPICS.test(foldText(item.question))),
+      'không hỏi thông tin cá nhân',
+    );
+  }
+  if (failedChecks > 0) process.exitCode = 1;
+}
+
 const demos = {
   text: () => ai.generateText('Trả lời trong 1 câu: thủ đô của Việt Nam là gì?'),
   structured: () =>
@@ -975,6 +1068,7 @@ const demos = {
   embed: embedDemo,
   score: scoreDemo,
   screen: screenDemo,
+  questions: questionsDemo,
 };
 
 /** Gợi ý cách xử lý cho các lỗi hay gặp khi chạy thử. */
