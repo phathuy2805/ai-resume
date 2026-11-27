@@ -64,6 +64,7 @@ export const envSchema = z
     GEMINI_MODEL_AUDIO: optionalWithDefault('gemini-2.5-flash'),
     AI_QUEUE_CONCURRENCY: z.coerce.number().int().min(1).default(2),
     AI_CONSIDER_MARGIN: z.coerce.number().int().min(0).max(100).default(10),
+    INTERVIEW_INVITE_TTL_DAYS: z.coerce.number().int().min(1).default(7),
   })
   .refine((env) => !env.S3_ACCESS_KEY === !env.S3_SECRET_KEY, {
     message: 'Phải khai báo cả S3_ACCESS_KEY và S3_SECRET_KEY, hoặc bỏ trống cả hai',
