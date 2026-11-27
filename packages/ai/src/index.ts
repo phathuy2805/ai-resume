@@ -9,6 +9,8 @@ export type {
   GenerateTextOptions,
   GenerateStructuredOptions,
   EmbedOptions,
+  InlineFile,
+  StructuredPrompt,
 } from './client.js';
 export type { AiClientOptions, AiModels } from './config.js';
 export type { AiLogger } from './logger.js';
@@ -102,3 +104,13 @@ export type {
   GenerateQuestionPlanInput,
   GenerateQuestionPlanOptions,
 } from './interview-questions.js';
+
+// Chuyển giọng nói thành chữ (W3-BE-02 Phần 1)
+export {
+  transcribe,
+  SttError,
+  isSttError,
+  SUPPORTED_AUDIO_MIME_TYPES,
+  MAX_AUDIO_BYTES,
+} from './stt.js';
+export type { SttErrorCode, SupportedAudioMimeType, TranscribeOptions } from './stt.js';

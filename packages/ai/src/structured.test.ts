@@ -187,6 +187,57 @@ describe('generateStructured', () => {
     expect(api.generateContent).toHaveBeenCalledTimes(1);
   });
 
+  it('prompt kèm file: gửi file inline (base64) trước phần chữ', async () => {
+    const { client, api } = setup(async () => fakeResponse(valid));
+    const audio = new Uint8Array([1, 2, 3, 4]);
+
+    await client.generateStructured(
+      { text: 'Chép lại lời nói', files: [{ mimeType: 'audio/wav', data: audio }] },
+      CandidateSchema,
+    );
+
+    const params = api.generateContent.mock.calls[0]![0] as GenerateContentParameters;
+    expect(params.contents).toEqual([
+      {
+        role: 'user',
+        parts: [
+          { inlineData: { mimeType: 'audio/wav', data: Buffer.from(audio).toString('base64') } },
+          { text: 'Chép lại lời nói' },
+        ],
+      },
+    ]);
+  });
+
+  it('options.model = "audio" dùng model audio; không truyền thì dùng model text', async () => {
+    const { client, api, lines } = setup(async () => fakeResponse(valid));
+
+    await client.generateStructured('p', CandidateSchema, { model: 'audio', temperature: 0 });
+    await client.generateStructured('p', CandidateSchema);
+
+    const [first, second] = api.generateContent.mock.calls.map(
+      ([params]) => params as GenerateContentParameters,
+    );
+    expect(first!.model).toBe('audio-model');
+    expect(first!.config).not.toHaveProperty('model');
+    expect(second!.model).toBe('text-model');
+    expect(lines[0]).toContain('model=audio-model');
+  });
+
+  it('log không chứa dữ liệu file gửi kèm', async () => {
+    const { client, lines } = setup(async () => fakeResponse(valid));
+    const audio = new TextEncoder().encode(SECRET_NAME);
+
+    await client.generateStructured(
+      { text: 'p', files: [{ mimeType: 'audio/wav', data: audio }] },
+      CandidateSchema,
+      { model: 'audio' },
+    );
+
+    const log = lines.join('\n');
+    expect(log).not.toContain(SECRET_NAME);
+    expect(log).not.toContain(Buffer.from(audio).toString('base64'));
+  });
+
   it('schema không đổi được: báo AiConfigError trước khi gọi Gemini', async () => {
     const { client, api } = setup(async () => fakeResponse(valid));
 

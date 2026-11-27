@@ -22,6 +22,9 @@ generated
 # Eval intermediate cache
 packages/ai/eval/.cache
 
+# Ghi âm thật để chạy thử transcribe (giọng người thật, không commit)
+packages/ai/fixtures/audio
+
 # Markdown files
 *.md
 !packages/ai/eval/results.md

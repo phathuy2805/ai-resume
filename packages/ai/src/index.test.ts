@@ -15,12 +15,15 @@ describe('public API (src/index.ts)', () => {
       'DEFAULT_SCORING_CONFIG',
       'EMBEDDING_DIMENSIONS',
       'EMBEDDING_TASK_TYPE',
+      'MAX_AUDIO_BYTES',
       'MAX_INTERVIEW_QUESTIONS',
       'MIN_INTERVIEW_QUESTIONS',
       'ParsedCvSchema',
       'ParsedJdSchema',
       'QUESTION_TYPES',
+      'SUPPORTED_AUDIO_MIME_TYPES',
       'ScreeningStepError',
+      'SttError',
       'buildCvEmbeddingText',
       'buildJdEmbeddingText',
       'calculateTotalYearsExperience',
@@ -33,6 +36,7 @@ describe('public API (src/index.ts)', () => {
       'generateQuestionPlan',
       'isAiError',
       'isCvExtractionError',
+      'isSttError',
       'normalizeLevel',
       'normalizeSkill',
       'normalizeSkills',
@@ -40,6 +44,7 @@ describe('public API (src/index.ts)', () => {
       'parseJd',
       'scoreCv',
       'screenCv',
+      'transcribe',
     ]);
   });
 });
