@@ -1,4 +1,17 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  Req,
+  Res,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import type { CookieOptions, Request, Response } from 'express';
 import envConfig from '../../shared/config/env.config.js';
 import { REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH } from '../../shared/constants/auth.constant.js';
@@ -9,23 +22,36 @@ import { UserAgent } from '../../shared/decorators/user-agent.decorator.js';
 import { getRefreshTokenExpiresInMs } from '../../shared/utils/time.util.js';
 import {
   ApiAuthController,
+  ApiChangePasswordDoc,
+  ApiDeleteAvatarDoc,
+  ApiForgotPasswordDoc,
   ApiGetProfileDoc,
   ApiLoginDoc,
   ApiLogoutDoc,
   ApiRefreshTokenDoc,
   ApiRegisterDoc,
+  ApiResetPasswordDoc,
+  ApiUpdateProfileDoc,
+  ApiUploadAvatarDoc,
 } from './auth.docs.js';
 import {
+  ChangePasswordBodyDto,
+  ForgotPasswordBodyDto,
   GetProfileResDto,
   LoginBodyDto,
   LoginResDto,
   LogoutResDto,
+  MessageResDto,
   RefreshTokenBodyDto,
   RefreshTokenResDto,
   RegisterBodyDto,
   RegisterResDto,
+  ResetPasswordBodyDto,
+  UpdateProfileBodyDto,
+  UpdateProfileResDto,
 } from './auth.dto.js';
 import { AuthService } from './auth.service.js';
+import { AvatarUploadInterceptor } from './avatar-upload.interceptor.js';
 
 @ApiAuthController()
 @Controller('auth')
@@ -37,8 +63,6 @@ export class AuthController {
   @ApiRegisterDoc()
   async register(
     @Body() body: RegisterBodyDto,
-    // passthrough: true cho phép gắn cookie qua res
-    // nhưng vẫn để NestJS tự xử lý giá trị return
     @Res({ passthrough: true }) res: Response,
     @UserAgent() userAgent?: string,
     @ClientIp() ip?: string,
@@ -74,6 +98,70 @@ export class AuthController {
     return this.authService.getProfile(userId);
   }
 
+  @Patch('me')
+  @ApiUpdateProfileDoc()
+  async updateProfile(
+    @CurrentUser('id') userId: string,
+    @Body() body: UpdateProfileBodyDto,
+  ): Promise<UpdateProfileResDto> {
+    return this.authService.updateProfile(userId, body);
+  }
+
+  @Post('me/avatar')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(AvatarUploadInterceptor)
+  @ApiUploadAvatarDoc()
+  async uploadAvatar(
+    @CurrentUser('id') userId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ): Promise<UpdateProfileResDto> {
+    return this.authService.updateAvatar(userId, file);
+  }
+
+  @Delete('me/avatar')
+  @ApiDeleteAvatarDoc()
+  async deleteAvatar(@CurrentUser('id') userId: string): Promise<UpdateProfileResDto> {
+    return this.authService.deleteAvatar(userId);
+  }
+
+  @Patch('change-password')
+  @ApiChangePasswordDoc()
+  async changePassword(
+    @CurrentUser('id') userId: string,
+    @Body() body: ChangePasswordBodyDto,
+    @Res({ passthrough: true }) res: Response,
+    @UserAgent() userAgent?: string,
+    @ClientIp() ip?: string,
+  ): Promise<MessageResDto> {
+    const { message, refreshToken } = await this.authService.changePassword(userId, body, {
+      userAgent,
+      ip,
+    });
+    this.setRefreshCookie(res, refreshToken);
+    return { message };
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiForgotPasswordDoc()
+  async forgotPassword(@Body() body: ForgotPasswordBodyDto): Promise<MessageResDto> {
+    return this.authService.forgotPassword(body);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiResetPasswordDoc()
+  async resetPassword(
+    @Body() body: ResetPasswordBodyDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<MessageResDto> {
+    const result = await this.authService.resetPassword(body);
+    res.clearCookie(REFRESH_COOKIE_NAME, this.getRefreshCookieBaseOptions());
+    return result;
+  }
+
   @Public()
   @Post('refresh')
   @ApiRefreshTokenDoc()
@@ -107,7 +195,6 @@ export class AuthController {
     return result;
   }
 
-  //Utility
   private extractRefreshToken(req: Request, body?: RefreshTokenBodyDto): string | undefined {
     const cookies = req.cookies as Record<string, string | undefined> | undefined;
     return cookies?.[REFRESH_COOKIE_NAME] ?? body?.refreshToken;

@@ -1,6 +1,7 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import envConfig from '../config/env.config.js';
+import { buildPasswordResetOtpEmail } from './email-templates.js';
 import {
   DEFAULT_MAIL_RETRY_DELAY_MS,
   DEMO_EMAIL_DOMAIN,
@@ -12,6 +13,13 @@ export interface SendEmailPayload {
   subject: string;
   html: string;
   text: string;
+}
+
+export interface SendPasswordResetOtpInput {
+  to: string;
+  fullName: string;
+  otp: string;
+  expiresInMinutes: number;
 }
 
 export type SendEmailResult =
@@ -108,6 +116,18 @@ export class MailService {
       `Gửi email thất bại sau khi thử lại tới ${recipient} (${payload.subject}): ${lastError}`,
     );
     return { status: 'failed', error: lastError };
+  }
+
+  sendPasswordResetOtp(input: SendPasswordResetOtpInput): Promise<SendEmailResult> {
+    const template = buildPasswordResetOtpEmail({
+      fullName: input.fullName,
+      otp: input.otp,
+      expiresInMinutes: input.expiresInMinutes,
+    });
+    return this.sendEmail({
+      to: input.to,
+      ...template,
+    });
   }
 
   private async sendViaSes(recipient: string, payload: SendEmailPayload): Promise<string | null> {

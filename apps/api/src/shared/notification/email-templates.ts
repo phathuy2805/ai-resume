@@ -26,6 +26,12 @@ export interface InterviewSubmittedTemplateInput {
   applicationsUrl: string;
 }
 
+export interface PasswordResetOtpTemplateInput {
+  fullName: string;
+  otp: string;
+  expiresInMinutes: number;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -250,4 +256,44 @@ export function buildInterviewSubmittedEmail(
     html: wrapHtmlLayout(subject, bodyHtml, 'Xem hồ sơ của tôi', input.applicationsUrl),
     text,
   };
+}
+
+export function buildPasswordResetOtpEmail(input: PasswordResetOtpTemplateInput): RenderedEmail {
+  const subject = '[HireFlow] Mã OTP đặt lại mật khẩu';
+  const text = [
+    `Xin chào ${input.fullName},`,
+    '',
+    `Mã OTP đặt lại mật khẩu HireFlow của bạn là: ${input.otp}`,
+    `Mã có hiệu lực trong ${input.expiresInMinutes} phút và chỉ dùng được một lần.`,
+    '',
+    'Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.',
+  ].join('\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(subject)}</title>
+</head>
+<body style="margin: 0; padding: 24px; background-color: #f9fafb; font-family: Arial, Helvetica, sans-serif; color: #111827; line-height: 1.6;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+    <div style="background-color: #1d4ed8; padding: 20px 24px; color: #ffffff;">
+      <h1 style="margin: 0; font-size: 20px;">HireFlow</h1>
+    </div>
+    <div style="padding: 24px;">
+      <p>Xin chào <strong>${escapeHtml(input.fullName)}</strong>,</p>
+      <p>Mã OTP đặt lại mật khẩu HireFlow của bạn là:</p>
+      <p style="font-size: 28px; font-weight: 700; letter-spacing: 6px; margin: 16px 0; color: #1d4ed8;">${escapeHtml(input.otp)}</p>
+      <p>Mã có hiệu lực trong <strong>${input.expiresInMinutes} phút</strong> và chỉ sử dụng một lần.</p>
+      <p style="color: #6b7280; font-size: 13px;">Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+    </div>
+    <div style="padding: 16px 24px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">
+      Đây là email tự động từ hệ thống tuyển dụng HireFlow. Vui lòng không trả lời trực tiếp email này.
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return { subject, html, text };
 }
