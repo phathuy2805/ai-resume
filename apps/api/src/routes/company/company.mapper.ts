@@ -1,5 +1,11 @@
 import type { Company as PrismaCompany } from '../../generated/prisma/client.js';
 import type { CompanyModel } from '../../shared/models/company.model.js';
+import { COMPANY_LOGO_PUBLIC_PATH } from './company.constant.js';
+
+/** `/api/company/logo?v=<updatedAt>` khi đã có logo; `v` đổi sau mỗi lần cập nhật để phá cache. */
+export function toLogoUrl(company: Pick<PrismaCompany, 'logoS3Key' | 'updatedAt'>): string | null {
+  return company.logoS3Key ? `${COMPANY_LOGO_PUBLIC_PATH}?v=${company.updatedAt.getTime()}` : null;
+}
 
 export function toCompany(company: PrismaCompany): CompanyModel {
   return {
@@ -7,7 +13,7 @@ export function toCompany(company: PrismaCompany): CompanyModel {
     name: company.name,
     shortName: company.shortName,
     tagline: company.tagline,
-    logoUrl: company.logoUrl,
+    logoUrl: toLogoUrl(company),
     industry: company.industry,
     companySize: company.companySize,
     foundedYear: company.foundedYear,

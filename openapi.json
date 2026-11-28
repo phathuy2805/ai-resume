@@ -651,6 +651,7 @@
         ]
       },
       "patch": {
+        "description": "Không cập nhật logo ở đây; dùng POST /company/logo.",
         "operationId": "CompanyController_updateCompany",
         "parameters": [],
         "requestBody": {
@@ -729,6 +730,208 @@
           }
         ],
         "summary": "Cập nhật thông tin doanh nghiệp (HR hoặc Admin, cập nhật từng phần)",
+        "tags": [
+          "Company"
+        ]
+      }
+    },
+    "/api/company/logo": {
+      "get": {
+        "description": "Redirect 302 sang presigned URL của S3 (hiệu lực 1 giờ). Dùng trực tiếp làm `src` của thẻ <img>; tham số `v` chỉ để phá cache trình duyệt khi logo thay đổi.",
+        "operationId": "CompanyController_getLogo",
+        "parameters": [
+          {
+            "name": "v",
+            "required": false,
+            "in": "query",
+            "description": "Phiên bản logo (cache busting)",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Chuyển hướng tới ảnh logo trên S3"
+          },
+          "404": {
+            "description": "Doanh nghiệp chưa có logo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Xem logo doanh nghiệp (Công khai)",
+        "tags": [
+          "Company"
+        ]
+      },
+      "post": {
+        "description": "Nhận ảnh JPG, PNG hoặc WebP (tối đa 2MB, kiểm tra theo magic bytes), lưu vào S3 private bucket, xoá logo cũ. Trả về thông tin doanh nghiệp với `logoUrl` mới.",
+        "operationId": "CompanyController_uploadLogo",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Ảnh logo JPG, PNG hoặc WebP (tối đa 2MB)",
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Ảnh logo JPG, PNG hoặc WebP (tối đa 2MB)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật logo thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/UpdateCompanyResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Thiếu file hoặc định dạng ảnh không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chỉ HR hoặc Admin mới được cập nhật",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Chưa cấu hình thông tin doanh nghiệp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Logo vượt quá giới hạn 2MB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Tải lên / thay logo doanh nghiệp (HR hoặc Admin)",
+        "tags": [
+          "Company"
+        ]
+      },
+      "delete": {
+        "operationId": "CompanyController_deleteLogo",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Đã xoá logo (logoUrl = null)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/UpdateCompanyResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chỉ HR hoặc Admin mới được cập nhật",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Chưa cấu hình thông tin doanh nghiệp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Xoá logo doanh nghiệp (HR hoặc Admin, idempotent)",
         "tags": [
           "Company"
         ]
@@ -3726,7 +3929,7 @@
             }
           },
           "logoUrl": {
-            "description": "URL logo doanh nghiệp",
+            "description": "Đường dẫn ảnh logo (/api/company/logo?v=...), null nếu chưa có. Logo được thay qua POST /company/logo",
             "type": "array",
             "items": {
               "type": "string"
@@ -3853,12 +4056,6 @@
             "description": "Khẩu hiệu ngắn",
             "nullable": true
           },
-          "logoUrl": {
-            "type": "string",
-            "maxLength": 500,
-            "description": "URL logo doanh nghiệp",
-            "nullable": true
-          },
           "industry": {
             "type": "string",
             "maxLength": 100,
@@ -3956,7 +4153,7 @@
             }
           },
           "logoUrl": {
-            "description": "URL logo doanh nghiệp",
+            "description": "Đường dẫn ảnh logo (/api/company/logo?v=...), null nếu chưa có. Logo được thay qua POST /company/logo",
             "type": "array",
             "items": {
               "type": "string"

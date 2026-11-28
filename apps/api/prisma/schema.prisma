@@ -74,7 +74,7 @@ model Company {
   name         String
   shortName    String?  @map("short_name")
   tagline      String?
-  logoUrl      String?  @map("logo_url")
+  logoS3Key    String?  @map("logo_s3_key") // key ảnh logo trên S3 private bucket
   industry     String?
   companySize  String?  @map("company_size")
   foundedYear  Int?     @map("founded_year")

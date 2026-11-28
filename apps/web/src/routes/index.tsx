@@ -13,6 +13,7 @@ import CandidateJobDetailPage from '@/pages/candidate/CandidateJobDetailPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import HRApplicationDetailPage from '@/pages/hr/HRApplicationDetailPage';
 import HRCandidatesPage from '@/pages/hr/HRCandidatesPage';
+import HRCompanySettingsPage from '@/pages/hr/HRCompanySettingsPage';
 import HRCreateJobPage from '@/pages/hr/HRCreateJobPage';
 import HREditJobPage from '@/pages/hr/HREditJobPage';
 import HRJobDetailPage from '@/pages/hr/HRJobDetailPage';
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
           { path: 'jobs/:jobId/candidates', element: <HRCandidatesPage /> },
           { path: 'applications/:id', element: <HRApplicationDetailPage /> },
           { path: 'stats', element: <HRStatsPage /> },
+          { path: 'company', element: <HRCompanySettingsPage /> },
           { path: 'jobs/new', element: <HRCreateJobPage /> },
           { path: 'jobs/:id', element: <HRJobDetailPage /> },
           { path: 'jobs/:id/edit', element: <HREditJobPage /> },

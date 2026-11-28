@@ -5,7 +5,12 @@ export const CompanySchema = z.object({
   name: z.string().min(1).describe('Tên đầy đủ của doanh nghiệp'),
   shortName: z.string().nullable().describe('Tên viết tắt / thương hiệu'),
   tagline: z.string().nullable().describe('Khẩu hiệu ngắn'),
-  logoUrl: z.string().nullable().describe('URL logo doanh nghiệp'),
+  logoUrl: z
+    .string()
+    .nullable()
+    .describe(
+      'Đường dẫn ảnh logo (/api/company/logo?v=...), null nếu chưa có. Logo được thay qua POST /company/logo',
+    ),
   industry: z.string().nullable().describe('Lĩnh vực hoạt động'),
   companySize: z.string().nullable().describe('Quy mô nhân sự (vd: "200-500 nhân viên")'),
   foundedYear: z.number().int().nullable().describe('Năm thành lập'),

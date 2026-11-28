@@ -18,3 +18,20 @@ export interface Company {
   createdAt: string;
   updatedAt: string;
 }
+
+/** PATCH /company: cập nhật từng phần; chuỗi rỗng = xoá giá trị. Logo đổi qua POST /company/logo. */
+export interface UpdateCompanyRequest {
+  name?: string;
+  shortName?: string | null;
+  tagline?: string | null;
+  industry?: string | null;
+  companySize?: string | null;
+  foundedYear?: number | null;
+  address?: string | null;
+  website?: string | null;
+  contactEmail?: string | null;
+  phone?: string | null;
+  description?: string | null;
+  culture?: string | null;
+  benefits?: string[];
+}

@@ -39,7 +39,6 @@ export const UpdateCompanyBodySchema = z
       .describe('Tên đầy đủ của doanh nghiệp'),
     shortName: optionalText(100, 'Tên viết tắt').describe('Tên viết tắt / thương hiệu'),
     tagline: optionalText(200, 'Khẩu hiệu').describe('Khẩu hiệu ngắn'),
-    logoUrl: optionalUrl('URL logo').describe('URL logo doanh nghiệp'),
     industry: optionalText(100, 'Lĩnh vực').describe('Lĩnh vực hoạt động'),
     companySize: optionalText(50, 'Quy mô').describe('Quy mô nhân sự'),
     foundedYear: z

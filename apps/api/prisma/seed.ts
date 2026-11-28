@@ -86,7 +86,7 @@ const SEED_COMPANY = {
   name: 'Công ty Cổ phần Công nghệ Lumora',
   shortName: 'Lumora Tech',
   tagline: 'Kiến tạo sản phẩm số cho hàng triệu người dùng Việt',
-  logoUrl: null,
+  // Không seed logo (logoS3Key): HR tải lên qua POST /company/logo, seed lại cũng không ghi đè.
   industry: 'Phần mềm / Công nghệ thông tin',
   companySize: '200-500 nhân viên',
   foundedYear: 2016,

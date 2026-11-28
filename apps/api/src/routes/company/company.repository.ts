@@ -21,4 +21,8 @@ export class CompanyRepository {
       throw error;
     }
   }
+
+  updateLogoKey(logoS3Key: string | null) {
+    return this.updateCompany({ logoS3Key });
+  }
 }
