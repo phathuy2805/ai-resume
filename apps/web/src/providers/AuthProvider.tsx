@@ -9,6 +9,7 @@ import {
 } from '@/lib/tokenStore';
 import { parseUserProfile } from '@/lib/session';
 import { toApiError } from '@/lib/apiError';
+import { clearSessionQueries } from '@/lib/queryClient';
 import type { UserProfile } from '@/types/auth';
 import { AuthContext, type AuthContextValue } from './auth-context';
 
@@ -78,7 +79,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         try {
           await logoutApi();
         } finally {
-          queryClient.clear();
+          clearSessionQueries(queryClient);
           setUser(null);
         }
       },

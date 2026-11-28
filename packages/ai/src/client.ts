@@ -38,7 +38,19 @@ export interface GenerateTextOptions extends CallOptions {
   temperature?: number;
 }
 
-export type GenerateStructuredOptions = GenerateTextOptions;
+export interface GenerateStructuredOptions extends GenerateTextOptions {
+  /** Model dùng cho lần gọi: 'text' (mặc định) hoặc 'audio' khi prompt có file âm thanh. */
+  model?: 'text' | 'audio';
+}
+
+/** File gửi kèm prompt (gửi inline, mã hóa base64). */
+export interface InlineFile {
+  mimeType: string;
+  data: Uint8Array;
+}
+
+/** Prompt cho generateStructured: chỉ có chữ, hoặc chữ kèm file (vd. audio câu trả lời phỏng vấn). */
+export type StructuredPrompt = string | { text: string; files: readonly InlineFile[] };
 
 export interface EmbedOptions extends CallOptions {
   /** Mục đích của vector, vd. "SEMANTIC_SIMILARITY". Hai vector muốn so sánh phải dùng cùng taskType. */
@@ -62,9 +74,10 @@ export interface AiClient {
   /**
    * Yêu cầu Gemini trả JSON theo `schema`, kiểm tra bằng Zod và trả về dữ liệu đúng kiểu.
    * Sai schema thì gọi lại 1 lần; vẫn sai thì ném AiInvalidResponseError.
+   * `prompt` có thể kèm file (gửi trước phần chữ); chọn model bằng `options.model`.
    */
   generateStructured<T extends z.ZodType>(
-    prompt: string,
+    prompt: StructuredPrompt,
     schema: T,
     options?: GenerateStructuredOptions,
   ): Promise<z.output<T>>;
@@ -88,6 +101,22 @@ export interface GeminiModelsApi {
 
 /** Tùy chọn chỉ dùng trong test để retry không phải chờ thật. */
 export type RetryTiming = Pick<RetryOptions, 'sleep' | 'random' | 'baseDelayMs' | 'maxDelayMs'>;
+
+/** Đổi prompt sang `contents` của SDK: chuỗi giữ nguyên; có file thì file đứng trước phần chữ. */
+function toContents(prompt: StructuredPrompt): GenerateContentParameters['contents'] {
+  if (typeof prompt === 'string') return prompt;
+  return [
+    {
+      role: 'user',
+      parts: [
+        ...prompt.files.map((file) => ({
+          inlineData: { mimeType: file.mimeType, data: Buffer.from(file.data).toString('base64') },
+        })),
+        { text: prompt.text },
+      ],
+    },
+  ];
+}
 
 /** Hàm BE gọi để tạo client. */
 export function createAiClient(options: AiClientOptions): AiClient {
@@ -208,10 +237,10 @@ export function buildAiClient(
     },
 
     async generateStructured(prompt, schema, options = {}) {
-      const { systemInstruction, temperature, ...callOptions } = options;
+      const { systemInstruction, temperature, model = 'text', ...callOptions } = options;
       const params: GenerateContentParameters = {
-        model: config.models.text,
-        contents: prompt,
+        model: config.models[model],
+        contents: toContents(prompt),
         config: {
           systemInstruction,
           temperature,

@@ -61,7 +61,7 @@ export const envSchema = z
     GEMINI_API_KEY: optionalWithDefault('dev-gemini-api-key'),
     GEMINI_MODEL_TEXT: optionalWithDefault('gemini-2.5-flash-lite'),
     GEMINI_MODEL_EMBEDDING: optionalWithDefault('gemini-embedding-001'),
-    GEMINI_MODEL_AUDIO: optionalWithDefault('gemini-2.5-flash'),
+    GEMINI_MODEL_AUDIO: optionalWithDefault('gemini-3.5-flash-lite'),
     AI_QUEUE_CONCURRENCY: z.coerce.number().int().min(1).default(2),
     AI_CONSIDER_MARGIN: z.coerce.number().int().min(0).max(100).default(10),
     INTERVIEW_INVITE_TTL_DAYS: z.coerce.number().int().min(1).default(7),

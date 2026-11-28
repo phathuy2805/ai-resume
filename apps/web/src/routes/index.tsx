@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AuthLayout from '@/components/layout/AuthLayout';
 import CandidateLayout from '@/components/layout/CandidateLayout';
 import HrLayout from '@/components/layout/HrLayout';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import CandidateApplicationsPage from '@/pages/candidate/CandidateApplicationsPage';
@@ -9,9 +10,11 @@ import CandidateFeedbackPlaceholderPage from '@/pages/candidate/CandidateFeedbac
 import CandidateInterviewPlaceholderPage from '@/pages/candidate/CandidateInterviewPlaceholderPage';
 import CandidateJobsPage from '@/pages/candidate/CandidateJobsPage';
 import CandidateJobDetailPage from '@/pages/candidate/CandidateJobDetailPage';
+import CompanyPage from '@/pages/CompanyPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import HRApplicationDetailPage from '@/pages/hr/HRApplicationDetailPage';
 import HRCandidatesPage from '@/pages/hr/HRCandidatesPage';
+import HRCompanySettingsPage from '@/pages/hr/HRCompanySettingsPage';
 import HRCreateJobPage from '@/pages/hr/HRCreateJobPage';
 import HREditJobPage from '@/pages/hr/HREditJobPage';
 import HRJobDetailPage from '@/pages/hr/HRJobDetailPage';
@@ -29,6 +32,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'login', element: <LoginPage /> },
           { path: 'register', element: <RegisterPage /> },
+          { path: 'forgot-password', element: <ForgotPasswordPage /> },
         ],
       },
     ],
@@ -46,6 +50,7 @@ export const router = createBrowserRouter([
           { path: 'jobs/:jobId/candidates', element: <HRCandidatesPage /> },
           { path: 'applications/:id', element: <HRApplicationDetailPage /> },
           { path: 'stats', element: <HRStatsPage /> },
+          { path: 'company', element: <HRCompanySettingsPage /> },
           { path: 'jobs/new', element: <HRCreateJobPage /> },
           { path: 'jobs/:id', element: <HRJobDetailPage /> },
           { path: 'jobs/:id/edit', element: <HREditJobPage /> },
@@ -69,6 +74,12 @@ export const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  {
+    // Trang giới thiệu công ty, công khai, dùng chung layout với trang ứng viên.
+    path: 'company',
+    element: <CandidateLayout />,
+    children: [{ index: true, element: <CompanyPage /> }],
   },
   { path: '*', element: <NotFoundPage /> },
 ]);

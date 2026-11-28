@@ -611,6 +611,332 @@
         ]
       }
     },
+    "/api/company": {
+      "get": {
+        "operationId": "CompanyController_getCompany",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Thông tin doanh nghiệp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GetCompanyResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Chưa cấu hình thông tin doanh nghiệp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Lấy thông tin doanh nghiệp tuyển dụng (Công khai)",
+        "tags": [
+          "Company"
+        ]
+      },
+      "patch": {
+        "description": "Không cập nhật logo ở đây; dùng POST /company/logo.",
+        "operationId": "CompanyController_updateCompany",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật thông tin doanh nghiệp thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/UpdateCompanyResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu cập nhật không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chỉ HR hoặc Admin mới được cập nhật",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Chưa cấu hình thông tin doanh nghiệp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Cập nhật thông tin doanh nghiệp (HR hoặc Admin, cập nhật từng phần)",
+        "tags": [
+          "Company"
+        ]
+      }
+    },
+    "/api/company/logo": {
+      "get": {
+        "description": "Redirect 302 sang presigned URL của S3 (hiệu lực 1 giờ). Dùng trực tiếp làm `src` của thẻ <img>; tham số `v` chỉ để phá cache trình duyệt khi logo thay đổi.",
+        "operationId": "CompanyController_getLogo",
+        "parameters": [
+          {
+            "name": "v",
+            "required": false,
+            "in": "query",
+            "description": "Phiên bản logo (cache busting)",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Chuyển hướng tới ảnh logo trên S3"
+          },
+          "404": {
+            "description": "Doanh nghiệp chưa có logo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Xem logo doanh nghiệp (Công khai)",
+        "tags": [
+          "Company"
+        ]
+      },
+      "post": {
+        "description": "Nhận ảnh JPG, PNG hoặc WebP (tối đa 2MB, kiểm tra theo magic bytes), lưu vào S3 private bucket, xoá logo cũ. Trả về thông tin doanh nghiệp với `logoUrl` mới.",
+        "operationId": "CompanyController_uploadLogo",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Ảnh logo JPG, PNG hoặc WebP (tối đa 2MB)",
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Ảnh logo JPG, PNG hoặc WebP (tối đa 2MB)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật logo thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/UpdateCompanyResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Thiếu file hoặc định dạng ảnh không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chỉ HR hoặc Admin mới được cập nhật",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Chưa cấu hình thông tin doanh nghiệp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Logo vượt quá giới hạn 2MB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Tải lên / thay logo doanh nghiệp (HR hoặc Admin)",
+        "tags": [
+          "Company"
+        ]
+      },
+      "delete": {
+        "operationId": "CompanyController_deleteLogo",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Đã xoá logo (logoUrl = null)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/UpdateCompanyResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chỉ HR hoặc Admin mới được cập nhật",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Chưa cấu hình thông tin doanh nghiệp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Xoá logo doanh nghiệp (HR hoặc Admin, idempotent)",
+        "tags": [
+          "Company"
+        ]
+      }
+    },
     "/api/jobs": {
       "get": {
         "operationId": "JobsController_findAll",
@@ -3571,6 +3897,365 @@
         },
         "required": [
           "message"
+        ],
+        "additionalProperties": false
+      },
+      "GetCompanyResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh doanh nghiệp (UUID)"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Tên đầy đủ của doanh nghiệp"
+          },
+          "shortName": {
+            "description": "Tên viết tắt / thương hiệu",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tagline": {
+            "description": "Khẩu hiệu ngắn",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "logoUrl": {
+            "description": "Đường dẫn ảnh logo (/api/company/logo?v=...), null nếu chưa có. Logo được thay qua POST /company/logo",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "industry": {
+            "description": "Lĩnh vực hoạt động",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "companySize": {
+            "description": "Quy mô nhân sự (vd: \"200-500 nhân viên\")",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "foundedYear": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Năm thành lập",
+            "nullable": true
+          },
+          "address": {
+            "description": "Địa chỉ trụ sở",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "website": {
+            "description": "Website doanh nghiệp",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contactEmail": {
+            "description": "Email liên hệ tuyển dụng",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "phone": {
+            "description": "Số điện thoại liên hệ",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "description": "Giới thiệu doanh nghiệp",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "culture": {
+            "description": "Văn hoá và giá trị cốt lõi",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "benefits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách phúc lợi"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm tạo (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "shortName",
+          "tagline",
+          "logoUrl",
+          "industry",
+          "companySize",
+          "foundedYear",
+          "address",
+          "website",
+          "contactEmail",
+          "phone",
+          "description",
+          "culture",
+          "benefits",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateCompanyBodyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Tên đầy đủ của doanh nghiệp"
+          },
+          "shortName": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Tên viết tắt / thương hiệu",
+            "nullable": true
+          },
+          "tagline": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Khẩu hiệu ngắn",
+            "nullable": true
+          },
+          "industry": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Lĩnh vực hoạt động",
+            "nullable": true
+          },
+          "companySize": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Quy mô nhân sự",
+            "nullable": true
+          },
+          "foundedYear": {
+            "type": "integer",
+            "minimum": 1800,
+            "maximum": 2026,
+            "description": "Năm thành lập",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 300,
+            "description": "Địa chỉ trụ sở",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Website doanh nghiệp",
+            "nullable": true
+          },
+          "contactEmail": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Email liên hệ tuyển dụng",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 30,
+            "description": "Số điện thoại liên hệ",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 10000,
+            "description": "Giới thiệu doanh nghiệp",
+            "nullable": true
+          },
+          "culture": {
+            "type": "string",
+            "maxLength": 10000,
+            "description": "Văn hoá và giá trị cốt lõi",
+            "nullable": true
+          },
+          "benefits": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "description": "Danh sách phúc lợi"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateCompanyResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Mã định danh doanh nghiệp (UUID)"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Tên đầy đủ của doanh nghiệp"
+          },
+          "shortName": {
+            "description": "Tên viết tắt / thương hiệu",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tagline": {
+            "description": "Khẩu hiệu ngắn",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "logoUrl": {
+            "description": "Đường dẫn ảnh logo (/api/company/logo?v=...), null nếu chưa có. Logo được thay qua POST /company/logo",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "industry": {
+            "description": "Lĩnh vực hoạt động",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "companySize": {
+            "description": "Quy mô nhân sự (vd: \"200-500 nhân viên\")",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "foundedYear": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Năm thành lập",
+            "nullable": true
+          },
+          "address": {
+            "description": "Địa chỉ trụ sở",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "website": {
+            "description": "Website doanh nghiệp",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contactEmail": {
+            "description": "Email liên hệ tuyển dụng",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "phone": {
+            "description": "Số điện thoại liên hệ",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "description": "Giới thiệu doanh nghiệp",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "culture": {
+            "description": "Văn hoá và giá trị cốt lõi",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "benefits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách phúc lợi"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Thời điểm tạo (ISO 8601)"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Thời điểm cập nhật gần nhất (ISO 8601)"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "shortName",
+          "tagline",
+          "logoUrl",
+          "industry",
+          "companySize",
+          "foundedYear",
+          "address",
+          "website",
+          "contactEmail",
+          "phone",
+          "description",
+          "culture",
+          "benefits",
+          "createdAt",
+          "updatedAt"
         ],
         "additionalProperties": false
       },

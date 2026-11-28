@@ -1,6 +1,7 @@
 import { ArrowRight, Bot, BriefcaseBusiness, Check, Clock, SearchX, Sparkles } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import CompanyBanner from '@/components/candidate/CompanyBanner';
 import SearchInput from '@/components/common/SearchInput';
 import EmptyState from '@/components/common/EmptyState';
 import QueryError from '@/components/common/QueryError';
@@ -222,6 +223,7 @@ export default function CandidateJobsPage() {
     });
   return (
     <div className="space-y-6">
+      <CompanyBanner showCompanyLink />
       <div>
         <h1 className="text-page-title">Việc làm đang tuyển</h1>
         <p className="mt-1 text-slate-600">Tìm vị trí phù hợp và nộp CV của bạn.</p>

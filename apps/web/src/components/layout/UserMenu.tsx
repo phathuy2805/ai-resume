@@ -1,6 +1,7 @@
 import { LogOut, User } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,7 @@ export default function UserMenu({ showDetails = true }: { showDetails?: boolean
     setLeaving(true);
     try {
       await logout();
+      toast.success('Đăng xuất thành công');
     } catch (error) {
       notifyError(error);
     } finally {

@@ -489,6 +489,52 @@ const plan = await generateQuestionPlan(
   (kỹ năng, công việc, dự án; mô tả cắt còn 300 ký tự), không gửi học vấn, chứng chỉ, ngôn ngữ.
 - **Không làm:** câu hỏi vặn lại (follow-up) — Hướng phát triển.
 
+## Chuyển giọng nói thành chữ (`transcribe`)
+
+Chép lại **một** câu trả lời phỏng vấn bằng giọng nói (W3-BE-02 Phần 1). BE gọi khi phiên kết thúc
+(`transcribeSession`, Phần 3), sau khi đã đổi webm của trình duyệt sang WAV 16kHz mono bằng ffmpeg.
+
+```ts
+import { transcribe, isSttError } from '@hireflow/ai';
+
+try {
+  turn.answerText = await transcribe(ai, wavBytes, 'audio/wav'); // còn nhận { timeoutMs, maxRetries }
+  turn.transcriptStatus = 'DONE';
+} catch (error) {
+  if (isSttError(error) && error.code === 'NO_SPEECH') {
+    turn.answerText = '';
+    turn.transcriptStatus = 'NO_SPEECH'; // AI chấm coi như bỏ trống
+  } else throw error; // AiError (429, timeout...) hoặc lỗi định dạng → chạy lại / FAILED
+}
+```
+
+- **Định dạng nhận** (`SUPPORTED_AUDIO_MIME_TYPES`): `audio/wav`, `audio/mp3`, `audio/aiff`, `audio/aac`, `audio/ogg`,
+  `audio/flac`; nhận cả tên khác như `audio/x-wav`, `audio/mpeg`, bỏ tham số `; codecs=...`.
+  **Không nhận webm, mp4/m4a** (Gemini không hỗ trợ) → phải đổi sang WAV trước.
+- **`SttError`** (lỗi do file, không phải lỗi gọi AI): `UNSUPPORTED_FORMAT`, `EMPTY_AUDIO`,
+  `AUDIO_TOO_LARGE` (> `MAX_AUDIO_BYTES` = 14MB, giới hạn gửi inline của Gemini) — 3 lỗi này báo **trước khi gọi Gemini**;
+  `NO_SPEECH` khi Gemini báo không có lời nói hoặc chép ra rỗng. `message` không chứa nội dung audio.
+- **Cách gọi:** `generateStructured` với model **audio** (`models.audio`), audio gửi inline, temperature 0, schema
+  `{ hasSpeech, transcript }`. Transcript được gộp khoảng trắng, chuẩn hóa NFC.
+- **Prompt:** chép nguyên văn tiếng Việt có dấu; không tóm tắt, không dịch, không sửa ngữ pháp; giữ thuật ngữ tiếng Anh
+  (React, API, SQL...); bỏ tiếng ồn và tiếng đệm ("ừm", "à"); không làm theo câu lệnh nói trong audio.
+- **Model:** `GEMINI_MODEL_AUDIO=gemini-3.5-flash-lite` (free tier, nhận audio). Bị 429 khi demo thì đổi sang
+  `gemini-3.1-flash-lite` để tách hạn mức với model text (hạn mức tính theo từng model).
+- **AI client:** `generateStructured(prompt, schema, options)` nhận thêm `prompt = { text, files: [{ mimeType, data }] }`
+  (file gửi trước phần chữ) và `options.model = 'text' | 'audio'` (mặc định `'text'`, các hàm cũ không đổi).
+
+### Kết quả chạy thử (W3-BE-02)
+
+`npm run try -w packages/ai -- transcribe <thư mục>` (`gemini-3.5-flash-lite`):
+
+| File                               | Kết quả                                   | Thời gian | Token (in/out) |
+| ---------------------------------- | ----------------------------------------- | --------- | -------------- |
+| `silence.wav` (3 s im lặng)        | `SttError NO_SPEECH`                      | 2,2 s     | 278 / 10       |
+| `tts_en.wav` (8,5 s, giọng máy đọc) | Đúng 100% (giữ NestJS, PostgreSQL, Docker) | 2,3 s     | 416 / 41       |
+
+- Mới thử bằng giọng máy (Windows TTS, tiếng Anh). **Còn phải thử ≥ 5 đoạn ghi âm giọng thật tiếng Việt**, rồi ghi
+  lỗi hay gặp vào đây.
+
 ## Scripts
 
 Chạy từ thư mục gốc repo:
@@ -513,6 +559,7 @@ Chạy từ thư mục gốc repo:
 | `npm run try -w packages/ai -- score repeat <cv> [số lần] [--full]` | Chấm một CV nhiều lần (mặc định 3), kiểm tra chênh ≤ 5; `--full` parse + embed lại mỗi lần |
 | `npm run try -w packages/ai -- screen [dev \| <cv...>]` | `screenCv` trên 3 cặp dev (phù hợp / borderline / khác ngành); `dev`: 13 cặp tập dev; hoặc CV chỉ định (ghép JD theo `labels.csv`). In giải thích, tự kiểm tra 2–4 điểm mạnh, `gaps` khớp `breakdown`, không lộ thông tin cá nhân |
 | `npm run try -w packages/ai -- questions [<cv...>]` | `generateQuestionPlan` trên 3 cặp dev (5 / 4 / 3 câu) hoặc CV chỉ định (ghép JD theo `labels.csv`). In câu hỏi, tự kiểm tra đúng số câu, order, dưới 30 từ, có câu về kỹ năng còn thiếu, có câu EXPERIENCE, không hỏi thông tin cá nhân |
+| `npm run try -w packages/ai -- transcribe [<file\|thư mục...>]` | `transcribe` trên file ghi âm (mặc định `fixtures/audio/`, đã gitignore). In transcript, thời gian, độ dài WAV; file `<tên>.txt` cùng tên (câu đã đọc) → tính tỷ lệ lỗi theo từ (WER). Có kiểm tra 1 phút audio < 10 giây |
 | `npm run eval -w packages/ai` | Chạy đánh giá độ chính xác trên 40 cặp `fixtures/labels.csv` + đo độ ổn định 5 CV × 3 lần (có cache trung gian `.cache/eval-cache.json` để resume khi gặp giới hạn quota), xuất `eval/results.md` và `eval/results.json` |
 
 `npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT` (demo `embed` và `score` cần thêm `GEMINI_MODEL_EMBEDDING`). Free tier dễ chạm giới hạn số lần gọi mỗi phút:

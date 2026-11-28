@@ -28,6 +28,14 @@ export interface QuestionPlanItem {
   targetSkill: string;
 }
 
+/** Thông tin doanh nghiệp tuyển dụng (Company), giúp câu hỏi sát bối cảnh công ty. */
+export interface QuestionPlanCompany {
+  name: string;
+  industry?: string | null;
+  description?: string | null;
+  culture?: string | null;
+}
+
 export interface GenerateQuestionPlanInput {
   parsedJd: ParsedJd;
   parsedCv: ParsedCv;
@@ -37,6 +45,8 @@ export interface GenerateQuestionPlanInput {
   count: number;
   /** Tên vị trí (Job.title); parsedJd không có trường này. */
   jobTitle?: string | null;
+  /** Doanh nghiệp tuyển dụng; bỏ trống thì prompt không có phần COMPANY. */
+  company?: QuestionPlanCompany | null;
 }
 
 export interface GenerateQuestionPlanOptions extends CallOptions {
@@ -56,6 +66,8 @@ export const QUESTION_PLAN_MAX_ATTEMPTS = 2;
 const MAX_PROMPT_SKILLS = 40;
 const MAX_PROMPT_ITEMS = 6;
 const MAX_PROMPT_DESCRIPTION_CHARS = 300;
+/** Giới thiệu / văn hoá công ty chỉ cần đủ để đặt bối cảnh, cắt ngắn để tiết kiệm token. */
+const MAX_PROMPT_COMPANY_CHARS = 400;
 
 /** Số câu gợi ý theo loại: khoảng một nửa TECHNICAL, phần còn lại chia đều (EXPERIENCE nhận phần lẻ). */
 export function questionTypeMix(count: number): Record<QuestionType, number> {
@@ -87,7 +99,7 @@ export const QuestionPlanResponseSchema = z.object({
 export type QuestionPlanResponse = z.infer<typeof QuestionPlanResponseSchema>;
 
 export const QUESTION_PLAN_SYSTEM_INSTRUCTION = `You are an experienced interviewer preparing a short first-round voice interview for one candidate.
-You receive the job requirements, the candidate's skills, work experience and projects, and the required skills that the candidate's CV does not show.
+You receive the job requirements, the candidate's skills, work experience and projects, the required skills that the candidate's CV does not show and, when available, the hiring company.
 Rules:
 - Return exactly the requested number of questions, in the order they will be asked. Follow the suggested mix of types.
 - type: TECHNICAL = knowledge or skill needed for this job; SITUATIONAL = how the candidate would handle a realistic situation in this role; EXPERIENCE = what the candidate actually did in a specific job or project listed in the CV.
@@ -96,6 +108,7 @@ Rules:
 - Each question: Vietnamese with correct diacritics, under 30 words, one single question with one idea, addressing the candidate as "bạn". It will be read aloud: no lists, code, markdown, brackets or special symbols.
 - Do not ask two questions about the same idea.
 - targetSkill: the skill or competency the question assesses, never a job title, company or project name. Use the exact name from the job skills or MISSING REQUIRED SKILLS when it matches; otherwise a short name, e.g. "Giải quyết vấn đề".
+- If COMPANY is given, set SITUATIONAL questions in the company's context (its domain, products or way of working) when it fits naturally. At most one question may explore how the candidate fits the company's stated culture or values. Never ask facts about the company that the candidate cannot know.
 - Never ask about age, gender, marital status, family, children, hometown, nationality, religion, health or appearance.
 - Do not mention scores, the CV screening or any assessment.`;
 
@@ -119,7 +132,7 @@ function describeItem(
 }
 
 /**
- * Prompt sinh câu hỏi: số câu + tỷ lệ loại câu, yêu cầu JD, kỹ năng còn thiếu, kỹ năng / công việc / dự án của CV.
+ * Prompt sinh câu hỏi: số câu + tỷ lệ loại câu, công ty (nếu có), yêu cầu JD, kỹ năng còn thiếu, kỹ năng / công việc / dự án của CV.
  * `reminder` (khi gọi lại) nhắc Gemini lỗi của lần trước.
  */
 export function buildQuestionPlanPrompt(input: GenerateQuestionPlanInput, reminder = ''): string {
@@ -162,9 +175,24 @@ export function buildQuestionPlanPrompt(input: GenerateQuestionPlanInput, remind
     projects.length ? `Projects:\n${projects.join('\n')}` : 'Projects: none',
   ];
 
+  const companyName = input.company?.name.trim();
+  const company = companyName
+    ? [
+        `Name: ${companyName}`,
+        input.company?.industry?.trim() ? `Industry: ${input.company.industry.trim()}` : '',
+        input.company?.description?.trim()
+          ? `About: ${clip(input.company.description, MAX_PROMPT_COMPANY_CHARS)}`
+          : '',
+        input.company?.culture?.trim()
+          ? `Culture: ${clip(input.company.culture, MAX_PROMPT_COMPANY_CHARS)}`
+          : '',
+      ].filter(Boolean)
+    : [];
+
   const missing = normalizeSkills(input.missingSkills);
   const sections = [
     `QUESTIONS\nNumber of questions: ${count}\nSuggested mix: ${mix.TECHNICAL} TECHNICAL, ${mix.SITUATIONAL} SITUATIONAL, ${mix.EXPERIENCE} EXPERIENCE`,
+    ...(company.length ? [`COMPANY\n${company.join('\n')}`] : []),
     `JOB\n${job.filter(Boolean).join('\n')}`,
     `MISSING REQUIRED SKILLS\n${missing.length ? missing.map((skill) => `- ${skill}`).join('\n') : 'none'}`,
     `CANDIDATE\n${candidate.join('\n')}`,

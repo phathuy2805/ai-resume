@@ -5,11 +5,14 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import HrSidebar from '@/components/layout/HrSidebar';
 import { getActiveHrLink } from '@/components/layout/hrLinks';
 import UserMenu from '@/components/layout/UserMenu';
+import { useCompany } from '@/hooks/useCompany';
+import { companyDisplayName } from '@/lib/company';
 
 export default function HrHeader() {
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const section = getActiveHrLink(pathname)?.label ?? 'Tuyển dụng';
+  const { data: company } = useCompany();
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur md:px-6">
@@ -25,7 +28,9 @@ export default function HrHeader() {
             <HrSidebar onNavigate={() => setMenuOpen(false)} />
           </SheetContent>
         </Sheet>
-        <span className="text-xs text-muted-foreground">HireFlow</span>
+        <span className="text-xs text-muted-foreground">
+          {company ? companyDisplayName(company) : 'HireFlow'}
+        </span>
         <span className="text-xs text-slate-300">/</span>
         <span className="font-medium text-foreground">{section}</span>
       </div>

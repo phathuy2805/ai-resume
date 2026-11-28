@@ -2,6 +2,7 @@ import type { JobsParams } from '@/types/jobs';
 
 export const queryKeys = {
   auth: { all: ['auth'] as const, me: () => ['auth', 'me'] as const },
+  company: { all: ['company'] as const },
   jobs: {
     all: ['jobs'] as const,
     public: () => ['jobs', 'public'] as const,

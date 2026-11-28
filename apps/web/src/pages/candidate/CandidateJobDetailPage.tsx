@@ -7,6 +7,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
+import AboutCompanyCard from '@/components/candidate/AboutCompanyCard';
 import ApplyCard from '@/components/candidate/ApplyCard';
 import EmptyState from '@/components/common/EmptyState';
 import SkillChip from '@/components/common/SkillChip';
@@ -141,6 +142,8 @@ export default function CandidateJobDetailPage() {
               </div>
             )}
           </Card>
+
+          <AboutCompanyCard />
         </div>
 
         <div className="lg:sticky lg:top-24 lg:col-span-5">

@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import Logo from '@/components/common/Logo';
-import { getActiveHrLink, hrLinks } from '@/components/layout/hrLinks';
+import BrandLogo from '@/components/common/BrandLogo';
+import { getActiveHrLink, hrLinkGroups, hrLinks } from '@/components/layout/hrLinks';
 import { cn } from '@/lib/utils';
 
 export default function HrSidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -14,35 +14,41 @@ export default function HrSidebar({ onNavigate }: { onNavigate?: () => void }) {
         onClick={onNavigate}
         className="flex h-14 items-center border-b border-border px-6"
       >
-        <Logo />
+        <BrandLogo />
       </Link>
-      <div className="p-4">
-        <div className="px-2 pb-1 text-xs uppercase tracking-wider text-muted-foreground">
-          Tuyển dụng
-        </div>
-        <nav className="flex flex-col gap-1">
-          {hrLinks.map(({ to, label, icon: Icon }) => {
-            // Tự tính active vì "Ứng viên" nằm ở /hr/jobs/:jobId/candidates, NavLink chỉ so tiền tố của `to`.
-            const isActive = to === activeTo;
-            return (
-              <Link
-                key={to}
-                to={to}
-                onClick={onNavigate}
-                aria-current={isActive ? 'page' : undefined}
-                className={cn(
-                  'flex items-center gap-2 rounded-lg px-2 py-2 font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-foreground',
-                )}
-              >
-                <Icon className="h-5 w-5" />
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
+      <div className="flex flex-col gap-5 p-4">
+        {hrLinkGroups.map((group) => (
+          <div key={group.id}>
+            <div className="px-2 pb-1 text-xs uppercase tracking-wider text-muted-foreground">
+              {group.label}
+            </div>
+            <nav className="flex flex-col gap-1">
+              {hrLinks
+                .filter((link) => link.group === group.id)
+                .map(({ to, label, icon: Icon }) => {
+                  // Tự tính active vì "Ứng viên" nằm ở /hr/jobs/:jobId/candidates, NavLink chỉ so tiền tố của `to`.
+                  const isActive = to === activeTo;
+                  return (
+                    <Link
+                      key={to}
+                      to={to}
+                      onClick={onNavigate}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={cn(
+                        'flex items-center gap-2 rounded-lg px-2 py-2 font-medium transition-colors',
+                        isActive
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'text-slate-600 hover:bg-slate-100 hover:text-foreground',
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                      {label}
+                    </Link>
+                  );
+                })}
+            </nav>
+          </div>
+        ))}
       </div>
     </aside>
   );

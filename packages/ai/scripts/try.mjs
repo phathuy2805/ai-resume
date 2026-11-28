@@ -21,6 +21,8 @@
 //   npm run try -w packages/ai -- screen cv_be_06.pdf [...]   # CV chỉ định, ghép JD theo labels.csv
 //   npm run try -w packages/ai -- questions    # generateQuestionPlan trên 3 cặp dev (5 / 4 / 3 câu) (W3-AI-01)
 //   npm run try -w packages/ai -- questions cv_be_06.pdf [...]   # CV chỉ định, ghép JD theo labels.csv
+//   npm run try -w packages/ai -- transcribe   # transcribe() trên file ghi âm trong fixtures/audio (W3-BE-02)
+//   npm run try -w packages/ai -- transcribe ./my-audio [file.wav ...]   # file hoặc thư mục chỉ định
 //
 // Chỉ chỉnh prompt dựa trên tập dev. "parse-cv all" chỉ dùng để xác nhận sau khi đã chốt prompt.
 // Nghỉ giữa các lần gọi Gemini: TRY_DELAY_MS (mặc định 2000) để không vượt quota.
@@ -43,6 +45,7 @@ import {
   embedText,
   extractCvText,
   generateQuestionPlan,
+  isSttError,
   scoreCv,
   screenCv,
   ScreeningStepError,
@@ -53,6 +56,7 @@ import {
   ParsedCvSchema,
   parseJd,
   ParsedJdSchema,
+  transcribe,
 } from '../dist/index.mjs';
 
 const REQUIRED_ENV = ['GEMINI_API_KEY', 'GEMINI_MODEL_TEXT'];
@@ -67,10 +71,10 @@ const ai = createAiClient({
   apiKey: process.env.GEMINI_API_KEY,
   models: {
     text: process.env.GEMINI_MODEL_TEXT,
-    // Chỉ demo embed cần model embedding (embedDemo tự báo nếu thiếu); script chưa gọi audio.
+    // Chỉ demo embed cần model embedding, demo transcribe cần model audio (tự báo nếu thiếu).
     // Giá trị tạm chỉ để qua bước kiểm tra cấu hình.
     embedding: process.env.GEMINI_MODEL_EMBEDDING || 'not-set',
-    audio: process.env.GEMINI_MODEL_AUDIO || 'not-used-by-try',
+    audio: process.env.GEMINI_MODEL_AUDIO || 'not-set',
   },
 });
 
@@ -1054,6 +1058,131 @@ async function questionsDemo() {
   if (failedChecks > 0) process.exitCode = 1;
 }
 
+// ── Demo transcribe: chuyển giọng nói thành chữ (W3-BE-02 Phần 1) ────────
+
+/** Thư mục mặc định chứa file ghi âm tự ghi. Đã nằm trong .gitignore (giọng thật, không commit). */
+const AUDIO_DIR = path.resolve(import.meta.dirname, '../fixtures/audio');
+/** Đuôi file → mimeType. webm / m4a có trong bảng để thấy lỗi UNSUPPORTED_FORMAT. */
+const AUDIO_MIME_BY_EXT = {
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
+  '.aif': 'audio/aiff',
+  '.aiff': 'audio/aiff',
+  '.aac': 'audio/aac',
+  '.ogg': 'audio/ogg',
+  '.flac': 'audio/flac',
+  '.webm': 'audio/webm',
+  '.m4a': 'audio/mp4',
+};
+
+function collectAudioFiles(inputs) {
+  const files = [];
+  for (const input of inputs) {
+    const full = path.resolve(input);
+    if (!existsSync(full)) throw new Error(`Không tìm thấy ${input}`);
+    if (statSync(full).isDirectory()) {
+      for (const name of readdirSync(full).sort()) {
+        if (path.extname(name).toLowerCase() in AUDIO_MIME_BY_EXT) files.push(path.join(full, name));
+      }
+    } else {
+      files.push(full);
+    }
+  }
+  return files;
+}
+
+/** Độ dài file WAV (giây) đọc từ header; null nếu không phải WAV chuẩn. */
+function wavSeconds(bytes) {
+  const text = (start) => String.fromCharCode(...bytes.subarray(start, start + 4));
+  if (bytes.length < 44 || text(0) !== 'RIFF' || text(8) !== 'WAVE') return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const byteRate = view.getUint32(28, true);
+  return byteRate > 0 ? (bytes.length - 44) / byteRate : null;
+}
+
+/** Tỷ lệ lỗi theo từ (WER) giữa chữ mẫu và chữ máy chép; bỏ dấu câu, không phân biệt hoa thường. */
+function wordErrorRate(expected, actual) {
+  const words = (text) =>
+    text
+      .normalize('NFC')
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+  const a = words(expected);
+  const b = words(actual);
+  if (a.length === 0) return null;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length] / a.length;
+}
+
+async function transcribeDemo() {
+  if (!process.env.GEMINI_MODEL_AUDIO?.trim()) {
+    console.error('✗ Thiếu GEMINI_MODEL_AUDIO (vd. gemini-3.5-flash-lite) trong packages/ai/.env');
+    process.exitCode = 1;
+    return;
+  }
+  const args = process.argv.slice(3);
+  const files = collectAudioFiles(args.length ? args : [AUDIO_DIR]);
+  if (files.length === 0) {
+    console.log(`Chưa có file ghi âm. Đặt file .wav / .mp3 / .flac vào ${AUDIO_DIR}`);
+    console.log('(Có thể kèm <tên>.txt cùng tên chứa câu đã đọc để tính tỷ lệ lỗi theo từ.)');
+    return;
+  }
+  const delayMs = Number(process.env.TRY_DELAY_MS ?? 2000);
+  const rows = [];
+
+  for (const [i, file] of files.entries()) {
+    if (i > 0) await sleep(delayMs);
+    const name = path.basename(file);
+    const ext = path.extname(file).toLowerCase();
+    const mimeType = AUDIO_MIME_BY_EXT[ext] ?? 'application/octet-stream';
+    const bytes = new Uint8Array(readFileSync(file));
+    const seconds = wavSeconds(bytes);
+    const expectedFile = file.slice(0, -ext.length) + '.txt';
+    const expected = existsSync(expectedFile) ? readFileSync(expectedFile, 'utf8').trim() : null;
+
+    const started = Date.now();
+    let transcript = null;
+    let errorCode = null;
+    try {
+      transcript = await transcribe(ai, bytes, mimeType);
+    } catch (error) {
+      if (!isSttError(error)) throw error;
+      errorCode = error.code;
+    }
+    const ms = Date.now() - started;
+
+    const size = `${(bytes.length / 1024).toFixed(0)} KB${seconds === null ? '' : `, ${seconds.toFixed(1)} s`}`;
+    console.log(`\n── ${name} (${mimeType}, ${size}): ${ms} ms`);
+    if (errorCode) console.log(`   ✗ SttError ${errorCode}`);
+    else console.log(`   ${transcript}`);
+
+    const wer = expected && transcript ? wordErrorRate(expected, transcript) : null;
+    if (expected) console.log(`   Mẫu: ${expected}`);
+    if (wer !== null) console.log(`   Tỷ lệ lỗi theo từ: ${(wer * 100).toFixed(1)}%`);
+    if (seconds !== null && transcript) {
+      check(ms < Math.max(10_000, seconds * 1000 * (10 / 60)), 'nhanh (1 phút audio < 10 giây)', `${ms} ms`);
+    }
+    rows.push({ name, ms, wer, errorCode });
+  }
+
+  const done = rows.filter((row) => !row.errorCode);
+  const wers = rows.map((row) => row.wer).filter((value) => value !== null);
+  console.log('\n── Tổng hợp:');
+  console.log(`   Chép được ${done.length}/${rows.length} file`);
+  if (done.length) console.log(`   Thời gian trung bình: ${Math.round(average(done.map((r) => r.ms)))} ms`);
+  if (wers.length) console.log(`   Tỷ lệ lỗi theo từ trung bình: ${(average(wers) * 100).toFixed(1)}%`);
+  if (failedChecks > 0) process.exitCode = 1;
+}
+
 const demos = {
   text: () => ai.generateText('Trả lời trong 1 câu: thủ đô của Việt Nam là gì?'),
   structured: () =>
@@ -1069,6 +1198,7 @@ const demos = {
   score: scoreDemo,
   screen: screenDemo,
   questions: questionsDemo,
+  transcribe: transcribeDemo,
 };
 
 /** Gợi ý cách xử lý cho các lỗi hay gặp khi chạy thử. */

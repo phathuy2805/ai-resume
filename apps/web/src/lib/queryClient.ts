@@ -1,4 +1,4 @@
-import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
+import { MutationCache, QueryCache, QueryClient, type Query } from '@tanstack/react-query';
 import { ApiError } from '@/types/api';
 import { notifyError } from './errorUtils';
 
@@ -46,3 +46,18 @@ export function createQueryClient(): QueryClient {
   });
 }
 export const queryClient = createQueryClient();
+
+/**
+ * Query công khai, giống nhau với mọi người dùng (không phụ thuộc phiên đăng nhập).
+ * Giữ lại khi đổi phiên để màn hình đang hiển thị (vd. banner công ty ở trang đăng nhập)
+ * không bị mất dữ liệu khi cache bị xoá giữa lúc đang fetch.
+ */
+const SESSION_INDEPENDENT_ROOTS: ReadonlySet<unknown> = new Set(['company']);
+const isSessionScoped = (query: Query) => !SESSION_INDEPENDENT_ROOTS.has(query.queryKey[0]);
+
+/** Xoá toàn bộ dữ liệu gắn với phiên đăng nhập (login / logout / hết phiên). */
+export function clearSessionQueries(client: QueryClient = queryClient): void {
+  void client.cancelQueries({ predicate: isSessionScoped });
+  client.removeQueries({ predicate: isSessionScoped });
+  client.getMutationCache().clear();
+}
