@@ -4730,6 +4730,13 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "description": "Mã phiên phỏng vấn AI nếu đã được mời phỏng vấn (null nếu chưa có)",
             "nullable": true
+          },
+          "interviewExpiresAt": {
+            "description": "Hạn chót hoàn thành phỏng vấn AI (ISO 8601, null nếu chưa có hoặc không giới hạn)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -5421,6 +5428,13 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "nullable": true
           },
+          "interviewExpiresAt": {
+            "description": "Hạn chót hoàn thành phỏng vấn AI (ISO 8601, null nếu chưa có hoặc không giới hạn)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "statusHistories": {
             "type": "array",
             "items": {
@@ -5525,6 +5539,12 @@
             ],
             "description": "Quyết định của HR sau vòng CV"
           },
+          "interviewDeadlineDays": {
+            "description": "Số ngày hạn hoàn thành phỏng vấn AI (1-30, mặc định 7 ngày; chỉ áp dụng khi APPROVE)",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
           "note": {
             "description": "Ghi chú của HR",
             "type": "string",
@@ -5566,6 +5586,13 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "nullable": true
+          },
+          "interviewExpiresAt": {
+            "description": "Hạn chót hoàn thành phỏng vấn AI (ISO 8601, null nếu REJECT)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "hrDecisionById": {
             "type": "string",

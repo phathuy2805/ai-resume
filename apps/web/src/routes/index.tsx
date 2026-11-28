@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AuthLayout from '@/components/layout/AuthLayout';
 import CandidateLayout from '@/components/layout/CandidateLayout';
 import HrLayout from '@/components/layout/HrLayout';
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import CandidateApplicationsPage from '@/pages/candidate/CandidateApplicationsPage';
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'login', element: <LoginPage /> },
           { path: 'register', element: <RegisterPage /> },
+          { path: 'forgot-password', element: <ForgotPasswordPage /> },
         ],
       },
     ],

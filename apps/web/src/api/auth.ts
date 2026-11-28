@@ -7,7 +7,7 @@ import {
   runSessionChange,
   staleSessionError,
 } from '@/lib/session';
-import { queryClient } from '@/lib/queryClient';
+import { clearSessionQueries, queryClient } from '@/lib/queryClient';
 import type { ApiResponse } from '@/types/api';
 import type {
   AuthResponse,
@@ -22,8 +22,7 @@ import { unwrap } from './response';
 
 export { refreshSession, refreshSession as refresh } from '@/lib/session';
 function clearSessionCache() {
-  void queryClient.cancelQueries();
-  queryClient.clear();
+  clearSessionQueries(queryClient);
 }
 export function login(body: LoginRequest): Promise<AuthResult> {
   const task = runSessionChange(async (version) => {

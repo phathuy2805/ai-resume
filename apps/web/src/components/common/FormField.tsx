@@ -1,7 +1,10 @@
-import { useState, type InputHTMLAttributes, type ReactNode } from 'react';
+import { useState, type ComponentType, type InputHTMLAttributes, type ReactNode } from 'react';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+
+type IconType = ComponentType<{ className?: string }>;
 
 /** Label above, control, then either an error or a helper line. */
 export function Field({
@@ -10,6 +13,7 @@ export function Field({
   error,
   hint,
   aside,
+  required,
   children,
 }: {
   id: string;
@@ -17,12 +21,21 @@ export function Field({
   error?: string;
   hint?: string;
   aside?: ReactNode;
+  /** Hiển thị dấu * sau label (chỉ để trang trí, validate vẫn do schema). */
+  required?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
-        <Label htmlFor={id}>{label}</Label>
+        <Label htmlFor={id}>
+          {label}
+          {required && (
+            <span aria-hidden="true" className="ml-0.5 text-destructive">
+              *
+            </span>
+          )}
+        </Label>
         {aside}
       </div>
       {children}
@@ -38,12 +51,41 @@ export function Field({
   );
 }
 
-export function PasswordInput(props: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+function LeadingIcon({ icon: Icon }: { icon: IconType }) {
+  return (
+    <Icon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-primary" />
+  );
+}
+
+/** Input có icon phía trước. */
+export function IconInput({
+  icon,
+  className,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & { icon: IconType }) {
+  return (
+    <div className="group relative">
+      <LeadingIcon icon={icon} />
+      <Input {...props} className={cn('pl-10', className)} />
+    </div>
+  );
+}
+
+export function PasswordInput({
+  icon,
+  className,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & { icon?: IconType }) {
   const [visible, setVisible] = useState(false);
   const Icon = visible ? EyeOff : Eye;
   return (
-    <div className="relative">
-      <Input {...props} type={visible ? 'text' : 'password'} className="pr-10" />
+    <div className="group relative">
+      {icon && <LeadingIcon icon={icon} />}
+      <Input
+        {...props}
+        type={visible ? 'text' : 'password'}
+        className={cn('pr-10', icon && 'pl-10', className)}
+      />
       <button
         type="button"
         onClick={() => setVisible((value) => !value)}

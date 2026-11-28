@@ -179,6 +179,15 @@ describe('transport and contracts', () => {
     expect(getAccessToken()).toBeNull();
     expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
   });
+  it('logout keeps public company data so the auth banner does not get stuck loading', async () => {
+    authTransport.defaults.adapter = failingAdapter(500);
+    setAccessToken('old');
+    queryClient.setQueryData(['private'], profile);
+    queryClient.setQueryData(['company'], { name: 'Lumora' });
+    await expect(logout()).rejects.toMatchObject({ status: 500 });
+    expect(queryClient.getQueryData(['private'])).toBeUndefined();
+    expect(queryClient.getQueryData(['company'])).toEqual({ name: 'Lumora' });
+  });
   it('routes mine, updates, closes, reopens and applications to the documented endpoints', async () => {
     const calls: string[] = [];
     const emptyPage = { data: [], meta: { page: 1, limit: 10, total: 0 } };

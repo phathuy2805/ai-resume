@@ -1,4 +1,4 @@
-import { queryClient } from './queryClient';
+import { clearSessionQueries } from './queryClient';
 import { markErrorHandled, notifyError } from './errorUtils';
 import { onSessionExpired, refreshSession } from './session';
 
@@ -8,8 +8,7 @@ export function installSessionLifecycle(
   isPublicPage: () => boolean,
 ): () => void {
   return onSessionExpired(({ error, hadAccessToken }) => {
-    void queryClient.cancelQueries();
-    queryClient.clear();
+    clearSessionQueries();
     if (hadAccessToken || !isPublicPage()) {
       notifyError(error);
       navigateToLogin();
