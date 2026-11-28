@@ -1,5 +1,91 @@
-import { Injectable } from '@nestjs/common';
+import {
+  generateQuestionPlan,
+  MAX_INTERVIEW_QUESTIONS,
+  MIN_INTERVIEW_QUESTIONS,
+  ParsedCvSchema,
+  ParsedJdSchema,
+  type AiClient,
+  type ParsedCv,
+  type ParsedJd,
+} from '@hireflow/ai';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { AI_CLIENT } from '../../shared/ai/ai.constant.js';
 import type { PlannedQuestion, QuestionPlanInput, QuestionPlanner } from './interviews.type.js';
+
+@Injectable()
+export class AiQuestionPlannerService implements QuestionPlanner {
+  private readonly logger = new Logger(AiQuestionPlannerService.name);
+
+  constructor(
+    @Inject(AI_CLIENT)
+    private readonly aiClient: AiClient,
+  ) {}
+
+  async generateQuestionPlan(input: QuestionPlanInput): Promise<PlannedQuestion[]> {
+    const count = Math.min(
+      Math.max(
+        Math.trunc(input.questionCount || MIN_INTERVIEW_QUESTIONS),
+        MIN_INTERVIEW_QUESTIONS,
+      ),
+      MAX_INTERVIEW_QUESTIONS,
+    );
+
+    const plan = await generateQuestionPlan(
+      this.aiClient,
+      {
+        parsedJd: this.resolveParsedJd(input),
+        parsedCv: this.resolveParsedCv(input),
+        missingSkills: input.missingSkills,
+        count,
+        jobTitle: input.jobTitle,
+      },
+      { logger: this.logger },
+    );
+
+    return plan.map((item) => ({
+      question: item.question,
+      questionType: item.type,
+      targetSkill: item.targetSkill,
+    }));
+  }
+
+  private resolveParsedJd(input: QuestionPlanInput): ParsedJd {
+    const parsed = ParsedJdSchema.safeParse(input.parsedJd);
+    if (parsed.success) {
+      return parsed.data;
+    }
+
+    return {
+      schemaVersion: 1,
+      requiredSkills: input.requiredSkills.map((s) => s.trim()).filter(Boolean),
+      preferredSkills: input.preferredSkills.map((s) => s.trim()).filter(Boolean),
+      minYearsExperience: null,
+      level: null,
+      educationRequirement: null,
+      responsibilities: [],
+      domain: input.jobTitle.trim() || 'General',
+    };
+  }
+
+  private resolveParsedCv(input: QuestionPlanInput): ParsedCv {
+    const parsed = ParsedCvSchema.safeParse(input.parsedCv);
+    if (parsed.success) {
+      return parsed.data;
+    }
+
+    return {
+      schemaVersion: 1,
+      summary: null,
+      skills: [],
+      experiences: [],
+      education: [],
+      projects: [],
+      certifications: [],
+      languages: [],
+      totalYearsExperience: 0,
+    };
+  }
+}
 
 @Injectable()
 export class FallbackQuestionPlannerService implements QuestionPlanner {

@@ -3,15 +3,15 @@ import { InterviewGateway } from './interview.gateway.js';
 import { QUESTION_PLANNER } from './interviews.constant.js';
 import { InterviewsRepository } from './interviews.repository.js';
 import { InterviewsService } from './interviews.service.js';
-import { FallbackQuestionPlannerService } from './question-planner.service.js';
+import { AiQuestionPlannerService } from './question-planner.service.js';
 
 @Module({
   providers: [
     InterviewsRepository,
-    FallbackQuestionPlannerService,
+    AiQuestionPlannerService,
     {
       provide: QUESTION_PLANNER,
-      useExisting: FallbackQuestionPlannerService,
+      useExisting: AiQuestionPlannerService,
     },
     InterviewsService,
     InterviewGateway,

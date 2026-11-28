@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "interviews" ADD COLUMN     "expires_at" TIMESTAMP(3);
+ALTER TABLE "interviews" ADD COLUMN IF NOT EXISTS "expires_at" TIMESTAMP(3);
