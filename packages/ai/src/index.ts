@@ -88,3 +88,17 @@ export type {
   ScreenCvOptions,
 } from './screening.js';
 export type { Explanation, ExplanationStrength, ExplanationGap } from './explanation.js';
+
+// Sinh bộ câu hỏi phỏng vấn (W3-AI-01)
+export {
+  generateQuestionPlan,
+  QUESTION_TYPES,
+  MIN_INTERVIEW_QUESTIONS,
+  MAX_INTERVIEW_QUESTIONS,
+} from './interview-questions.js';
+export type {
+  QuestionPlanItem,
+  QuestionType,
+  GenerateQuestionPlanInput,
+  GenerateQuestionPlanOptions,
+} from './interview-questions.js';

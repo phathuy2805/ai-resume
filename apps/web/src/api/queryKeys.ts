@@ -19,6 +19,8 @@ export const queryKeys = {
       params !== undefined
         ? (['applications', jobId, params] as const)
         : (['applications', jobId] as const),
+    /** Under `byJob(jobId)` so decision/rescreen invalidations refresh the stats page too. */
+    stats: (jobId: string) => ['applications', jobId, 'stats'] as const,
     detail: (id: string) => ['application', id] as const,
   },
   // Namespace only; no interview endpoint has been assumed or implemented.

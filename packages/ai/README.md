@@ -443,6 +443,52 @@ Chạy `npm run eval -w packages/ai` trên toàn bộ 40 cặp CV–JD của `fi
 - **Chi phí & thời gian:** trung bình **3.387 tokens** LLM mỗi CV (2.613 input + 774 output; embedding không trả `tokenCount`). Thời gian trung bình 40 cặp ghi nhận `44,9 s` do nhiều đợt `503 UNAVAILABLE` giờ cao điểm kích hoạt retry; ở lượt không gặp `503` (các lượt đo độ ổn định), mỗi CV mất khoảng **4,2–7,4 s**.
 - **Hạn chế:** nhãn do 1 người gán, bộ dữ liệu nhỏ (30 CV / 40 cặp), và toàn bộ CV là dữ liệu giả lập.
 
+## Sinh câu hỏi phỏng vấn (`generateQuestionPlan`)
+
+BE gọi **1 lần** khi ứng viên bắt đầu phiên (W3-BE-01), lưu mỗi câu thành một `InterviewTurn`.
+Kết nối lại chỉ đọc DB, không sinh lại.
+
+```ts
+import { generateQuestionPlan } from '@hireflow/ai';
+
+const plan = await generateQuestionPlan(
+  ai,
+  {
+    parsedJd: job.parsedJd,
+    parsedCv: application.parsedCv,
+    missingSkills: screening.breakdown.requiredSkills.missing, // [] nếu không thiếu
+    count: job.interviewQuestionCount, // 3–5
+    jobTitle: job.title, // không bắt buộc
+  },
+  { logger: new Logger('AI') }, // không bắt buộc; còn nhận timeoutMs, maxRetries
+);
+// plan: QuestionPlanItem[] → InterviewTurn { order, question, questionType: type, targetSkill }
+```
+
+```ts
+// QuestionPlanItem
+{
+  order: number,                                      // 1..count, liên tục
+  question: string,                                   // tiếng Việt, dưới 30 từ, đọc thành tiếng được
+  type: 'TECHNICAL' | 'SITUATIONAL' | 'EXPERIENCE',   // chuyên môn / tình huống / kinh nghiệm thực tế
+  targetSkill: string,                                // kỹ năng câu hỏi kiểm tra; tên chuẩn của JD nếu khớp
+}
+```
+
+- **Nội dung (prompt):** khoảng một nửa `TECHNICAL`, còn lại chia đều `SITUATIONAL` / `EXPERIENCE`
+  (3 câu: 2/0/1, 4 câu: 2/1/1, 5 câu: 3/1/1); ít nhất 1 câu về kỹ năng bắt buộc còn thiếu (nếu có);
+  ít nhất 1 câu về công việc / dự án cụ thể trong CV; xưng "bạn"; không hỏi tuổi, giới tính, gia đình, quê quán...
+  Temperature 0.4.
+- **Chỉnh bằng code:** bỏ câu rỗng / trùng; thừa câu thì cắt về `count` (giữ câu về kỹ năng còn thiếu); đánh lại
+  `order`; `targetSkill` đưa về tên chuẩn của JD (rỗng → `parsedJd.domain`). Câu quá 30 từ chỉ ghi log `warn`.
+- **Gọi lại tối đa 1 lần:** thiếu câu → gọi lại, vẫn thiếu thì ném `AiInvalidResponseError`
+  (BE gửi `interview:error`, giữ `INTERVIEW_INVITED`). Không có câu về kỹ năng còn thiếu → gọi lại,
+  vẫn không có thì vẫn dùng và ghi log.
+- **Lỗi khác:** `count` ngoài 3–5 → `RangeError` (không gọi Gemini); 429 / timeout → `AiError` của client.
+- **Quota:** thường 1 lần gọi, ~2.000–3.000 token. Prompt chỉ gửi JD (domain, level, kỹ năng, trách nhiệm) và CV
+  (kỹ năng, công việc, dự án; mô tả cắt còn 300 ký tự), không gửi học vấn, chứng chỉ, ngôn ngữ.
+- **Không làm:** câu hỏi vặn lại (follow-up) — Hướng phát triển.
+
 ## Scripts
 
 Chạy từ thư mục gốc repo:
@@ -466,6 +512,7 @@ Chạy từ thư mục gốc repo:
 | `npm run try -w packages/ai -- score [all]` | `scoreCv` trên 13 cặp CV ↔ JD tập dev của `labels.csv` (`all`: 40 cặp), so với `expected_score` và nhãn theo ngưỡng của job |
 | `npm run try -w packages/ai -- score repeat <cv> [số lần] [--full]` | Chấm một CV nhiều lần (mặc định 3), kiểm tra chênh ≤ 5; `--full` parse + embed lại mỗi lần |
 | `npm run try -w packages/ai -- screen [dev \| <cv...>]` | `screenCv` trên 3 cặp dev (phù hợp / borderline / khác ngành); `dev`: 13 cặp tập dev; hoặc CV chỉ định (ghép JD theo `labels.csv`). In giải thích, tự kiểm tra 2–4 điểm mạnh, `gaps` khớp `breakdown`, không lộ thông tin cá nhân |
+| `npm run try -w packages/ai -- questions [<cv...>]` | `generateQuestionPlan` trên 3 cặp dev (5 / 4 / 3 câu) hoặc CV chỉ định (ghép JD theo `labels.csv`). In câu hỏi, tự kiểm tra đúng số câu, order, dưới 30 từ, có câu về kỹ năng còn thiếu, có câu EXPERIENCE, không hỏi thông tin cá nhân |
 | `npm run eval -w packages/ai` | Chạy đánh giá độ chính xác trên 40 cặp `fixtures/labels.csv` + đo độ ổn định 5 CV × 3 lần (có cache trung gian `.cache/eval-cache.json` để resume khi gặp giới hạn quota), xuất `eval/results.md` và `eval/results.json` |
 
 `npm run try` đọc `packages/ai/.env`: copy từ `.env.example` rồi điền `GEMINI_API_KEY` và `GEMINI_MODEL_TEXT` (demo `embed` và `score` cần thêm `GEMINI_MODEL_EMBEDDING`). Free tier dễ chạm giới hạn số lần gọi mỗi phút:
