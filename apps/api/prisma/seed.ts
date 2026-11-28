@@ -81,8 +81,43 @@ const SEED_JOBS = [
   },
 ];
 
+// Doanh nghiệp giả lập (tên, domain .example, số điện thoại đều là dữ liệu fake)
+const SEED_COMPANY = {
+  name: 'Công ty Cổ phần Công nghệ Lumora',
+  shortName: 'Lumora Tech',
+  tagline: 'Kiến tạo sản phẩm số cho hàng triệu người dùng Việt',
+  logoUrl: null,
+  industry: 'Phần mềm / Công nghệ thông tin',
+  companySize: '200-500 nhân viên',
+  foundedYear: 2016,
+  address: 'Tầng 12, Toà nhà Lumora, Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh',
+  website: 'https://lumora.example',
+  contactEmail: 'tuyendung@lumora.example',
+  phone: '(028) 3800 0000',
+  description:
+    'Lumora Tech là công ty công nghệ phát triển các nền tảng thương mại điện tử, thanh toán số và phân tích dữ liệu cho doanh nghiệp vừa và nhỏ. Với đội ngũ hơn 300 kỹ sư, chuyên gia dữ liệu và marketing, chúng tôi vận hành các sản phẩm phục vụ hơn 2 triệu người dùng mỗi tháng trên toàn quốc.',
+  culture:
+    'Chúng tôi đề cao tinh thần chủ động, minh bạch và học hỏi liên tục. Mỗi thành viên được trao quyền ra quyết định trong phạm vi công việc, được khuyến khích chia sẻ kiến thức qua các buổi Tech Talk hằng tuần và được đánh giá dựa trên kết quả thay vì thời gian ngồi văn phòng.',
+  benefits: [
+    'Lương tháng 13 và thưởng hiệu suất theo quý',
+    'Bảo hiểm sức khoẻ cao cấp cho nhân viên và người thân',
+    'Làm việc hybrid 2 ngày/tuần tại nhà',
+    'Ngân sách học tập 10 triệu đồng/năm cho khoá học và chứng chỉ',
+    '15 ngày phép năm và team building hằng năm',
+    'Cấp MacBook / laptop cấu hình cao khi nhận việc',
+  ],
+};
+
 async function main() {
   console.log('🌱 Starting database seed...');
+
+  // 0. Thông tin doanh nghiệp (bảng singleton - tối đa 1 dòng)
+  const company = await prisma.company.upsert({
+    where: { singleton: true },
+    update: SEED_COMPANY,
+    create: SEED_COMPANY,
+  });
+  console.log(`✅ Seeded Company: ${company.name}`);
 
   const defaultPassword = process.env.SEED_DEFAULT_PASSWORD || 'ChangeMe123!';
   const passwordHash = await bcrypt.hash(defaultPassword, 10);

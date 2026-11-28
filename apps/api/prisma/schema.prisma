@@ -56,8 +56,33 @@ enum AnswerSource {
 }
 
 // ==========================================
-// 2. CORE MODELS (User, RefreshToken, Job)
+// 2. CORE MODELS (Company, User, RefreshToken, Job)
 // ==========================================
+
+// Hồ sơ doanh nghiệp tuyển dụng. Hệ thống phục vụ 1 doanh nghiệp duy nhất:
+// cột `singleton` (unique, luôn = true) đảm bảo bảng chỉ có tối đa 1 dòng.
+model Company {
+  id           String   @id @default(uuid())
+  singleton    Boolean  @unique @default(true)
+  name         String
+  shortName    String?  @map("short_name")
+  tagline      String?
+  logoUrl      String?  @map("logo_url")
+  industry     String?
+  companySize  String?  @map("company_size")
+  foundedYear  Int?     @map("founded_year")
+  address      String?
+  website      String?
+  contactEmail String?  @map("contact_email")
+  phone        String?
+  description  String?  @db.Text
+  culture      String?  @db.Text
+  benefits     String[] @default([])
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("company")
+}
 
 model User {
   id           String   @id @default(uuid())
