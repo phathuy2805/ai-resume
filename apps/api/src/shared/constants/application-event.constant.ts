@@ -8,4 +8,5 @@ export interface ApplicationStatusChangedPayload {
   fromStatus: ApplicationStatus | null;
   toStatus: ApplicationStatus;
   actorId: string | null;
+  candidateMessage?: string | null;
 }

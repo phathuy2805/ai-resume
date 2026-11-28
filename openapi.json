@@ -2016,6 +2016,516 @@
         ]
       }
     },
+    "/api/applications/{id}/interview": {
+      "get": {
+        "description": "Trả danh sách lượt hỏi đáp (kèm nguồn VOICE/TEXT, transcriptStatus, askedAt, answeredAt, durationSec, isEmpty, link presigned audioUrl để nghe lại).\n\nTrả điểm 4 tiêu chí, totalScore, passThreshold, rubricWeights, nhận xét tổng quan, trích dẫn bằng chứng từng tiêu chí, aiRecommendation (PASS/REJECT), quyết định của HR, evaluationError và phase/hạn của phiên.",
+        "operationId": "InterviewEvaluationController_getApplicationInterview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh hồ sơ ứng tuyển (Application UUID)",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chi tiết phiên phỏng vấn và kết quả đánh giá",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GetApplicationInterviewResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Application ID không đúng định dạng UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "INTERVIEW_FORBIDDEN": {
+                    "summary": "Bạn không có quyền truy cập thông tin phỏng vấn này",
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Bạn không có quyền truy cập thông tin phỏng vấn này",
+                      "code": "INTERVIEW_FORBIDDEN",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy hồ sơ hoặc hồ sơ chưa có phiên phỏng vấn",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_NOT_FOUND": {
+                    "summary": "Không tìm thấy hồ sơ ứng tuyển",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy hồ sơ ứng tuyển",
+                      "code": "APPLICATION_NOT_FOUND",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  },
+                  "INTERVIEW_NOT_FOUND": {
+                    "summary": "Không tìm thấy phiên phỏng vấn",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy phiên phỏng vấn",
+                      "code": "INTERVIEW_NOT_FOUND",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Xem chi tiết phiên phỏng vấn và kết quả AI đánh giá (HR sở hữu job)",
+        "tags": [
+          "Interviews"
+        ]
+      }
+    },
+    "/api/applications/{id}/interview-decision": {
+      "post": {
+        "description": "Chỉ nhận khi hồ sơ đang ở trạng thái EVALUATED và chưa có quyết định cuối.\n\nQuyết định là cuối cùng, không hoàn tác: PASS chuyển sang PASSED, FAIL chuyển sang FAILED và phát sự kiện application.status_changed để gửi email cho ứng viên.\n\nnote là ghi chú nội bộ (không gửi ứng viên); candidateMessage là lời nhắn tùy chọn tối đa 500 ký tự hiển thị tại trang phản hồi và email.",
+        "operationId": "InterviewEvaluationController_decideInterview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh hồ sơ ứng tuyển (Application UUID)",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InterviewDecisionBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lưu quyết định vòng phỏng vấn thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InterviewDecisionResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu quyết định hoặc ID không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "INTERVIEW_FORBIDDEN": {
+                    "summary": "Bạn không có quyền truy cập thông tin phỏng vấn này",
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Bạn không có quyền truy cập thông tin phỏng vấn này",
+                      "code": "INTERVIEW_FORBIDDEN",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy hồ sơ hoặc phiên phỏng vấn",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_NOT_FOUND": {
+                    "summary": "Không tìm thấy hồ sơ ứng tuyển",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy hồ sơ ứng tuyển",
+                      "code": "APPLICATION_NOT_FOUND",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  },
+                  "INTERVIEW_NOT_FOUND": {
+                    "summary": "Không tìm thấy phiên phỏng vấn",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy phiên phỏng vấn",
+                      "code": "INTERVIEW_NOT_FOUND",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Hồ sơ không ở trạng thái EVALUATED hoặc HR đã ra quyết định trước đó",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "INVALID_INTERVIEW_DECISION_STATUS": {
+                    "summary": "Chỉ có thể quyết định Đạt/Không đạt khi hồ sơ đang ở trạng thái EVALUATED và chưa có quyết định cuối",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Chỉ có thể quyết định Đạt/Không đạt khi hồ sơ đang ở trạng thái EVALUATED và chưa có quyết định cuối",
+                      "code": "INVALID_INTERVIEW_DECISION_STATUS",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "HR ra quyết định Đạt/Không đạt vòng phỏng vấn sơ bộ",
+        "tags": [
+          "Interviews"
+        ]
+      }
+    },
+    "/api/interviews/{id}/re-evaluate": {
+      "post": {
+        "description": "Chỉ cho phép khi HR chưa ra quyết định: phiên đang ở INTERVIEWING có evaluationError, hoặc đang ở EVALUATED chưa quyết định.\n\nXóa evaluationError và đưa phiên vào chạy nền (nhận dạng lại các câu FAILED rồi chấm lại).",
+        "operationId": "InterviewEvaluationController_reEvaluateInterview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh phiên phỏng vấn (Interview UUID)",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Đã tiếp nhận yêu cầu đánh giá lại ở nền",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ReEvaluateInterviewResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Interview ID không đúng định dạng UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chỉ HR sở hữu tin tuyển dụng mới được truy cập",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "INTERVIEW_FORBIDDEN": {
+                    "summary": "Bạn không có quyền truy cập thông tin phỏng vấn này",
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Bạn không có quyền truy cập thông tin phỏng vấn này",
+                      "code": "INTERVIEW_FORBIDDEN",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy phiên phỏng vấn",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "INTERVIEW_NOT_FOUND": {
+                    "summary": "Không tìm thấy phiên phỏng vấn",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy phiên phỏng vấn",
+                      "code": "INTERVIEW_NOT_FOUND",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Phiên phỏng vấn đã có quyết định cuối hoặc chưa đủ điều kiện đánh giá lại",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "INVALID_REEVALUATE_STATUS": {
+                    "summary": "Chỉ có thể đánh giá lại khi HR chưa ra quyết định (phiên đang lỗi ở trạng thái INTERVIEWING hoặc đang ở EVALUATED)",
+                    "value": {
+                      "statusCode": 409,
+                      "message": "Chỉ có thể đánh giá lại khi HR chưa ra quyết định (phiên đang lỗi ở trạng thái INTERVIEWING hoặc đang ở EVALUATED)",
+                      "code": "INVALID_REEVALUATE_STATUS",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "HR yêu cầu chạy lại nhận dạng câu lỗi và AI đánh giá lại phiên phỏng vấn",
+        "tags": [
+          "Interviews"
+        ]
+      }
+    },
+    "/api/me/applications/{id}/feedback": {
+      "get": {
+        "description": "Dùng chung cho 2 vòng: PASSED/FAILED trả stage=INTERVIEW; REJECTED trả stage=CV.\n\nfeedback = null nghĩa là phản hồi đang được chuẩn bị. Không bao giờ trả điểm số, đề xuất AI, ngưỡng điểm hay ghi chú nội bộ.\n\nCác trạng thái chưa có kết quả cuối chỉ trả { status }.",
+        "operationId": "InterviewEvaluationController_getCandidateFeedback",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Mã định danh hồ sơ ứng tuyển (Application UUID)",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Phản hồi gửi ứng viên (không chứa điểm hay ghi chú nội bộ)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GetCandidateFeedbackResDto_Output"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Application ID không đúng định dạng UUID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu access token hoặc token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Chỉ ứng viên sở hữu hồ sơ mới được truy cập",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "INTERVIEW_FORBIDDEN": {
+                    "summary": "Bạn không có quyền truy cập thông tin phỏng vấn này",
+                    "value": {
+                      "statusCode": 403,
+                      "message": "Bạn không có quyền truy cập thông tin phỏng vấn này",
+                      "code": "INTERVIEW_FORBIDDEN",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không tìm thấy hồ sơ ứng tuyển",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "APPLICATION_NOT_FOUND": {
+                    "summary": "Không tìm thấy hồ sơ ứng tuyển",
+                    "value": {
+                      "statusCode": 404,
+                      "message": "Không tìm thấy hồ sơ ứng tuyển",
+                      "code": "APPLICATION_NOT_FOUND",
+                      "timestamp": "2026-11-28T03:00:00.000Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Ứng viên xem phản hồi sau quyết định của HR (vòng CV bị loại hoặc vòng phỏng vấn)",
+        "tags": [
+          "Interviews"
+        ]
+      }
+    },
     "/api/screening/trigger/{applicationId}": {
       "post": {
         "operationId": "ScreeningDraftController_triggerScreening",
@@ -2071,122 +2581,6 @@
         "summary": "[Phác thảo Tuần 2] Lấy kết quả chấm điểm sàng lọc, điểm mạnh và lỗ hổng kỹ năng",
         "tags": [
           "Draft - Screening (Week 2)"
-        ]
-      }
-    },
-    "/api/interviews/session/{applicationId}": {
-      "post": {
-        "operationId": "InterviewDraftController_createSession",
-        "parameters": [
-          {
-            "name": "applicationId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "[Phác thảo Tuần 3] Khởi tạo phiên phỏng vấn giọng nói hai chiều với AI",
-        "tags": [
-          "Draft - Interview (Week 3)"
-        ]
-      }
-    },
-    "/api/interviews/session/{interviewId}/turn": {
-      "get": {
-        "operationId": "InterviewDraftController_getNextTurn",
-        "parameters": [
-          {
-            "name": "interviewId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "[Phác thảo Tuần 3] Nhận câu hỏi phỏng vấn tiếp theo từ AI thích ứng",
-        "tags": [
-          "Draft - Interview (Week 3)"
-        ]
-      }
-    },
-    "/api/interviews/complete/{interviewId}": {
-      "post": {
-        "operationId": "InterviewDraftController_completeInterview",
-        "parameters": [
-          {
-            "name": "interviewId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "[Phác thảo Tuần 3] Kết thúc phỏng vấn và kích hoạt đánh giá transcript",
-        "tags": [
-          "Draft - Interview (Week 3)"
-        ]
-      }
-    },
-    "/api/interviews/report/{interviewId}": {
-      "get": {
-        "operationId": "InterviewDraftController_getInterviewReport",
-        "parameters": [
-          {
-            "name": "interviewId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "JWT-auth": []
-          }
-        ],
-        "summary": "[Phác thảo Tuần 3] Xem báo cáo 4 cột điểm phỏng vấn cho HR và ứng viên",
-        "tags": [
-          "Draft - Interview (Week 3)"
         ]
       }
     },
@@ -4242,6 +4636,13 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "description": "Mã phiên phỏng vấn AI nếu đã được mời phỏng vấn (null nếu chưa có)",
             "nullable": true
+          },
+          "interviewExpiresAt": {
+            "description": "Hạn chót hoàn thành phỏng vấn AI (ISO 8601, null nếu chưa có hoặc không giới hạn)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -4933,6 +5334,13 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "nullable": true
           },
+          "interviewExpiresAt": {
+            "description": "Hạn chót hoàn thành phỏng vấn AI (ISO 8601, null nếu chưa có hoặc không giới hạn)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "statusHistories": {
             "type": "array",
             "items": {
@@ -5037,6 +5445,12 @@
             ],
             "description": "Quyết định của HR sau vòng CV"
           },
+          "interviewDeadlineDays": {
+            "description": "Số ngày hạn hoàn thành phỏng vấn AI (1-30, mặc định 7 ngày; chỉ áp dụng khi APPROVE)",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
           "note": {
             "description": "Ghi chú của HR",
             "type": "string",
@@ -5078,6 +5492,13 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "nullable": true
+          },
+          "interviewExpiresAt": {
+            "description": "Hạn chót hoàn thành phỏng vấn AI (ISO 8601, null nếu REJECT)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "hrDecisionById": {
             "type": "string",
@@ -5160,6 +5581,690 @@
         "required": [
           "url",
           "expiresInSec"
+        ],
+        "additionalProperties": false
+      },
+      "GetApplicationInterviewResDto_Output": {
+        "type": "object",
+        "properties": {
+          "interviewId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUBMITTED",
+              "SCREENING",
+              "SCREENING_FAILED",
+              "SCREENED",
+              "SHORTLISTED",
+              "REJECTED",
+              "INTERVIEW_INVITED",
+              "INTERVIEWING",
+              "EVALUATED",
+              "PASSED",
+              "FAILED"
+            ]
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "INVITED",
+              "IN_PROGRESS",
+              "SUBMITTED",
+              "EVALUATED",
+              "DECIDED",
+              "EXPIRED"
+            ]
+          },
+          "expiresAt": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "inviteExpiresAt": {
+            "type": "string"
+          },
+          "sessionExpiresAt": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isExpired": {
+            "type": "boolean"
+          },
+          "recordingConsentAt": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "startedAt": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "completedAt": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "transcriptS3Key": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evaluationError": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "passThreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "rubricWeights": {
+            "type": "object",
+            "properties": {
+              "technical": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số chuyên môn (%)"
+              },
+              "communication": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số giao tiếp (%)"
+              },
+              "relevance": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số độ phù hợp (%)"
+              },
+              "evidence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Trọng số minh chứng (%)"
+              }
+            },
+            "required": [
+              "technical",
+              "communication",
+              "relevance",
+              "evidence"
+            ],
+            "additionalProperties": false
+          },
+          "turns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "orderIndex": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "question": {
+                  "type": "string"
+                },
+                "questionType": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "targetSkill": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "answerText": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "VOICE",
+                    "TEXT"
+                  ]
+                },
+                "transcriptStatus": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "DONE",
+                    "NO_SPEECH",
+                    "FAILED",
+                    null
+                  ],
+                  "nullable": true
+                },
+                "transcriptEdited": {
+                  "type": "boolean"
+                },
+                "askedAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "answeredAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "durationSec": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "nullable": true
+                },
+                "isEmpty": {
+                  "type": "boolean"
+                },
+                "audioUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "orderIndex",
+                "question",
+                "questionType",
+                "targetSkill",
+                "answerText",
+                "source",
+                "transcriptStatus",
+                "transcriptEdited",
+                "askedAt",
+                "answeredAt",
+                "durationSec",
+                "isEmpty",
+                "audioUrl"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "technicalScore": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "communicationScore": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "relevanceScore": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "evidenceScore": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "totalScore": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "feedbackSummary": {
+                "type": "string"
+              },
+              "evidenceQuotes": {
+                "type": "object",
+                "properties": {
+                  "technical": {
+                    "type": "object",
+                    "properties": {
+                      "comment": {
+                        "type": "string",
+                        "description": "Nhận xét cho tiêu chí"
+                      },
+                      "quotes": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Các câu trích dẫn dẫn chứng từ lời trả lời của ứng viên"
+                      }
+                    },
+                    "required": [
+                      "comment",
+                      "quotes"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "communication": {
+                    "type": "object",
+                    "properties": {
+                      "comment": {
+                        "type": "string",
+                        "description": "Nhận xét cho tiêu chí"
+                      },
+                      "quotes": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Các câu trích dẫn dẫn chứng từ lời trả lời của ứng viên"
+                      }
+                    },
+                    "required": [
+                      "comment",
+                      "quotes"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "relevance": {
+                    "type": "object",
+                    "properties": {
+                      "comment": {
+                        "type": "string",
+                        "description": "Nhận xét cho tiêu chí"
+                      },
+                      "quotes": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Các câu trích dẫn dẫn chứng từ lời trả lời của ứng viên"
+                      }
+                    },
+                    "required": [
+                      "comment",
+                      "quotes"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "evidence": {
+                    "type": "object",
+                    "properties": {
+                      "comment": {
+                        "type": "string",
+                        "description": "Nhận xét cho tiêu chí"
+                      },
+                      "quotes": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Các câu trích dẫn dẫn chứng từ lời trả lời của ứng viên"
+                      }
+                    },
+                    "required": [
+                      "comment",
+                      "quotes"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "technical",
+                  "communication",
+                  "relevance",
+                  "evidence"
+                ],
+                "additionalProperties": false
+              },
+              "aiRecommendation": {
+                "type": "string",
+                "enum": [
+                  "PASS",
+                  "REJECT"
+                ]
+              },
+              "candidateFeedback": {
+                "type": "object",
+                "properties": {
+                  "strengths": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Các điểm mạnh nổi bật"
+                  },
+                  "improvements": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Các điểm cần cải thiện"
+                  },
+                  "suggestions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Gợi ý cụ thể để phát triển thêm"
+                  }
+                },
+                "required": [
+                  "strengths",
+                  "improvements",
+                  "suggestions"
+                ],
+                "additionalProperties": false
+              },
+              "decisionBy": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "description": "ID người dùng (UUID)"
+                  },
+                  "fullName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Họ và tên đầy đủ"
+                  }
+                },
+                "required": [
+                  "id",
+                  "fullName"
+                ],
+                "additionalProperties": false,
+                "nullable": true
+              },
+              "decisionAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "decisionNote": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "candidateMessage": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "createdAt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "technicalScore",
+              "communicationScore",
+              "relevanceScore",
+              "evidenceScore",
+              "totalScore",
+              "feedbackSummary",
+              "evidenceQuotes",
+              "aiRecommendation",
+              "candidateFeedback",
+              "decisionBy",
+              "decisionAt",
+              "decisionNote",
+              "candidateMessage",
+              "createdAt"
+            ],
+            "additionalProperties": false,
+            "nullable": true
+          }
+        },
+        "required": [
+          "interviewId",
+          "applicationId",
+          "status",
+          "phase",
+          "expiresAt",
+          "inviteExpiresAt",
+          "sessionExpiresAt",
+          "isExpired",
+          "recordingConsentAt",
+          "startedAt",
+          "completedAt",
+          "transcriptS3Key",
+          "evaluationError",
+          "passThreshold",
+          "rubricWeights",
+          "turns",
+          "result"
+        ],
+        "additionalProperties": false
+      },
+      "InterviewDecisionBodyDto": {
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "FAIL"
+            ],
+            "description": "Quyết định cuối vòng phỏng vấn sơ bộ (PASS hoặc FAIL)"
+          },
+          "note": {
+            "description": "Ghi chú nội bộ của HR (không hiển thị cho ứng viên)",
+            "type": "string",
+            "maxLength": 1000
+          },
+          "candidateMessage": {
+            "description": "Lời nhắn gửi ứng viên (hiển thị tại trang phản hồi và email)",
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "additionalProperties": false
+      },
+      "InterviewDecisionResDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "interviewId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PASSED",
+              "FAILED"
+            ]
+          },
+          "decisionById": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "decisionAt": {
+            "type": "string"
+          },
+          "decisionNote": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "candidateMessage": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "interviewId",
+          "status",
+          "decisionById",
+          "decisionAt",
+          "decisionNote",
+          "candidateMessage"
+        ],
+        "additionalProperties": false
+      },
+      "ReEvaluateInterviewResDto_Output": {
+        "type": "object",
+        "properties": {
+          "interviewId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUBMITTED",
+              "SCREENING",
+              "SCREENING_FAILED",
+              "SCREENED",
+              "SHORTLISTED",
+              "REJECTED",
+              "INTERVIEW_INVITED",
+              "INTERVIEWING",
+              "EVALUATED",
+              "PASSED",
+              "FAILED"
+            ]
+          }
+        },
+        "required": [
+          "interviewId",
+          "applicationId",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "GetCandidateFeedbackResDto_Output": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUBMITTED",
+              "SCREENING",
+              "SCREENING_FAILED",
+              "SCREENED",
+              "SHORTLISTED",
+              "REJECTED",
+              "INTERVIEW_INVITED",
+              "INTERVIEWING",
+              "EVALUATED",
+              "PASSED",
+              "FAILED"
+            ],
+            "description": "Trạng thái hiện tại của hồ sơ"
+          },
+          "stage": {
+            "type": "string",
+            "description": "Vòng phản hồi (CV hoặc INTERVIEW)",
+            "enum": [
+              "CV",
+              "INTERVIEW"
+            ]
+          },
+          "result": {
+            "type": "string",
+            "description": "Kết quả quyết định của HR",
+            "enum": [
+              "PASSED",
+              "FAILED",
+              "REJECTED"
+            ]
+          },
+          "candidateMessage": {
+            "description": "Lời nhắn của HR gửi ứng viên",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "feedback": {
+            "type": "object",
+            "properties": {
+              "strengths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Các điểm mạnh nổi bật"
+              },
+              "improvements": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Các điểm cần cải thiện"
+              },
+              "suggestions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Gợi ý cụ thể để phát triển thêm"
+              }
+            },
+            "required": [
+              "strengths",
+              "improvements",
+              "suggestions"
+            ],
+            "additionalProperties": false,
+            "description": "Phản hồi kỹ năng dạng JSON (null nếu đang chuẩn bị)",
+            "nullable": true
+          }
+        },
+        "required": [
+          "status"
         ],
         "additionalProperties": false
       },

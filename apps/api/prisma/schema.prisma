@@ -210,13 +210,14 @@ model Interview {
   recordingConsentAt DateTime?        @map("recording_consent_at")
   startedAt          DateTime?        @map("started_at")
   completedAt        DateTime?        @map("completed_at")
+  expiresAt          DateTime?        @map("expires_at")
   transcriptS3Key    String?          @map("transcript_s3_key")
   evaluationError    String?          @map("evaluation_error") @db.Text
   createdAt          DateTime         @default(now()) @map("created_at")
-  expiresAt          DateTime?        @map("expires_at")
-  application        Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  turns              InterviewTurn[]
-  result             InterviewResult?
+
+  application Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  turns       InterviewTurn[]
+  result      InterviewResult?
 
   @@map("interviews")
 }
