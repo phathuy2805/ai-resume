@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import Logo from '@/components/common/Logo';
+import BrandLogo from '@/components/common/BrandLogo';
 import { getActiveHrLink, hrLinkGroups, hrLinks } from '@/components/layout/hrLinks';
 import { cn } from '@/lib/utils';
 
@@ -14,7 +14,7 @@ export default function HrSidebar({ onNavigate }: { onNavigate?: () => void }) {
         onClick={onNavigate}
         className="flex h-14 items-center border-b border-border px-6"
       >
-        <Logo />
+        <BrandLogo />
       </Link>
       <div className="flex flex-col gap-5 p-4">
         {hrLinkGroups.map((group) => (

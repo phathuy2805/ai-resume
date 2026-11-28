@@ -7,9 +7,11 @@ import {
   type AiClient,
   type ParsedCv,
   type ParsedJd,
+  type QuestionPlanCompany,
 } from '@hireflow/ai';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AI_CLIENT } from '../../shared/ai/ai.constant.js';
+import { CompanyService } from '../company/company.service.js';
 import type { PlannedQuestion, QuestionPlanInput, QuestionPlanner } from './interviews.type.js';
 
 @Injectable()
@@ -19,14 +21,12 @@ export class AiQuestionPlannerService implements QuestionPlanner {
   constructor(
     @Inject(AI_CLIENT)
     private readonly aiClient: AiClient,
+    private readonly companyService: CompanyService,
   ) {}
 
   async generateQuestionPlan(input: QuestionPlanInput): Promise<PlannedQuestion[]> {
     const count = Math.min(
-      Math.max(
-        Math.trunc(input.questionCount || MIN_INTERVIEW_QUESTIONS),
-        MIN_INTERVIEW_QUESTIONS,
-      ),
+      Math.max(Math.trunc(input.questionCount || MIN_INTERVIEW_QUESTIONS), MIN_INTERVIEW_QUESTIONS),
       MAX_INTERVIEW_QUESTIONS,
     );
 
@@ -38,6 +38,7 @@ export class AiQuestionPlannerService implements QuestionPlanner {
         missingSkills: input.missingSkills,
         count,
         jobTitle: input.jobTitle,
+        company: await this.resolveCompany(),
       },
       { logger: this.logger },
     );
@@ -47,6 +48,26 @@ export class AiQuestionPlannerService implements QuestionPlanner {
       questionType: item.type,
       targetSkill: item.targetSkill,
     }));
+  }
+
+  /**
+   * Thông tin công ty giúp câu hỏi tình huống sát bối cảnh doanh nghiệp.
+   * Không bắt buộc: chưa cấu hình hoặc lỗi thì vẫn sinh câu hỏi như cũ (chỉ ghi log).
+   */
+  private async resolveCompany(): Promise<QuestionPlanCompany | null> {
+    try {
+      const company = await this.companyService.getCompany();
+      return {
+        name: company.name,
+        industry: company.industry,
+        description: company.description,
+        culture: company.culture,
+      };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Bỏ qua thông tin công ty khi sinh câu hỏi phỏng vấn: ${reason}`);
+      return null;
+    }
   }
 
   private resolveParsedJd(input: QuestionPlanInput): ParsedJd {

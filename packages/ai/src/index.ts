@@ -103,6 +103,7 @@ export type {
   QuestionType,
   GenerateQuestionPlanInput,
   GenerateQuestionPlanOptions,
+  QuestionPlanCompany,
 } from './interview-questions.js';
 
 // Chuyển giọng nói thành chữ (W3-BE-02 Phần 1)

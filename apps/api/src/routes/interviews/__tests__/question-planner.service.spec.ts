@@ -1,5 +1,7 @@
 import * as aiPkg from '@hireflow/ai';
+import { NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CompanyService } from '../../company/company.service.js';
 import { AiQuestionPlannerService } from '../question-planner.service.js';
 
 describe('AiQuestionPlannerService', () => {
@@ -9,11 +11,21 @@ describe('AiQuestionPlannerService', () => {
     embed: vi.fn(),
   } as unknown as aiPkg.AiClient;
 
+  const company = {
+    name: 'Công ty Cổ phần Công nghệ Lumora',
+    industry: 'Phần mềm',
+    description: 'Nền tảng thương mại điện tử',
+    culture: 'Chủ động, minh bạch',
+  };
+  let companyService: { getCompany: ReturnType<typeof vi.fn> };
   let service: AiQuestionPlannerService;
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    service = new AiQuestionPlannerService(aiClient);
+    companyService = {
+      getCompany: vi.fn().mockResolvedValue({ ...company, id: 'c1', logoUrl: null, benefits: [] }),
+    };
+    service = new AiQuestionPlannerService(aiClient, companyService as unknown as CompanyService);
   });
 
   it('gọi generateQuestionPlan từ @hireflow/ai với parsedJd/parsedCv hợp lệ và map về PlannedQuestion[]', async () => {
@@ -78,6 +90,7 @@ describe('AiQuestionPlannerService', () => {
         missingSkills: ['Redis'],
         count: 3,
         jobTitle: 'Backend Engineer',
+        company,
       },
       expect.objectContaining({ logger: expect.anything() }),
     );
@@ -131,6 +144,30 @@ describe('AiQuestionPlannerService', () => {
     });
     expect(callInput.parsedCv.schemaVersion).toBe(1);
     expect(callInput.parsedCv.skills).toEqual([]);
+  });
+
+  it('vẫn sinh câu hỏi (company = null) khi chưa cấu hình thông tin công ty', async () => {
+    companyService.getCompany.mockRejectedValueOnce(
+      new NotFoundException('Chưa cấu hình thông tin doanh nghiệp'),
+    );
+    const spy = vi.spyOn(aiPkg, 'generateQuestionPlan').mockResolvedValueOnce([
+      { order: 1, question: 'Q1', type: 'TECHNICAL', targetSkill: 'NodeJS' },
+      { order: 2, question: 'Q2', type: 'TECHNICAL', targetSkill: 'SQL' },
+      { order: 3, question: 'Q3', type: 'SITUATIONAL', targetSkill: 'Debugging' },
+    ]);
+
+    await expect(
+      service.generateQuestionPlan({
+        jobTitle: 'Backend Engineer',
+        requiredSkills: ['NodeJS'],
+        preferredSkills: [],
+        parsedJd: null,
+        parsedCv: null,
+        questionCount: 3,
+        missingSkills: [],
+      }),
+    ).resolves.toHaveLength(3);
+    expect(spy.mock.calls[0][1].company).toBeNull();
   });
 
   it('ném lại lỗi từ generateQuestionPlan để InterviewsService giữ INTERVIEW_INVITED', async () => {

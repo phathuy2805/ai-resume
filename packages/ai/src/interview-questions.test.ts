@@ -156,6 +156,33 @@ describe('buildQuestionPlanPrompt', () => {
     expect(buildQuestionPlanPrompt(input({ parsedCv: cv }))).not.toContain(long);
   });
 
+  it('không có company → không có phần COMPANY', () => {
+    expect(prompt).not.toContain('COMPANY');
+  });
+
+  it('có company → phần COMPANY đứng trước JOB, bỏ dòng trống, cắt giới thiệu dài', () => {
+    const longAbout = 'b'.repeat(1000);
+    const p = buildQuestionPlanPrompt(
+      input({
+        company: {
+          name: ' Lumora Tech ',
+          industry: 'Thương mại điện tử',
+          description: longAbout,
+          culture: '  ',
+        },
+      }),
+    );
+    expect(p).toMatch(
+      /COMPANY\nName: Lumora Tech\nIndustry: Thương mại điện tử\nAbout: b+…\n\nJOB/,
+    );
+    expect(p).not.toContain(longAbout);
+    expect(p).not.toContain('Culture:');
+  });
+
+  it('company không có tên → bỏ qua phần COMPANY', () => {
+    expect(buildQuestionPlanPrompt(input({ company: { name: '  ' } }))).not.toContain('COMPANY');
+  });
+
   it('thêm NOTE khi gọi lại', () => {
     expect(buildQuestionPlanPrompt(input(), 'Return exactly 4.')).toMatch(
       /NOTE\nReturn exactly 4\.$/,

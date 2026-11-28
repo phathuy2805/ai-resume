@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Menu } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import Logo from '@/components/common/Logo';
+import BrandLogo from '@/components/common/BrandLogo';
 import UserMenu from '@/components/layout/UserMenu';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +19,7 @@ export default function CandidateHeader() {
       <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 md:px-8">
         <div className="flex h-full items-center gap-8">
           <Link to="/candidate/jobs">
-            <Logo />
+            <BrandLogo />
           </Link>
           <nav className="hidden h-full items-center gap-6 md:flex">
             {links.map(({ to, label }) => (
