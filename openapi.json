@@ -3,7 +3,7 @@
   "paths": {
     "/api/auth/register": {
       "post": {
-        "description": "Tạo tài khoản mới, đồng thời cấp httpOnly cookie `refresh_token` để client có thể gọi `/api/auth/refresh` lấy `accessToken` ngay.",
+        "description": "Chỉ cho phép tự đăng ký tài khoản ứng viên (`CANDIDATE`); không cho phép tự đăng ký tài khoản `HR`/`ADMIN`. Đồng thời cấp httpOnly cookie `refresh_token` để client có thể gọi `/api/auth/refresh` lấy `accessToken` ngay.",
         "operationId": "AuthController_register",
         "parameters": [],
         "requestBody": {
@@ -18,7 +18,7 @@
         },
         "responses": {
           "201": {
-            "description": "Đăng ký thành công",
+            "description": "Đăng ký tài khoản ứng viên thành công",
             "content": {
               "application/json": {
                 "schema": {
@@ -36,7 +36,7 @@
             }
           },
           "400": {
-            "description": "Dữ liệu đầu vào không hợp lệ",
+            "description": "Dữ liệu đầu vào không hợp lệ hoặc cố tự đăng ký vai trò khác CANDIDATE",
             "content": {
               "application/json": {
                 "schema": {
@@ -56,7 +56,7 @@
             }
           }
         },
-        "summary": "Đăng ký tài khoản mới (HR hoặc CANDIDATE)",
+        "summary": "Đăng ký tài khoản ứng viên mới (CANDIDATE)",
         "tags": [
           "Auth"
         ]
@@ -3022,19 +3022,18 @@
             "description": "Mật khẩu người dùng"
           },
           "role": {
+            "default": "CANDIDATE",
+            "description": "Vai trò khi tự đăng ký (chỉ hỗ trợ CANDIDATE, mặc định là CANDIDATE)",
             "type": "string",
             "enum": [
-              "CANDIDATE",
-              "HR"
-            ],
-            "description": "Vai trò trong hệ thống (HR hoặc CANDIDATE)"
+              "CANDIDATE"
+            ]
           }
         },
         "required": [
           "email",
           "fullName",
-          "password",
-          "role"
+          "password"
         ]
       },
       "RegisterResDto_Output": {

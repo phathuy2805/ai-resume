@@ -24,7 +24,13 @@ export const RegisterBodySchema = UserSchema.pick({
   fullName: true,
 }).extend({
   password: PasswordSchema.describe('Mật khẩu người dùng'),
-  role: z.enum([Role.CANDIDATE, Role.HR]).describe('Vai trò trong hệ thống (HR hoặc CANDIDATE)'),
+  role: z
+    .enum([Role.CANDIDATE], {
+      message: 'Chỉ cho phép tự đăng ký tài khoản ứng viên (CANDIDATE)',
+    })
+    .optional()
+    .default(Role.CANDIDATE)
+    .describe('Vai trò khi tự đăng ký (chỉ hỗ trợ CANDIDATE, mặc định là CANDIDATE)'),
 });
 
 export const LoginBodySchema = UserSchema.pick({
