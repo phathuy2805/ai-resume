@@ -15,6 +15,7 @@ import { JwtAuthGuard } from './shared/guards/jwt-auth.guard.js';
 import { RolesGuard } from './shared/guards/roles.guard.js';
 import { TransformInterceptor } from './shared/interceptors/transform.interceptor.js';
 import { AiModule } from './shared/ai/ai.module.js';
+import { NotificationModule } from './shared/notification/notification.module.js';
 import { SharedModule } from './shared/shared.module.js';
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SharedModule } from './shared/shared.module.js';
     }),
     EventEmitterModule.forRoot(),
     SharedModule,
+    NotificationModule,
     AiModule,
     AuthModule,
     JobsModule,

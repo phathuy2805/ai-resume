@@ -104,22 +104,43 @@ Tất cả các lệnh đều được chạy từ **thư mục gốc**:
 
 ---
 
-## 5. Quy ước làm việc nhóm (Team Conventions)
+## 5. Cấu hình Email thông báo (Amazon SES — `W3-BE-05`)
 
-### 5.1. Quy ước đặt tên nhánh (Branch Naming)
+Hệ thống gửi email thông báo tự động qua HTTPS API của **Amazon SES (`@aws-sdk/client-ses`)** (không dùng cổng SMTP 25 nên không bị chặn trên EC2/VPS) mỗi khi HR ra quyết định (`INTERVIEW_INVITED`, `REJECTED`, `PASSED`, `FAILED`) và khi ứng viên hoàn thành bài phỏng vấn (`interview.completed`).
+
+### Biến môi trường trong `apps/api/.env`
+
+| Biến | Mặc định | Mô tả |
+| --- | --- | --- |
+| `EMAIL_ENABLED` | `false` | `false`: chỉ ghi log nội dung email ra console (dùng khi dev). `true`: gửi thật qua Amazon SES. |
+| `MAIL_FROM` | `HireFlow <no-reply@airesume.id.vn>` | Địa chỉ người gửi đã xác thực (Verified Identity) trên Amazon SES. |
+| `SES_REGION` | *(lấy theo `S3_REGION`)* | AWS Region của SES (vd. `ap-southeast-2`). Tự dùng chung `S3_ACCESS_KEY`/`S3_SECRET_KEY` (hoặc IAM Role trên EC2). |
+| `FRONTEND_ORIGIN` | `http://localhost:5173` | Dùng để dựng link trực tiếp tới trang phòng phỏng vấn / trang phản hồi trong email. |
+
+### Lưu ý vận hành & Production
+- **Xác thực domain (`airesume.id.vn`):** tạo Verified Identity trên Amazon SES và thêm các bản ghi DNS **Easy DKIM (CNAME)** + **SPF** để email vào hộp thư chính, tránh vào Spam.
+- **AWS SES Sandbox:** tài khoản AWS mới ở chế độ Sandbox chỉ gửi được tới các địa chỉ đã Verify trong SES Console; để gửi cho mọi email ứng viên cần bấm *Request Production Access* trong AWS SES.
+- **Tài khoản demo:** mọi địa chỉ kết thúc bằng `@example.com` tự động được bỏ qua không gửi email thật.
+- **An toàn luồng nghiệp vụ:** email không bao giờ chứa điểm số, đề xuất AI, ngưỡng điểm hay ghi chú nội bộ HR; nếu AWS SES lỗi sẽ tự thử lại 1 lần rồi ghi log, không ảnh hưởng việc chuyển trạng thái hồ sơ.
+
+---
+
+## 6. Quy ước làm việc nhóm (Team Conventions)
+
+### 6.1. Quy ước đặt tên nhánh (Branch Naming)
 Mọi nhánh mới phải được rẽ từ nhánh `main` cập nhật mới nhất, đặt tên theo mã thẻ công việc:
 * `feat/<mã-thẻ>`: Phát triển tính năng mới (Ví dụ: `feat/W1-BE-03`, `feat/W1-FE-01`).
 * `fix/<mã-thẻ>`: Sửa lỗi (Ví dụ: `fix/W1-BE-02`).
 * `chore/<mã-thẻ>`: Cấu hình, bảo trì hệ thống.
 
-### 5.2. Quy ước Commit (Conventional Commits)
+### 6.2. Quy ước Commit (Conventional Commits)
 * `feat: <nội dung>` (tính năng mới)
 * `fix: <nội dung>` (sửa lỗi)
 * `docs: <nội dung>` (tài liệu)
 * `refactor: <nội dung>` (tái cấu trúc code)
 * `chore: <nội dung>` (cập nhật dependency, config)
 
-### 5.3. Quy trình Pull Request (PR)
+### 6.3. Quy trình Pull Request (PR)
 * Nhánh `main` được bảo vệ (Branch Protection). **Không được push trực tiếp lên `main`**.
 * Mọi thay đổi phải tạo Pull Request (PR) trỏ về `main`.
 * Cần **ít nhất 1 thành viên review và approve** trước khi merge.
