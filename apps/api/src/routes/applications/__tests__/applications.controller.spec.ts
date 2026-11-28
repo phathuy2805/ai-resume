@@ -117,6 +117,7 @@ describe('ApplicationsController (HTTP)', () => {
         aiRecommendation: null,
         interviewId: null,
         interviewExpiresAt: null,
+        interview: null,
         createdAt: '2026-11-18T03:00:00.000Z',
         updatedAt: '2026-11-18T03:00:00.000Z',
       },

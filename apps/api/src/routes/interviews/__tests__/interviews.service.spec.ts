@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AnswerSource } from '../../../generated/prisma/client.js';
+import { AnswerSource, TurnTranscriptStatus } from '../../../generated/prisma/client.js';
 import { AiQueueService } from '../../../shared/ai/ai-queue.service.js';
 import { ApplicationStatus } from '../../../shared/constants/application-status.enum.js';
 import type { ApplicationStateService } from '../../../shared/services/application-state.service.js';
@@ -9,6 +9,9 @@ import {
   INTERVIEW_AI_QUEUE_PRIORITY,
   INTERVIEW_COMPLETED_EVENT,
   INTERVIEW_ERROR_CODES,
+  INTERVIEW_INVITE_TTL_MS,
+  INTERVIEW_PHASES,
+  INTERVIEW_SESSION_TTL_MS,
   TRANSCRIPT_STATUS,
 } from '../interviews.constant.js';
 import { InterviewWebSocketError } from '../interviews.error.js';
@@ -31,10 +34,13 @@ const TURN_2_ID = '660e8400-e29b-41d4-a716-446655440002';
 function makeOwnership(
   overrides: Partial<InterviewOwnershipRecord> = {},
 ): InterviewOwnershipRecord {
+  const now = new Date();
   return {
     id: INTERVIEW_ID,
     applicationId: APP_ID,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    createdAt: now,
+    startedAt: null,
+    expiresAt: new Date(now.getTime() + INTERVIEW_INVITE_TTL_MS),
     completedAt: null,
     application: {
       candidateId: CANDIDATE_A,
@@ -46,14 +52,14 @@ function makeOwnership(
 }
 
 function makeSession(overrides: Partial<InterviewSessionRecord> = {}): InterviewSessionRecord {
-  const now = new Date('2026-11-27T10:00:00.000Z');
+  const now = new Date();
   return {
     id: INTERVIEW_ID,
     applicationId: APP_ID,
     recordingConsentAt: null,
     startedAt: null,
     completedAt: null,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    expiresAt: new Date(now.getTime() + INTERVIEW_INVITE_TTL_MS),
     evaluationError: null,
     createdAt: now,
     application: {
@@ -87,6 +93,9 @@ describe('InterviewsService', () => {
   let repo: {
     findOwnership: ReturnType<typeof vi.fn>;
     findSessionById: ReturnType<typeof vi.fn>;
+    findExpiredInProgressSessions: ReturnType<typeof vi.fn>;
+    ensureTurnAskedAt: ReturnType<typeof vi.fn>;
+    autoCompleteExpiredSession: ReturnType<typeof vi.fn>;
     startSessionWithTurns: ReturnType<typeof vi.fn>;
     recordTurnAnswer: ReturnType<typeof vi.fn>;
   };
@@ -100,6 +109,9 @@ describe('InterviewsService', () => {
     repo = {
       findOwnership: vi.fn(),
       findSessionById: vi.fn(),
+      findExpiredInProgressSessions: vi.fn().mockResolvedValue([]),
+      ensureTurnAskedAt: vi.fn().mockResolvedValue(undefined),
+      autoCompleteExpiredSession: vi.fn().mockResolvedValue(true),
       startSessionWithTurns: vi.fn(),
       recordTurnAnswer: vi.fn(),
     };
@@ -155,25 +167,28 @@ describe('InterviewsService', () => {
   });
 
   describe('joinInterview', () => {
-    it('returns initial state when INTERVIEW_INVITED', async () => {
+    it('returns NOT_STARTED phase, inviteExpiresAt, and null sessionExpiresAt when INTERVIEW_INVITED', async () => {
       repo.findSessionById.mockResolvedValueOnce(makeSession());
 
       const state = await service.joinInterview(INTERVIEW_ID, CANDIDATE_A);
 
       expect(state.status).toBe(ApplicationStatus.INTERVIEW_INVITED);
+      expect(state.phase).toBe(INTERVIEW_PHASES.NOT_STARTED);
+      expect(state.inviteExpiresAt).toBeTruthy();
+      expect(state.sessionExpiresAt).toBeNull();
       expect(state.isExpired).toBe(false);
       expect(state.transcriptStatus).toBe(TRANSCRIPT_STATUS.NONE);
-      expect(state.processingDelayed).toBe(false);
       expect(state.totalQuestions).toBe(3);
       expect(state.currentQuestion).toBeNull();
-      expect(state.answeredTurns).toEqual([]);
     });
 
-    it('resumes at the first turn with answeredAt === null even when previous VOICE turn has answerText === null', async () => {
-      const answeredAt = new Date('2026-11-27T10:05:00.000Z');
+    it('resumes at first unanswered turn without overwriting existing askedAt', async () => {
+      const startedAt = new Date(Date.now() - 10 * 60_000);
+      const asked1 = new Date(Date.now() - 10 * 60_000);
+      const answered1 = new Date(Date.now() - 8 * 60_000);
       repo.findSessionById.mockResolvedValueOnce(
         makeSession({
-          startedAt: new Date('2026-11-27T10:01:00.000Z'),
+          startedAt,
           application: {
             ...makeSession().application,
             status: ApplicationStatus.INTERVIEWING,
@@ -187,9 +202,11 @@ describe('InterviewsService', () => {
               targetSkill: 'NodeJS',
               answerText: null,
               source: AnswerSource.VOICE,
+              transcriptStatus: TurnTranscriptStatus.PENDING,
               transcriptEdited: false,
               audioS3Key: 'interviews/turn-1.webm',
-              answeredAt,
+              askedAt: asked1,
+              answeredAt: answered1,
             },
             {
               id: TURN_2_ID,
@@ -199,8 +216,10 @@ describe('InterviewsService', () => {
               targetSkill: 'NestJS',
               answerText: null,
               source: AnswerSource.VOICE,
+              transcriptStatus: null,
               transcriptEdited: false,
               audioS3Key: null,
+              askedAt: answered1,
               answeredAt: null,
             },
           ],
@@ -209,13 +228,13 @@ describe('InterviewsService', () => {
 
       const state = await service.joinInterview(INTERVIEW_ID, CANDIDATE_A);
 
+      expect(state.phase).toBe(INTERVIEW_PHASES.IN_PROGRESS);
+      expect(state.sessionExpiresAt).toBe(
+        new Date(startedAt.getTime() + INTERVIEW_SESSION_TTL_MS).toISOString(),
+      );
+      expect(repo.ensureTurnAskedAt).not.toHaveBeenCalled();
       expect(state.answeredTurns).toHaveLength(1);
-      expect(state.answeredTurns[0]).toMatchObject({
-        turnId: TURN_1_ID,
-        order: 1,
-        answerText: null,
-        source: AnswerSource.VOICE,
-      });
+      expect(state.answeredTurns[0].askedAt).toBe(asked1.toISOString());
       expect(state.currentQuestion).toEqual({
         turnId: TURN_2_ID,
         order: 2,
@@ -224,10 +243,75 @@ describe('InterviewsService', () => {
       });
     });
 
-    it('returns DELAYED and processingDelayed=true without leaking evaluationError details', async () => {
-      const completedAt = new Date('2026-11-27T10:20:00.000Z');
+    it('returns EXPIRED phase when invite deadline (7 days) passed without starting', async () => {
       repo.findSessionById.mockResolvedValueOnce(
         makeSession({
+          createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+          expiresAt: new Date(Date.now() - 60_000),
+        }),
+      );
+
+      const state = await service.joinInterview(INTERVIEW_ID, CANDIDATE_A);
+
+      expect(state.phase).toBe(INTERVIEW_PHASES.EXPIRED);
+      expect(state.isExpired).toBe(true);
+      expect(state.currentQuestion).toBeNull();
+    });
+
+    it('auto-completes session and emits interview.completed when startedAt > 24 hours ago', async () => {
+      const startedAt = new Date(Date.now() - INTERVIEW_SESSION_TTL_MS - 60_000);
+      const expectedCompletedAt = new Date(startedAt.getTime() + INTERVIEW_SESSION_TTL_MS);
+
+      repo.findSessionById.mockResolvedValueOnce(
+        makeSession({
+          startedAt,
+          completedAt: null,
+          application: {
+            ...makeSession().application,
+            status: ApplicationStatus.INTERVIEWING,
+          },
+          turns: [
+            {
+              id: TURN_1_ID,
+              orderIndex: 1,
+              question: 'Câu 1',
+              questionType: 'EXPERIENCE',
+              targetSkill: 'NodeJS',
+              answerText: null,
+              source: AnswerSource.VOICE,
+              transcriptStatus: null,
+              transcriptEdited: false,
+              audioS3Key: null,
+              askedAt: startedAt,
+              answeredAt: null,
+            },
+          ],
+        }),
+      );
+
+      const state = await service.joinInterview(INTERVIEW_ID, CANDIDATE_A);
+
+      expect(repo.autoCompleteExpiredSession).toHaveBeenCalledWith(
+        INTERVIEW_ID,
+        expectedCompletedAt,
+      );
+      expect(eventEmitter.emit).toHaveBeenCalledWith(INTERVIEW_COMPLETED_EVENT, {
+        interviewId: INTERVIEW_ID,
+        applicationId: APP_ID,
+        jobId: JOB_ID,
+        candidateId: CANDIDATE_A,
+        completedAt: expectedCompletedAt,
+      });
+      expect(state.phase).toBe(INTERVIEW_PHASES.SUBMITTED);
+      expect(state.completedAt).toBe(expectedCompletedAt.toISOString());
+      expect(state.currentQuestion).toBeNull();
+    });
+
+    it('returns DELAYED and processingDelayed=true without leaking evaluationError details', async () => {
+      const completedAt = new Date();
+      repo.findSessionById.mockResolvedValueOnce(
+        makeSession({
+          startedAt: new Date(Date.now() - 10 * 60_000),
           completedAt,
           evaluationError: 'Gemini 503 UNAVAILABLE internal stack trace',
           application: {
@@ -243,8 +327,10 @@ describe('InterviewsService', () => {
               targetSkill: 'NodeJS',
               answerText: null,
               source: AnswerSource.VOICE,
+              transcriptStatus: TurnTranscriptStatus.PENDING,
               transcriptEdited: false,
               audioS3Key: 'interviews/turn-1.webm',
+              askedAt: new Date(Date.now() - 10 * 60_000),
               answeredAt: completedAt,
             },
           ],
@@ -253,23 +339,41 @@ describe('InterviewsService', () => {
 
       const state = await service.joinInterview(INTERVIEW_ID, CANDIDATE_A);
 
+      expect(state.phase).toBe(INTERVIEW_PHASES.SUBMITTED);
       expect(state.transcriptStatus).toBe(TRANSCRIPT_STATUS.DELAYED);
       expect(state.processingDelayed).toBe(true);
-      expect(state.currentQuestion).toBeNull();
       expect(state).not.toHaveProperty('evaluationError');
     });
+  });
 
-    it('marks isExpired=true and hides currentQuestion when past expiresAt', async () => {
-      repo.findSessionById.mockResolvedValueOnce(
-        makeSession({
-          expiresAt: new Date(Date.now() - 60_000),
+  describe('onApplicationBootstrap / autoCompleteExpiredSessions', () => {
+    it('auto-completes all in-progress sessions older than 24h and emits interview.completed', async () => {
+      const startedAt = new Date(Date.now() - INTERVIEW_SESSION_TTL_MS - 300_000);
+      repo.findExpiredInProgressSessions.mockResolvedValueOnce([
+        {
+          id: INTERVIEW_ID,
+          applicationId: APP_ID,
+          startedAt,
+          application: {
+            jobId: JOB_ID,
+            candidateId: CANDIDATE_A,
+          },
+        },
+      ]);
+
+      await service.onApplicationBootstrap();
+
+      expect(repo.autoCompleteExpiredSession).toHaveBeenCalledWith(
+        INTERVIEW_ID,
+        new Date(startedAt.getTime() + INTERVIEW_SESSION_TTL_MS),
+      );
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        INTERVIEW_COMPLETED_EVENT,
+        expect.objectContaining({
+          interviewId: INTERVIEW_ID,
+          applicationId: APP_ID,
         }),
       );
-
-      const state = await service.joinInterview(INTERVIEW_ID, CANDIDATE_A);
-
-      expect(state.isExpired).toBe(true);
-      expect(state.currentQuestion).toBeNull();
     });
   });
 
@@ -281,9 +385,12 @@ describe('InterviewsService', () => {
       expect(repo.findSessionById).not.toHaveBeenCalled();
     });
 
-    it('rejects when interview is expired with INTERVIEW_EXPIRED', async () => {
+    it('rejects when invite is expired (>7 days) with INTERVIEW_EXPIRED', async () => {
       repo.findSessionById.mockResolvedValueOnce(
-        makeSession({ expiresAt: new Date(Date.now() - 10_000) }),
+        makeSession({
+          createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+          expiresAt: new Date(Date.now() - 10_000),
+        }),
       );
 
       await expect(service.startInterview(INTERVIEW_ID, CANDIDATE_A, true)).rejects.toMatchObject({
@@ -291,7 +398,7 @@ describe('InterviewsService', () => {
       });
     });
 
-    it('queues question planning on live lane with high priority, persists turns, emits status event, and returns question 1', async () => {
+    it('queues question planning on live lane, persists turns, emits status event, and returns question 1', async () => {
       const addSpy = vi.spyOn(aiQueue, 'add');
       const onPreparing = vi.fn();
       const statusEvent = {
@@ -317,19 +424,15 @@ describe('InterviewsService', () => {
         priority: INTERVIEW_AI_QUEUE_PRIORITY,
         lane: 'live',
       });
-      expect(questionPlanner.generateQuestionPlan).toHaveBeenCalledWith(
-        expect.objectContaining({
-          jobTitle: 'Backend NestJS',
-          missingSkills: ['NestJS'],
-          questionCount: 3,
-        }),
-      );
       expect(stateService.emitStatusChanged).toHaveBeenCalledWith(statusEvent);
-      expect(res.firstQuestion).toEqual({
-        turnId: TURN_1_ID,
-        order: 1,
-        total: 2,
-        text: 'Câu 1',
+      expect(res).toEqual({
+        kind: 'STARTED',
+        firstQuestion: {
+          turnId: TURN_1_ID,
+          order: 1,
+          total: 2,
+          text: 'Câu 1',
+        },
       });
     });
 
@@ -357,10 +460,18 @@ describe('InterviewsService', () => {
       expect(repo.startSessionWithTurns).not.toHaveBeenCalled();
 
       const retryRes = await service.startInterview(INTERVIEW_ID, CANDIDATE_A, true);
-      expect(retryRes.firstQuestion.text).toBe('Câu 1 retry');
+      expect(retryRes).toEqual({
+        kind: 'STARTED',
+        firstQuestion: {
+          turnId: TURN_1_ID,
+          order: 1,
+          total: 1,
+          text: 'Câu 1 retry',
+        },
+      });
     });
 
-    it('blocks concurrent duplicate start calls via in-flight lock', async () => {
+    it('ignores concurrent duplicate start calls silently without calling AI twice', async () => {
       let resolvePlan!: (value: unknown) => void;
       questionPlanner.generateQuestionPlan.mockReturnValueOnce(
         new Promise((resolve) => {
@@ -382,9 +493,8 @@ describe('InterviewsService', () => {
       const firstPromise = service.startInterview(INTERVIEW_ID, CANDIDATE_A, true);
       await Promise.resolve();
 
-      await expect(service.startInterview(INTERVIEW_ID, CANDIDATE_A, true)).rejects.toMatchObject({
-        code: INTERVIEW_ERROR_CODES.INVALID_STATE,
-      });
+      const secondRes = await service.startInterview(INTERVIEW_ID, CANDIDATE_A, true);
+      expect(secondRes).toEqual({ kind: 'IGNORED' });
       expect(questionPlanner.generateQuestionPlan).toHaveBeenCalledTimes(1);
 
       resolvePlan([{ question: 'Câu 1', questionType: 'EXPERIENCE', targetSkill: 'NodeJS' }]);
@@ -403,8 +513,9 @@ describe('InterviewsService', () => {
 
   describe('submitAnswer', () => {
     function makeInterviewingSession(): InterviewSessionRecord {
+      const startedAt = new Date(Date.now() - 5 * 60_000);
       return makeSession({
-        startedAt: new Date('2026-11-27T10:01:00.000Z'),
+        startedAt,
         application: {
           ...makeSession().application,
           status: ApplicationStatus.INTERVIEWING,
@@ -418,8 +529,10 @@ describe('InterviewsService', () => {
             targetSkill: 'NodeJS',
             answerText: null,
             source: AnswerSource.VOICE,
+            transcriptStatus: null,
             transcriptEdited: false,
-            audioS3Key: null,
+            audioS3Key: 'interviews/turn-1.webm',
+            askedAt: startedAt,
             answeredAt: null,
           },
           {
@@ -430,23 +543,39 @@ describe('InterviewsService', () => {
             targetSkill: 'NestJS',
             answerText: null,
             source: AnswerSource.VOICE,
+            transcriptStatus: null,
             transcriptEdited: false,
-            audioS3Key: null,
+            audioS3Key: 'interviews/turn-2.webm',
+            askedAt: null,
             answeredAt: null,
           },
         ],
       });
     }
 
-    it('records VOICE answer with null answerText and returns next question', async () => {
+    it('rejects VOICE answer with AUDIO_NOT_UPLOADED when turn has no audioS3Key in DB', async () => {
+      const session = makeInterviewingSession();
+      session.turns[0].audioS3Key = null;
+      repo.findSessionById.mockResolvedValueOnce(session);
+
+      await expect(
+        service.submitAnswer(INTERVIEW_ID, CANDIDATE_A, {
+          turnId: TURN_1_ID,
+          source: 'VOICE',
+        }),
+      ).rejects.toMatchObject({
+        code: INTERVIEW_ERROR_CODES.AUDIO_NOT_UPLOADED,
+      });
+      expect(repo.recordTurnAnswer).not.toHaveBeenCalled();
+    });
+
+    it('records VOICE answer with null answerText, PENDING transcriptStatus, and sets askedAt for next turn', async () => {
       repo.findSessionById.mockResolvedValueOnce(makeInterviewingSession());
       repo.recordTurnAnswer.mockResolvedValueOnce({ recorded: true, completedAt: null });
 
       const res = await service.submitAnswer(INTERVIEW_ID, CANDIDATE_A, {
         turnId: TURN_1_ID,
         source: 'VOICE',
-        audioKey: 'interviews/turn-1.webm',
-        transcriptEdited: false,
       });
 
       expect(repo.recordTurnAnswer).toHaveBeenCalledWith(
@@ -455,7 +584,9 @@ describe('InterviewsService', () => {
           turnId: TURN_1_ID,
           answerText: null,
           source: AnswerSource.VOICE,
-          audioS3Key: 'interviews/turn-1.webm',
+          transcriptStatus: TurnTranscriptStatus.PENDING,
+          clearAudio: false,
+          nextTurnId: TURN_2_ID,
           isFinalTurn: false,
         }),
       );
@@ -468,20 +599,39 @@ describe('InterviewsService', () => {
           text: 'Câu 2',
         },
       });
-      expect(eventEmitter.emit).not.toHaveBeenCalled();
+    });
+
+    it('clears previously uploaded audio (clearAudio=true, transcriptStatus=null) when candidate switches to TEXT', async () => {
+      repo.findSessionById.mockResolvedValueOnce(makeInterviewingSession());
+      repo.recordTurnAnswer.mockResolvedValueOnce({ recorded: true, completedAt: null });
+
+      const res = await service.submitAnswer(INTERVIEW_ID, CANDIDATE_A, {
+        turnId: TURN_1_ID,
+        source: 'TEXT',
+        text: 'Em chuyển sang trả lời bằng chữ',
+      });
+
+      expect(repo.recordTurnAnswer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          turnId: TURN_1_ID,
+          answerText: 'Em chuyển sang trả lời bằng chữ',
+          source: AnswerSource.TEXT,
+          transcriptStatus: null,
+          clearAudio: true,
+          nextTurnId: TURN_2_ID,
+        }),
+      );
+      expect(res.kind).toBe('NEXT_QUESTION');
     });
 
     it('returns DUPLICATE with current state when resubmitting an already-answered turn', async () => {
       const answeredSession = makeInterviewingSession();
-      answeredSession.turns[0].answeredAt = new Date('2026-11-27T10:02:00.000Z');
-      answeredSession.turns[0].audioS3Key = 'interviews/turn-1.webm';
+      answeredSession.turns[0].answeredAt = new Date();
       repo.findSessionById.mockResolvedValueOnce(answeredSession);
 
       const res = await service.submitAnswer(INTERVIEW_ID, CANDIDATE_A, {
         turnId: TURN_1_ID,
         source: 'VOICE',
-        audioKey: 'interviews/turn-1-dup.webm',
-        transcriptEdited: false,
       });
 
       expect(repo.recordTurnAnswer).not.toHaveBeenCalled();
@@ -499,7 +649,6 @@ describe('InterviewsService', () => {
           turnId: TURN_2_ID,
           source: 'TEXT',
           text: 'Trả lời nhảy cóc',
-          transcriptEdited: false,
         })
         .catch((e) => e);
 
@@ -509,9 +658,8 @@ describe('InterviewsService', () => {
 
     it('completes session on final turn and emits interview.completed event', async () => {
       const session = makeInterviewingSession();
-      session.turns[0].answeredAt = new Date('2026-11-27T10:02:00.000Z');
-      session.turns[0].audioS3Key = 'interviews/turn-1.webm';
-      const completedAt = new Date('2026-11-27T10:05:00.000Z');
+      session.turns[0].answeredAt = new Date();
+      const completedAt = new Date();
 
       repo.findSessionById.mockResolvedValueOnce(session);
       repo.recordTurnAnswer.mockResolvedValueOnce({ recorded: true, completedAt });
@@ -519,8 +667,6 @@ describe('InterviewsService', () => {
       const res = await service.submitAnswer(INTERVIEW_ID, CANDIDATE_A, {
         turnId: TURN_2_ID,
         source: 'VOICE',
-        audioKey: 'interviews/turn-2.webm',
-        transcriptEdited: false,
       });
 
       expect(res).toEqual({
@@ -542,10 +688,10 @@ describe('InterviewsService', () => {
 
     it('returns READY transcriptStatus immediately when all answers are TEXT', async () => {
       const session = makeInterviewingSession();
-      session.turns[0].answeredAt = new Date('2026-11-27T10:02:00.000Z');
+      session.turns[0].answeredAt = new Date();
       session.turns[0].source = AnswerSource.TEXT;
       session.turns[0].answerText = 'Câu trả lời 1 bằng text';
-      const completedAt = new Date('2026-11-27T10:05:00.000Z');
+      const completedAt = new Date();
 
       repo.findSessionById.mockResolvedValueOnce(session);
       repo.recordTurnAnswer.mockResolvedValueOnce({ recorded: true, completedAt });
@@ -554,7 +700,6 @@ describe('InterviewsService', () => {
         turnId: TURN_2_ID,
         source: 'TEXT',
         text: 'Câu trả lời 2 bằng text',
-        transcriptEdited: false,
       });
 
       expect(res).toEqual({

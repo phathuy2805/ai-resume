@@ -1,8 +1,12 @@
 import type { Socket } from 'socket.io';
-import type { AnswerSource } from '../../generated/prisma/client.js';
+import type { AnswerSource, TurnTranscriptStatus } from '../../generated/prisma/client.js';
 import type { ApplicationStatus } from '../../shared/constants/application-status.enum.js';
 import type { AuthenticatedUser } from '../../shared/types/auth.type.js';
-import type { InterviewErrorCode, TranscriptStatus } from './interviews.constant.js';
+import type {
+  InterviewErrorCode,
+  InterviewPhase,
+  TranscriptStatus,
+} from './interviews.constant.js';
 
 export interface InterviewQuestionPayload {
   turnId: string;
@@ -17,12 +21,17 @@ export interface InterviewAnsweredTurnPayload {
   question: string;
   answerText: string | null;
   source: AnswerSource;
+  transcriptStatus: TurnTranscriptStatus | null;
+  askedAt: string | null;
   answeredAt: string;
 }
 
 export interface InterviewStatePayload {
   interviewId: string;
   status: ApplicationStatus;
+  phase: InterviewPhase;
+  inviteExpiresAt: string;
+  sessionExpiresAt: string | null;
   expiresAt: string | null;
   isExpired: boolean;
   recordingConsentAt: string | null;
@@ -91,9 +100,9 @@ export type InterviewSocket = Socket<
   InterviewSocketData
 >;
 
-export interface StartInterviewResult {
-  firstQuestion: InterviewQuestionPayload;
-}
+export type StartInterviewResult =
+  | { kind: 'STARTED'; firstQuestion: InterviewQuestionPayload }
+  | { kind: 'IGNORED' };
 
 export type SubmitAnswerResult =
   | { kind: 'DUPLICATE'; state: InterviewStatePayload }

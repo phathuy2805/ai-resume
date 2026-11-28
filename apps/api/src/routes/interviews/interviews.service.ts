@@ -5,16 +5,25 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  OnApplicationBootstrap,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { AnswerSource } from '../../generated/prisma/client.js';
+import { AnswerSource, TurnTranscriptStatus } from '../../generated/prisma/client.js';
 import { AiQueueService } from '../../shared/ai/ai-queue.service.js';
 import { ApplicationStatus } from '../../shared/constants/application-status.enum.js';
 import { ApplicationStateService } from '../../shared/services/application-state.service.js';
 import {
+  computeInterviewPhase,
+  computeInviteExpiresAt,
+  computeSessionExpiresAt,
+  isInviteExpired,
+  isSessionDeadlinePassed,
+} from './interview-phase.util.js';
+import {
   INTERVIEW_AI_QUEUE_PRIORITY,
   INTERVIEW_COMPLETED_EVENT,
   INTERVIEW_ERROR_CODES,
+  INTERVIEW_SESSION_TTL_MS,
   QUESTION_PLANNER,
   TRANSCRIPT_STATUS,
   type TranscriptStatus,
@@ -36,7 +45,7 @@ import type {
 } from './interviews.type.js';
 
 @Injectable()
-export class InterviewsService {
+export class InterviewsService implements OnApplicationBootstrap {
   private readonly logger = new Logger(InterviewsService.name);
   private readonly startingInterviews = new Set<string>();
 
@@ -48,6 +57,56 @@ export class InterviewsService {
     @Inject(QUESTION_PLANNER)
     private readonly questionPlanner: QuestionPlanner,
   ) {}
+
+  async onApplicationBootstrap(): Promise<void> {
+    try {
+      await this.autoCompleteExpiredSessions();
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Lỗi khi quét các phiên phỏng vấn quá hạn 24 giờ: ${reason}`);
+    }
+  }
+
+  async autoCompleteExpiredSessions(now = new Date()): Promise<number> {
+    const cutoff = new Date(now.getTime() - INTERVIEW_SESSION_TTL_MS);
+    const expired = await this.interviewsRepo.findExpiredInProgressSessions(cutoff);
+    let completedCount = 0;
+
+    for (const session of expired) {
+      if (!session.startedAt) {
+        continue;
+      }
+      const completedAt = computeSessionExpiresAt(session) ?? now;
+      const completed = await this.interviewsRepo.autoCompleteExpiredSession(
+        session.id,
+        completedAt,
+      );
+      if (completed) {
+        completedCount += 1;
+        this.emitInterviewCompleted({
+          interviewId: session.id,
+          applicationId: session.applicationId,
+          jobId: session.application.jobId,
+          candidateId: session.application.candidateId,
+          completedAt,
+        });
+      }
+    }
+
+    if (completedCount > 0) {
+      this.logger.log(`Đã tự kết thúc ${completedCount} phiên phỏng vấn quá hạn 24 giờ`);
+    }
+
+    return completedCount;
+  }
+
+  async autoCompleteIfSessionExpired(interviewId: string, now = new Date()): Promise<boolean> {
+    const session = await this.interviewsRepo.findSessionById(interviewId);
+    if (!session) {
+      return false;
+    }
+    return this.completeSessionIfDeadlinePassed(session, now);
+  }
 
   async assertInterviewOwner(
     interviewId: string,
@@ -90,6 +149,17 @@ export class InterviewsService {
 
   async joinInterview(interviewId: string, userId: string): Promise<InterviewStatePayload> {
     const session = await this.loadOwnedSession(interviewId, userId);
+    await this.completeSessionIfDeadlinePassed(session);
+
+    if (session.completedAt === null && session.startedAt !== null) {
+      const currentTurn = session.turns.find((turn) => turn.answeredAt === null);
+      if (currentTurn && currentTurn.askedAt === null) {
+        const now = new Date();
+        await this.interviewsRepo.ensureTurnAskedAt(session.id, currentTurn.id, now);
+        currentTurn.askedAt = now;
+      }
+    }
+
     return this.buildStatePayload(session);
   }
 
@@ -102,17 +172,14 @@ export class InterviewsService {
     if (!consent) {
       throw new InterviewWebSocketError(
         INTERVIEW_ERROR_CODES.CONSENT_REQUIRED,
-        'Bạn cần đồng ý ghi âm trước khi bắt đầu phỏng vấn',
+        'Bạn cần đồng ý để AI xử lý và lưu câu trả lời trước khi bắt đầu phỏng vấn',
       );
     }
 
     const session = await this.loadOwnedSession(interviewId, userId);
 
-    if (this.isSessionExpired(session)) {
-      throw new InterviewWebSocketError(
-        INTERVIEW_ERROR_CODES.INTERVIEW_EXPIRED,
-        'Lời mời phỏng vấn đã hết hạn',
-      );
+    if (this.startingInterviews.has(interviewId)) {
+      return { kind: 'IGNORED' };
     }
 
     if (session.application.status !== ApplicationStatus.INTERVIEW_INVITED) {
@@ -122,10 +189,10 @@ export class InterviewsService {
       );
     }
 
-    if (this.startingInterviews.has(interviewId)) {
+    if (isInviteExpired(session)) {
       throw new InterviewWebSocketError(
-        INTERVIEW_ERROR_CODES.INVALID_STATE,
-        'Phiên phỏng vấn đang được khởi tạo, vui lòng chờ giây lát',
+        INTERVIEW_ERROR_CODES.INTERVIEW_EXPIRED,
+        'Lời mời phỏng vấn đã quá hạn tham gia',
       );
     }
 
@@ -161,6 +228,7 @@ export class InterviewsService {
 
       const first = persisted.turns[0];
       return {
+        kind: 'STARTED',
         firstQuestion: {
           turnId: first.id,
           order: first.orderIndex,
@@ -190,11 +258,15 @@ export class InterviewsService {
       );
     }
 
-    if (this.isSessionExpired(session)) {
-      throw new InterviewWebSocketError(
-        INTERVIEW_ERROR_CODES.INTERVIEW_EXPIRED,
-        'Phiên phỏng vấn đã quá hạn hoàn thành',
-      );
+    if (await this.completeSessionIfDeadlinePassed(session)) {
+      return {
+        kind: 'COMPLETED',
+        completed: {
+          interviewId: session.id,
+          completedAt: session.completedAt!.toISOString(),
+          transcriptStatus: this.computeTranscriptStatus(session),
+        },
+      };
     }
 
     const targetTurn = session.turns.find((turn) => turn.id === payload.turnId);
@@ -220,22 +292,28 @@ export class InterviewsService {
       );
     }
 
+    if (payload.source === 'VOICE' && !currentTurn.audioS3Key) {
+      throw new InterviewWebSocketError(
+        INTERVIEW_ERROR_CODES.AUDIO_NOT_UPLOADED,
+        'Vui lòng tải file ghi âm lên trước khi gửi câu trả lời bằng giọng nói',
+      );
+    }
+
     const nextTurn =
       session.turns.find((turn) => turn.answeredAt === null && turn.id !== currentTurn.id) ?? null;
     const isFinalTurn = nextTurn === null;
     const answeredAt = new Date();
-    const source = payload.source === 'VOICE' ? AnswerSource.VOICE : AnswerSource.TEXT;
-    const answerText = payload.source === 'TEXT' ? payload.text : (payload.text ?? null);
-    const audioS3Key = payload.source === 'VOICE' ? payload.audioKey : null;
+    const isVoice = payload.source === 'VOICE';
 
     const recordResult = await this.interviewsRepo.recordTurnAnswer({
       interviewId: session.id,
       turnId: currentTurn.id,
-      answerText,
-      source,
-      audioS3Key,
-      transcriptEdited: payload.transcriptEdited ?? false,
+      answerText: isVoice ? null : payload.text,
+      source: isVoice ? AnswerSource.VOICE : AnswerSource.TEXT,
+      transcriptStatus: isVoice ? TurnTranscriptStatus.PENDING : null,
+      clearAudio: !isVoice,
       answeredAt,
+      nextTurnId: nextTurn?.id ?? null,
       isFinalTurn,
     });
 
@@ -260,20 +338,19 @@ export class InterviewsService {
     }
 
     const completedAt = recordResult.completedAt ?? answeredAt;
-    const completedEvent: InterviewCompletedEventPayload = {
+    this.emitInterviewCompleted({
       interviewId: session.id,
       applicationId: session.applicationId,
       jobId: session.application.jobId,
       candidateId: session.application.candidateId,
       completedAt,
-    };
-    this.eventEmitter.emit(INTERVIEW_COMPLETED_EVENT, completedEvent);
+    });
 
     const hasPendingVoiceStt = session.turns.some((turn) => {
       if (turn.id === currentTurn.id) {
-        return source === AnswerSource.VOICE && answerText === null;
+        return isVoice;
       }
-      return turn.source === AnswerSource.VOICE && turn.answerText === null;
+      return turn.source === AnswerSource.VOICE && turn.answerText === null && turn.answeredAt !== null;
     });
 
     return {
@@ -286,6 +363,39 @@ export class InterviewsService {
           : TRANSCRIPT_STATUS.READY,
       },
     };
+  }
+
+  private async completeSessionIfDeadlinePassed(
+    session: InterviewSessionRecord,
+    now = new Date(),
+  ): Promise<boolean> {
+    if (!isSessionDeadlinePassed(session, now)) {
+      return false;
+    }
+
+    const completedAt = computeSessionExpiresAt(session) ?? now;
+    const transitioned = await this.interviewsRepo.autoCompleteExpiredSession(
+      session.id,
+      completedAt,
+    );
+    session.completedAt = completedAt;
+
+    if (transitioned) {
+      this.logger.log(`Tự động kết thúc phiên phỏng vấn quá hạn 24 giờ: interview=${session.id}`);
+      this.emitInterviewCompleted({
+        interviewId: session.id,
+        applicationId: session.applicationId,
+        jobId: session.application.jobId,
+        candidateId: session.application.candidateId,
+        completedAt,
+      });
+    }
+
+    return true;
+  }
+
+  private emitInterviewCompleted(payload: InterviewCompletedEventPayload): void {
+    this.eventEmitter.emit(INTERVIEW_COMPLETED_EVENT, payload);
   }
 
   private async loadOwnedSession(
@@ -354,14 +464,6 @@ export class InterviewsService {
     return required.missing.filter((item): item is string => typeof item === 'string');
   }
 
-  private isSessionExpired(session: InterviewSessionRecord, now = new Date()): boolean {
-    return (
-      session.completedAt === null &&
-      session.expiresAt !== null &&
-      now.getTime() > session.expiresAt.getTime()
-    );
-  }
-
   private computeTranscriptStatus(session: InterviewSessionRecord): TranscriptStatus {
     if (session.completedAt === null) {
       return TRANSCRIPT_STATUS.NONE;
@@ -370,13 +472,23 @@ export class InterviewsService {
       return TRANSCRIPT_STATUS.DELAYED;
     }
     const hasPendingVoiceStt = session.turns.some(
-      (turn) => turn.source === AnswerSource.VOICE && turn.answerText === null,
+      (turn) =>
+        turn.answeredAt !== null &&
+        turn.source === AnswerSource.VOICE &&
+        turn.answerText === null &&
+        turn.transcriptStatus !== TurnTranscriptStatus.NO_SPEECH,
     );
     return hasPendingVoiceStt ? TRANSCRIPT_STATUS.TRANSCRIBING : TRANSCRIPT_STATUS.READY;
   }
 
   private buildStatePayload(session: InterviewSessionRecord): InterviewStatePayload {
-    const isExpired = this.isSessionExpired(session);
+    const now = new Date();
+    const status = session.application.status as ApplicationStatus;
+    const inviteExpiresAt = computeInviteExpiresAt(session);
+    const sessionExpiresAt = computeSessionExpiresAt(session);
+    const phase = computeInterviewPhase(session, status, now);
+    const expired = isInviteExpired(session, now);
+
     const totalQuestions =
       session.turns.length > 0
         ? session.turns.length
@@ -390,12 +502,14 @@ export class InterviewsService {
         question: turn.question,
         answerText: turn.answerText,
         source: turn.source,
+        transcriptStatus: turn.transcriptStatus,
+        askedAt: turn.askedAt ? turn.askedAt.toISOString() : null,
         answeredAt: turn.answeredAt!.toISOString(),
       }));
 
     const nextUnanswered = session.turns.find((turn) => turn.answeredAt === null) ?? null;
     const currentQuestion =
-      session.completedAt === null && !isExpired && nextUnanswered !== null
+      session.completedAt === null && !expired && nextUnanswered !== null
         ? {
             turnId: nextUnanswered.id,
             order: nextUnanswered.orderIndex,
@@ -406,9 +520,12 @@ export class InterviewsService {
 
     return {
       interviewId: session.id,
-      status: session.application.status as ApplicationStatus,
-      expiresAt: session.expiresAt?.toISOString() ?? null,
-      isExpired,
+      status,
+      phase,
+      inviteExpiresAt: inviteExpiresAt.toISOString(),
+      sessionExpiresAt: sessionExpiresAt ? sessionExpiresAt.toISOString() : null,
+      expiresAt: inviteExpiresAt.toISOString(),
+      isExpired: expired,
       recordingConsentAt: session.recordingConsentAt?.toISOString() ?? null,
       startedAt: session.startedAt?.toISOString() ?? null,
       completedAt: session.completedAt?.toISOString() ?? null,

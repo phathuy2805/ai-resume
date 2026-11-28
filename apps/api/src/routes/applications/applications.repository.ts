@@ -32,7 +32,15 @@ export type ApplicationSummary = Prisma.ApplicationGetPayload<{
 
 export const myApplicationSelect = {
   ...applicationSummarySelect,
-  interview: { select: { id: true, expiresAt: true } },
+  interview: {
+    select: {
+      id: true,
+      createdAt: true,
+      startedAt: true,
+      completedAt: true,
+      expiresAt: true,
+    },
+  },
 } satisfies Prisma.ApplicationSelect;
 
 export type MyApplicationRow = Prisma.ApplicationGetPayload<{
