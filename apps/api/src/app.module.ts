@@ -7,6 +7,7 @@ import { ApplicationsModule } from './routes/applications/applications.module.js
 import { AuthModule } from './routes/auth/auth.module.js';
 import { CompanyModule } from './routes/company/company.module.js';
 import { DraftsModule } from './routes/drafts/drafts.module.js';
+import { InterviewEvaluationModule } from './routes/interview-evaluation/interview-evaluation.module.js';
 import { InterviewsModule } from './routes/interviews/interviews.module.js';
 import { JobsModule } from './routes/jobs/jobs.module.js';
 import { validateEnv } from './shared/config/env.config.js';
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from './shared/guards/jwt-auth.guard.js';
 import { RolesGuard } from './shared/guards/roles.guard.js';
 import { TransformInterceptor } from './shared/interceptors/transform.interceptor.js';
 import { AiModule } from './shared/ai/ai.module.js';
+import { NotificationModule } from './shared/notification/notification.module.js';
 import { SharedModule } from './shared/shared.module.js';
 @Module({
   imports: [
@@ -24,12 +26,14 @@ import { SharedModule } from './shared/shared.module.js';
     }),
     EventEmitterModule.forRoot(),
     SharedModule,
+    NotificationModule,
     AiModule,
     AuthModule,
     CompanyModule,
     JobsModule,
     ApplicationsModule,
     InterviewsModule,
+    InterviewEvaluationModule,
     DraftsModule,
   ],
   providers: [

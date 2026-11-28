@@ -65,6 +65,14 @@ export const envSchema = z
     AI_QUEUE_CONCURRENCY: z.coerce.number().int().min(1).default(2),
     AI_CONSIDER_MARGIN: z.coerce.number().int().min(0).max(100).default(10),
     INTERVIEW_INVITE_TTL_DAYS: z.coerce.number().int().min(1).default(7),
+    INTERVIEW_PASS_THRESHOLD: z.coerce.number().int().min(0).max(100).default(60),
+    // Email thông báo (W3-BE-05 - Amazon SES HTTPS API, dùng chung S3_ACCESS_KEY / S3_SECRET_KEY)
+    EMAIL_ENABLED: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((v) => v === 'true'),
+    MAIL_FROM: optionalWithDefault('HireFlow <no-reply@airesume.id.vn>'),
+    SES_REGION: optionalString,
   })
   .refine((env) => !env.S3_ACCESS_KEY === !env.S3_SECRET_KEY, {
     message: 'Phải khai báo cả S3_ACCESS_KEY và S3_SECRET_KEY, hoặc bỏ trống cả hai',

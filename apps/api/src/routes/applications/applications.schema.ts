@@ -10,6 +10,7 @@ import {
   PaginationMetaSchema,
   PaginationQuerySchema,
 } from '../../shared/models/pagination.model.js';
+import { INTERVIEW_PHASES } from '../interviews/interviews.constant.js';
 import { UserSchema } from '../../shared/models/user.model.js';
 
 // ==================== Params ====================
@@ -66,6 +67,19 @@ export const DecisionBodySchema = z.object({
 
 // ==================== Response ====================
 
+export const MyApplicationInterviewSummarySchema = z.object({
+  id: z.uuid().describe('Mã phiên phỏng vấn AI'),
+  phase: z
+    .enum([
+      INTERVIEW_PHASES.NOT_STARTED,
+      INTERVIEW_PHASES.IN_PROGRESS,
+      INTERVIEW_PHASES.SUBMITTED,
+      INTERVIEW_PHASES.EXPIRED,
+    ])
+    .describe('Giai đoạn phiên phỏng vấn (NOT_STARTED | IN_PROGRESS | SUBMITTED | EXPIRED)'),
+  inviteExpiresAt: z.string().describe('Hạn chót tham gia phỏng vấn (ISO 8601, +7 ngày từ khi mời)'),
+});
+
 export const MyApplicationResSchema = ApplicationSchema.extend({
   interviewId: z
     .uuid()
@@ -76,7 +90,10 @@ export const MyApplicationResSchema = ApplicationSchema.extend({
     .string()
     .nullable()
     .optional()
-    .describe('Hạn chót hoàn thành phỏng vấn AI (ISO 8601, null nếu chưa có hoặc không giới hạn)'),
+    .describe('Hạn chót tham gia phỏng vấn AI (ISO 8601, null nếu chưa có)'),
+  interview: MyApplicationInterviewSummarySchema.nullable()
+    .optional()
+    .describe('Thông tin tóm tắt phiên phỏng vấn cho trang Hồ sơ của tôi'),
 });
 
 export const JobApplicationListItemSchema = ApplicationSchema.pick({

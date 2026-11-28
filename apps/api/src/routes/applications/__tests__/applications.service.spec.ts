@@ -275,5 +275,40 @@ describe('ApplicationsService', () => {
 
       await expect(service.findMine(CANDIDATE_ID)).resolves.toEqual([]);
     });
+
+    it('trả thêm interview { id, phase, inviteExpiresAt } cho hồ sơ đã mời phỏng vấn', async () => {
+      const now = new Date();
+      const inviteExpiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const base = savedApplication({
+        jobId: JOB_ID,
+        candidateId: CANDIDATE_ID,
+        cvS3Key: 'cvs/a.pdf',
+        cvFileName: 'a.pdf',
+        cvSizeBytes: 1,
+        cvMimeType: 'application/pdf',
+        cvText: 'text',
+      });
+      repo.findByCandidate.mockResolvedValue([
+        {
+          ...base,
+          status: 'INTERVIEW_INVITED',
+          interview: {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            createdAt: now,
+            startedAt: null,
+            completedAt: null,
+            expiresAt: inviteExpiresAt,
+          },
+        },
+      ]);
+
+      const result = await service.findMine(CANDIDATE_ID);
+
+      expect(result[0].interview).toEqual({
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        phase: 'NOT_STARTED',
+        inviteExpiresAt: inviteExpiresAt.toISOString(),
+      });
+    });
   });
 });

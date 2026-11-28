@@ -19,16 +19,12 @@ export const InterviewAnswerPayloadSchema = z.discriminatedUnion('source', [
   z.object({
     turnId: z.uuid('turnId không đúng định dạng UUID'),
     source: z.literal('VOICE'),
-    audioKey: z.string().trim().min(1, 'Thiếu audioKey cho câu trả lời bằng giọng nói'),
-    text: AnswerTextSchema.optional(),
-    transcriptEdited: z.boolean().optional().default(false),
+    text: z.undefined({ message: 'Câu trả lời bằng giọng nói không nhận trường text' }).optional(),
   }),
   z.object({
     turnId: z.uuid('turnId không đúng định dạng UUID'),
     source: z.literal('TEXT'),
     text: AnswerTextSchema,
-    audioKey: z.string().trim().min(1).optional(),
-    transcriptEdited: z.boolean().optional().default(false),
   }),
 ]);
 

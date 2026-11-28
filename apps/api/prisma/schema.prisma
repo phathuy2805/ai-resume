@@ -55,6 +55,13 @@ enum AnswerSource {
   TEXT
 }
 
+enum TurnTranscriptStatus {
+  PENDING
+  DONE
+  NO_SPEECH
+  FAILED
+}
+
 // ==========================================
 // 2. CORE MODELS (Company, User, RefreshToken, Job)
 // ==========================================
@@ -89,11 +96,15 @@ model User {
   email        String   @unique
   passwordHash String   @map("password_hash")
   fullName     String   @map("full_name")
+  phone        String?  @db.VarChar(20)
+  bio          String?  @db.Text
+  avatarS3Key  String?  @map("avatar_s3_key")
   role         Role     @default(CANDIDATE)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   refreshTokens      RefreshToken[]
+  passwordResetOtps  PasswordResetOtp[]
   jobs               Job[]                      @relation("CreatedJobs")
   applications       Application[]              @relation("CandidateApplications")
   hrDecisions        Application[]              @relation("HrDecisionApplications")
@@ -101,6 +112,21 @@ model User {
   interviewDecisions InterviewResult[]          @relation("InterviewDecisionByUser")
 
   @@map("users")
+}
+
+model PasswordResetOtp {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  codeHash  String    @map("code_hash")
+  attempts  Int       @default(0)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("password_reset_otps")
 }
 
 model RefreshToken {
@@ -163,10 +189,12 @@ model Application {
   status           ApplicationStatus           @default(SUBMITTED)
   screeningError   String?                     @map("screening_error") @db.Text
   aiRecommendation AiRecommendation?           @map("ai_recommendation")
-  hrDecisionById   String?                     @map("hr_decision_by_id")
-  hrDecisionAt     DateTime?                   @map("hr_decision_at")
-  hrNote           String?                     @map("hr_note") @db.Text
-  embedding        Unsupported("vector(768)")?
+  hrDecisionById    String?                     @map("hr_decision_by_id")
+  hrDecisionAt      DateTime?                   @map("hr_decision_at")
+  hrNote            String?                     @map("hr_note") @db.Text
+  candidateMessage  String?                     @map("candidate_message") @db.Text
+  candidateFeedback Json?                       @map("candidate_feedback")
+  embedding         Unsupported("vector(768)")?
   createdAt        DateTime                    @default(now()) @map("created_at")
   updatedAt        DateTime                    @updatedAt @map("updated_at")
 
@@ -226,29 +254,32 @@ model Interview {
   recordingConsentAt DateTime?        @map("recording_consent_at")
   startedAt          DateTime?        @map("started_at")
   completedAt        DateTime?        @map("completed_at")
+  expiresAt          DateTime?        @map("expires_at")
   transcriptS3Key    String?          @map("transcript_s3_key")
   evaluationError    String?          @map("evaluation_error") @db.Text
   createdAt          DateTime         @default(now()) @map("created_at")
-  expiresAt          DateTime?        @map("expires_at")
-  application        Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  turns              InterviewTurn[]
-  result             InterviewResult?
+
+  application Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  turns       InterviewTurn[]
+  result      InterviewResult?
 
   @@map("interviews")
 }
 
 model InterviewTurn {
-  id               String       @id @default(uuid())
-  interviewId      String       @map("interview_id")
-  orderIndex       Int          @map("order_index")
-  question         String       @db.Text
-  questionType     String?      @map("question_type")
-  targetSkill      String?      @map("target_skill")
-  answerText       String?      @map("answer_text") @db.Text
-  source           AnswerSource @default(VOICE)
-  transcriptEdited Boolean      @default(false) @map("transcript_edited")
-  audioS3Key       String?      @map("audio_s3_key")
-  answeredAt       DateTime?    @map("answered_at")
+  id               String                @id @default(uuid())
+  interviewId      String                @map("interview_id")
+  orderIndex       Int                   @map("order_index")
+  question         String                @db.Text
+  questionType     String?               @map("question_type")
+  targetSkill      String?               @map("target_skill")
+  answerText       String?               @map("answer_text") @db.Text
+  source           AnswerSource          @default(VOICE)
+  transcriptStatus TurnTranscriptStatus? @map("transcript_status")
+  transcriptEdited Boolean               @default(false) @map("transcript_edited")
+  audioS3Key       String?               @map("audio_s3_key")
+  askedAt          DateTime?             @map("asked_at")
+  answeredAt       DateTime?             @map("answered_at")
 
   interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
@@ -268,7 +299,8 @@ model InterviewResult {
   feedbackSummary    String           @map("feedback_summary") @db.Text
   evidenceQuotes     Json             @map("evidence_quotes")
   aiRecommendation   AiRecommendation @map("ai_recommendation")
-  candidateFeedback  String           @map("candidate_feedback") @db.Text
+  candidateFeedback  Json             @map("candidate_feedback")
+  candidateMessage   String?          @map("candidate_message") @db.Text
   decisionById       String?          @map("decision_by_id")
   decisionAt         DateTime?        @map("decision_at")
   decisionNote       String?          @map("decision_note") @db.Text

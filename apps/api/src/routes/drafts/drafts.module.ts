@@ -1,15 +1,7 @@
 import { Module } from '@nestjs/common';
-import {
-  DashboardDraftController,
-  InterviewDraftController,
-  ScreeningDraftController,
-} from './drafts.controller.js';
+import { DashboardDraftController, ScreeningDraftController } from './drafts.controller.js';
 
 @Module({
-  controllers: [
-    ScreeningDraftController,
-    InterviewDraftController,
-    DashboardDraftController,
-  ],
+  controllers: [ScreeningDraftController, DashboardDraftController],
 })
 export class DraftsModule {}

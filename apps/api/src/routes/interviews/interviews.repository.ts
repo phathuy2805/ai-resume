@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { AnswerSource, Prisma } from '../../generated/prisma/client.js';
+import { AnswerSource, type Prisma, type TurnTranscriptStatus } from '../../generated/prisma/client.js';
 import type { ApplicationStatusChangedPayload } from '../../shared/constants/application-event.constant.js';
 import { ApplicationStatus } from '../../shared/constants/application-status.enum.js';
 import { ApplicationStateService } from '../../shared/services/application-state.service.js';
@@ -9,6 +9,8 @@ import type { PlannedQuestion } from './interviews.type.js';
 export const interviewOwnershipSelect = {
   id: true,
   applicationId: true,
+  createdAt: true,
+  startedAt: true,
   expiresAt: true,
   completedAt: true,
   application: {
@@ -67,8 +69,10 @@ export const interviewSessionSelect = {
       targetSkill: true,
       answerText: true,
       source: true,
+      transcriptStatus: true,
       transcriptEdited: true,
       audioS3Key: true,
+      askedAt: true,
       answeredAt: true,
     },
   },
@@ -77,6 +81,16 @@ export const interviewSessionSelect = {
 export type InterviewSessionRecord = Prisma.InterviewGetPayload<{
   select: typeof interviewSessionSelect;
 }>;
+
+export interface ExpiredInProgressSessionRecord {
+  id: string;
+  applicationId: string;
+  startedAt: Date | null;
+  application: {
+    jobId: string;
+    candidateId: string;
+  };
+}
 
 export interface StartSessionWithTurnsParams {
   interviewId: string;
@@ -103,9 +117,10 @@ export interface RecordTurnAnswerParams {
   turnId: string;
   answerText: string | null;
   source: AnswerSource;
-  audioS3Key: string | null;
-  transcriptEdited: boolean;
+  transcriptStatus: TurnTranscriptStatus | null;
+  clearAudio: boolean;
   answeredAt: Date;
+  nextTurnId: string | null;
   isFinalTurn: boolean;
 }
 
@@ -134,6 +149,51 @@ export class InterviewsRepository {
     });
   }
 
+  findExpiredInProgressSessions(
+    cutoffStartedBefore: Date,
+  ): Promise<ExpiredInProgressSessionRecord[]> {
+    return this.prisma.interview.findMany({
+      where: {
+        startedAt: { lte: cutoffStartedBefore },
+        completedAt: null,
+      },
+      select: {
+        id: true,
+        applicationId: true,
+        startedAt: true,
+        application: {
+          select: {
+            jobId: true,
+            candidateId: true,
+          },
+        },
+      },
+    });
+  }
+
+  async ensureTurnAskedAt(interviewId: string, turnId: string, askedAt: Date): Promise<void> {
+    await this.prisma.interviewTurn.updateMany({
+      where: {
+        id: turnId,
+        interviewId,
+        askedAt: null,
+      },
+      data: { askedAt },
+    });
+  }
+
+  async autoCompleteExpiredSession(interviewId: string, completedAt: Date): Promise<boolean> {
+    const updated = await this.prisma.interview.updateMany({
+      where: {
+        id: interviewId,
+        completedAt: null,
+        startedAt: { not: null },
+      },
+      data: { completedAt },
+    });
+    return updated.count > 0;
+  }
+
   startSessionWithTurns({
     interviewId,
     applicationId,
@@ -148,7 +208,7 @@ export class InterviewsRepository {
         ApplicationStatus.INTERVIEWING,
         {
           actorId: candidateId,
-          reason: 'Ứng viên đồng ý ghi âm và bắt đầu phỏng vấn AI',
+          reason: 'Ứng viên đồng ý AI xử lý và bắt đầu phỏng vấn',
           tx,
         },
       );
@@ -171,6 +231,7 @@ export class InterviewsRepository {
             question: item.question,
             questionType: item.questionType,
             targetSkill: item.targetSkill,
+            askedAt: i === 0 ? startedAt : null,
           },
           select: {
             id: true,
@@ -193,9 +254,10 @@ export class InterviewsRepository {
     turnId,
     answerText,
     source,
-    audioS3Key,
-    transcriptEdited,
+    transcriptStatus,
+    clearAudio,
     answeredAt,
+    nextTurnId,
     isFinalTurn,
   }: RecordTurnAnswerParams): Promise<RecordTurnAnswerResult> {
     return this.prisma.$transaction(async (tx) => {
@@ -208,14 +270,25 @@ export class InterviewsRepository {
         data: {
           answerText,
           source,
-          audioS3Key,
-          transcriptEdited,
+          transcriptStatus,
+          ...(clearAudio ? { audioS3Key: null } : {}),
           answeredAt,
         },
       });
 
       if (updated.count === 0) {
         return { recorded: false };
+      }
+
+      if (nextTurnId) {
+        await tx.interviewTurn.updateMany({
+          where: {
+            id: nextTurnId,
+            interviewId,
+            askedAt: null,
+          },
+          data: { askedAt: answeredAt },
+        });
       }
 
       if (isFinalTurn) {
