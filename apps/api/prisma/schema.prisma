@@ -55,6 +55,13 @@ enum AnswerSource {
   TEXT
 }
 
+enum TurnTranscriptStatus {
+  PENDING
+  DONE
+  NO_SPEECH
+  FAILED
+}
+
 // ==========================================
 // 2. CORE MODELS (User, RefreshToken, Job)
 // ==========================================
@@ -138,10 +145,12 @@ model Application {
   status           ApplicationStatus           @default(SUBMITTED)
   screeningError   String?                     @map("screening_error") @db.Text
   aiRecommendation AiRecommendation?           @map("ai_recommendation")
-  hrDecisionById   String?                     @map("hr_decision_by_id")
-  hrDecisionAt     DateTime?                   @map("hr_decision_at")
-  hrNote           String?                     @map("hr_note") @db.Text
-  embedding        Unsupported("vector(768)")?
+  hrDecisionById    String?                     @map("hr_decision_by_id")
+  hrDecisionAt      DateTime?                   @map("hr_decision_at")
+  hrNote            String?                     @map("hr_note") @db.Text
+  candidateMessage  String?                     @map("candidate_message") @db.Text
+  candidateFeedback Json?                       @map("candidate_feedback")
+  embedding         Unsupported("vector(768)")?
   createdAt        DateTime                    @default(now()) @map("created_at")
   updatedAt        DateTime                    @updatedAt @map("updated_at")
 
@@ -213,17 +222,19 @@ model Interview {
 }
 
 model InterviewTurn {
-  id               String       @id @default(uuid())
-  interviewId      String       @map("interview_id")
-  orderIndex       Int          @map("order_index")
-  question         String       @db.Text
-  questionType     String?      @map("question_type")
-  targetSkill      String?      @map("target_skill")
-  answerText       String?      @map("answer_text") @db.Text
-  source           AnswerSource @default(VOICE)
-  transcriptEdited Boolean      @default(false) @map("transcript_edited")
-  audioS3Key       String?      @map("audio_s3_key")
-  answeredAt       DateTime?    @map("answered_at")
+  id               String                @id @default(uuid())
+  interviewId      String                @map("interview_id")
+  orderIndex       Int                   @map("order_index")
+  question         String                @db.Text
+  questionType     String?               @map("question_type")
+  targetSkill      String?               @map("target_skill")
+  answerText       String?               @map("answer_text") @db.Text
+  source           AnswerSource          @default(VOICE)
+  transcriptStatus TurnTranscriptStatus? @map("transcript_status")
+  transcriptEdited Boolean               @default(false) @map("transcript_edited")
+  audioS3Key       String?               @map("audio_s3_key")
+  askedAt          DateTime?             @map("asked_at")
+  answeredAt       DateTime?             @map("answered_at")
 
   interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
@@ -243,7 +254,8 @@ model InterviewResult {
   feedbackSummary    String           @map("feedback_summary") @db.Text
   evidenceQuotes     Json             @map("evidence_quotes")
   aiRecommendation   AiRecommendation @map("ai_recommendation")
-  candidateFeedback  String           @map("candidate_feedback") @db.Text
+  candidateFeedback  Json             @map("candidate_feedback")
+  candidateMessage   String?          @map("candidate_message") @db.Text
   decisionById       String?          @map("decision_by_id")
   decisionAt         DateTime?        @map("decision_at")
   decisionNote       String?          @map("decision_note") @db.Text
