@@ -236,9 +236,10 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
   });
 
   describe('findDetailForHr', () => {
-    it('maps screeningResult, histories, interviewId and omits sensitive/heavy fields', async () => {
+    it('maps screeningResult, histories, interviewId, interviewExpiresAt and omits sensitive/heavy fields', async () => {
+      const deadline = new Date('2026-11-28T09:00:00.000Z');
       const detail = makeDetail({
-        interview: { id: INTERVIEW_ID },
+        interview: { id: INTERVIEW_ID, expiresAt: deadline },
       });
       repo.findDetailById.mockResolvedValueOnce(detail);
 
@@ -246,6 +247,7 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
 
       expect(GetApplicationDetailResSchema.safeParse(res).success).toBe(true);
       expect(res.interviewId).toBe(INTERVIEW_ID);
+      expect(res.interviewExpiresAt).toBe(deadline.toISOString());
       expect(res.job).toEqual({ id: JOB_ID, title: 'Backend NestJS', cvPassThreshold: 70 });
       expect(res.screeningResult?.totalScore).toBe(84);
       expect(res.statusHistories).toHaveLength(1);
@@ -256,8 +258,9 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
   });
 
   describe('decide', () => {
-    it('approves a SCREENED application, creates Interview, transitions to INTERVIEW_INVITED, and emits events', async () => {
+    it('approves a SCREENED application, creates Interview with deadline, transitions to INTERVIEW_INVITED, and emits events', async () => {
       const now = new Date('2026-11-21T09:00:00.000Z');
+      const expiresAt = new Date('2026-11-26T09:00:00.000Z');
       repo.findDecisionContext.mockResolvedValueOnce({
         id: APP_ID,
         status: ApplicationStatus.SCREENED,
@@ -267,6 +270,7 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
         id: APP_ID,
         status: ApplicationStatus.INTERVIEW_INVITED,
         interviewId: INTERVIEW_ID,
+        interviewExpiresAt: expiresAt,
         hrDecisionById: HR_A,
         hrDecisionAt: now,
         hrNote: 'Rất phù hợp',
@@ -291,12 +295,21 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
       const res = await service.decide(HR_A, APP_ID, {
         decision: 'APPROVE',
         note: 'Rất phù hợp',
+        interviewDeadlineDays: 5,
       });
 
+      expect(repo.applyDecision).toHaveBeenCalledWith({
+        applicationId: APP_ID,
+        hrId: HR_A,
+        decision: 'APPROVE',
+        note: 'Rất phù hợp',
+        interviewDeadlineDays: 5,
+      });
       expect(res).toEqual({
         id: APP_ID,
         status: ApplicationStatus.INTERVIEW_INVITED,
         interviewId: INTERVIEW_ID,
+        interviewExpiresAt: expiresAt.toISOString(),
         hrDecisionById: HR_A,
         hrDecisionAt: now.toISOString(),
         hrNote: 'Rất phù hợp',
@@ -468,8 +481,9 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
       });
     });
 
-    it('includes interviewId in findMine when interview exists', async () => {
+    it('includes interviewId and interviewExpiresAt in findMine when interview exists', async () => {
       const now = new Date('2026-11-21T08:00:00.000Z');
+      const deadline = new Date('2026-11-28T08:00:00.000Z');
       repo.findByCandidate.mockResolvedValueOnce([
         {
           id: APP_ID,
@@ -481,12 +495,13 @@ describe('ApplicationsService (HR Dashboard W2-BE-04)', () => {
           createdAt: now,
           updatedAt: now,
           job: { id: JOB_ID, title: 'Backend NestJS' },
-          interview: { id: INTERVIEW_ID },
+          interview: { id: INTERVIEW_ID, expiresAt: deadline },
         },
       ]);
 
       const res = await service.findMine('cand-1');
       expect(res[0].interviewId).toBe(INTERVIEW_ID);
+      expect(res[0].interviewExpiresAt).toBe(deadline.toISOString());
     });
   });
 });

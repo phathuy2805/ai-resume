@@ -25,3 +25,4 @@ packages/ai/eval/.cache
 # Markdown files
 *.md
 !packages/ai/eval/results.md
+!docs/interview-events.md

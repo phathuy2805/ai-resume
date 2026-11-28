@@ -196,18 +196,18 @@ model ApplicationStatusHistory {
 // ==========================================
 
 model Interview {
-  id                 String    @id @default(uuid())
-  applicationId      String    @unique @map("application_id")
-  recordingConsentAt DateTime? @map("recording_consent_at")
-  startedAt          DateTime? @map("started_at")
-  completedAt        DateTime? @map("completed_at")
-  transcriptS3Key    String?   @map("transcript_s3_key")
-  evaluationError    String?   @map("evaluation_error") @db.Text
-  createdAt          DateTime  @default(now()) @map("created_at")
-
-  application Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  turns       InterviewTurn[]
-  result      InterviewResult?
+  id                 String           @id @default(uuid())
+  applicationId      String           @unique @map("application_id")
+  recordingConsentAt DateTime?        @map("recording_consent_at")
+  startedAt          DateTime?        @map("started_at")
+  completedAt        DateTime?        @map("completed_at")
+  transcriptS3Key    String?          @map("transcript_s3_key")
+  evaluationError    String?          @map("evaluation_error") @db.Text
+  createdAt          DateTime         @default(now()) @map("created_at")
+  expiresAt          DateTime?        @map("expires_at")
+  application        Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  turns              InterviewTurn[]
+  result             InterviewResult?
 
   @@map("interviews")
 }

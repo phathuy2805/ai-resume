@@ -5,10 +5,10 @@ import { JobStatus } from '../../shared/constants/job.constant.js';
 import { SIGNED_URL_EXPIRES_SEC } from '../../shared/constants/storage.constant.js';
 import { isUniqueConstraintPrismaError } from '../../shared/helper.js';
 import type { ApplicationModel } from '../../shared/models/application.model.js';
+import { ScreeningPipelineService } from '../../shared/screening/screening-pipeline.service.js';
+import { RESCREENABLE_STATUSES } from '../../shared/screening/screening.constant.js';
 import { ApplicationStateService } from '../../shared/services/application-state.service.js';
 import { StorageService } from '../../shared/services/storage.service.js';
-import { RESCREENABLE_STATUSES } from '../../shared/screening/screening.constant.js';
-import { ScreeningPipelineService } from '../../shared/screening/screening-pipeline.service.js';
 import { CV_MIME_TYPE } from './applications.constant.js';
 import {
   AlreadyAppliedException,
@@ -185,6 +185,7 @@ export class ApplicationsService {
       hrId: userId,
       decision: body.decision,
       note: body.note,
+      interviewDeadlineDays: body.interviewDeadlineDays,
     });
     if (!result) {
       throw InvalidDecisionStatusException;

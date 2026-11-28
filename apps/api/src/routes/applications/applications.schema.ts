@@ -52,6 +52,15 @@ export const UploadCvFileSchema = z.object({
 
 export const DecisionBodySchema = z.object({
   decision: z.enum(['APPROVE', 'REJECT']).describe('Quyết định của HR sau vòng CV'),
+  interviewDeadlineDays: z
+    .number()
+    .int('Số ngày hạn phỏng vấn phải là số nguyên')
+    .min(1, 'Số ngày hạn phỏng vấn tối thiểu là 1')
+    .max(30, 'Số ngày hạn phỏng vấn tối đa là 30')
+    .optional()
+    .describe(
+      'Số ngày hạn hoàn thành phỏng vấn AI (1-30, mặc định 7 ngày; chỉ áp dụng khi APPROVE)',
+    ),
   note: z.string().trim().max(1000).optional().describe('Ghi chú của HR'),
 });
 
@@ -63,6 +72,11 @@ export const MyApplicationResSchema = ApplicationSchema.extend({
     .nullable()
     .optional()
     .describe('Mã phiên phỏng vấn AI nếu đã được mời phỏng vấn (null nếu chưa có)'),
+  interviewExpiresAt: z
+    .string()
+    .nullable()
+    .optional()
+    .describe('Hạn chót hoàn thành phỏng vấn AI (ISO 8601, null nếu chưa có hoặc không giới hạn)'),
 });
 
 export const JobApplicationListItemSchema = ApplicationSchema.pick({
@@ -111,7 +125,10 @@ export const ScoreBreakdownSchema = z.object({
 
 export const ExplanationStrengthSchema = z.object({
   point: z.string().describe('Nhận xét điểm mạnh của ứng viên'),
-  quote: z.string().nullable().describe('Trích dẫn nguyên văn từ CV (null nếu không kiểm chứng được)'),
+  quote: z
+    .string()
+    .nullable()
+    .describe('Trích dẫn nguyên văn từ CV (null nếu không kiểm chứng được)'),
 });
 
 export const ExplanationGapSchema = z.object({
@@ -181,6 +198,11 @@ export const GetApplicationDetailResSchema = ApplicationSchema.pick({
   hrDecisionAt: z.string().nullable(),
   hrNote: z.string().nullable(),
   interviewId: z.uuid().nullable(),
+  interviewExpiresAt: z
+    .string()
+    .nullable()
+    .optional()
+    .describe('Hạn chót hoàn thành phỏng vấn AI (ISO 8601, null nếu chưa có hoặc không giới hạn)'),
   statusHistories: z.array(ApplicationStatusHistoryItemSchema),
 });
 
@@ -189,6 +211,11 @@ export const DecisionResSchema = ApplicationSchema.pick({
   status: true,
 }).extend({
   interviewId: z.uuid().nullable(),
+  interviewExpiresAt: z
+    .string()
+    .nullable()
+    .optional()
+    .describe('Hạn chót hoàn thành phỏng vấn AI (ISO 8601, null nếu REJECT)'),
   hrDecisionById: z.uuid().nullable(),
   hrDecisionAt: z.string().nullable(),
   hrNote: z.string().nullable(),
