@@ -23,7 +23,7 @@ import type {
 // ==================== Candidate Mappers ====================
 
 type CandidateApplicationRow = Omit<MyApplicationRow, 'interview'> & {
-  interview?: { id: string } | null;
+  interview?: { id: string; expiresAt?: Date | null } | null;
 };
 
 /**
@@ -48,6 +48,7 @@ export function toMyApplicationDto(app: CandidateApplicationRow): MyApplicationR
   return {
     ...toApplicationDto(app),
     interviewId: app.interview?.id ?? null,
+    interviewExpiresAt: app.interview?.expiresAt?.toISOString() ?? null,
   };
 }
 
@@ -94,6 +95,7 @@ export function toApplicationDetailDto(app: HrApplicationDetail): GetApplication
     hrDecisionAt: app.hrDecisionAt ? app.hrDecisionAt.toISOString() : null,
     hrNote: app.hrNote ?? null,
     interviewId: app.interview?.id ?? null,
+    interviewExpiresAt: app.interview?.expiresAt?.toISOString() ?? null,
     statusHistories: app.statusHistories.map((history) => ({
       id: history.id,
       fromStatus: (history.fromStatus as ApplicationStatus | null) ?? null,
@@ -117,6 +119,7 @@ export function toDecisionDto(result: ApplyDecisionResult): DecisionResType {
     hrDecisionById: result.hrDecisionById,
     hrDecisionAt: result.hrDecisionAt.toISOString(),
     hrNote: result.hrNote,
+    interviewExpiresAt: result.interviewExpiresAt?.toISOString() ?? null,
   };
 }
 

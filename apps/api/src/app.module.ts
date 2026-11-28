@@ -7,6 +7,7 @@ import { ApplicationsModule } from './routes/applications/applications.module.js
 import { AuthModule } from './routes/auth/auth.module.js';
 import { CompanyModule } from './routes/company/company.module.js';
 import { DraftsModule } from './routes/drafts/drafts.module.js';
+import { InterviewsModule } from './routes/interviews/interviews.module.js';
 import { JobsModule } from './routes/jobs/jobs.module.js';
 import { validateEnv } from './shared/config/env.config.js';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter.js';
@@ -28,6 +29,7 @@ import { SharedModule } from './shared/shared.module.js';
     CompanyModule,
     JobsModule,
     ApplicationsModule,
+    InterviewsModule,
     DraftsModule,
   ],
   providers: [

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../../generated/prisma/client.js';
+import envConfig from '../../shared/config/env.config.js';
 import type { ApplicationStatusChangedPayload } from '../../shared/constants/application-event.constant.js';
 import { ApplicationStatus } from '../../shared/constants/application-status.enum.js';
 import { isUniqueConstraintPrismaError } from '../../shared/helper.js';
@@ -31,7 +32,7 @@ export type ApplicationSummary = Prisma.ApplicationGetPayload<{
 
 export const myApplicationSelect = {
   ...applicationSummarySelect,
-  interview: { select: { id: true } },
+  interview: { select: { id: true, expiresAt: true } },
 } satisfies Prisma.ApplicationSelect;
 
 export type MyApplicationRow = Prisma.ApplicationGetPayload<{
@@ -77,7 +78,7 @@ export const hrApplicationDetailSelect = {
     },
   },
   hrDecisionBy: { select: { id: true, fullName: true } },
-  interview: { select: { id: true } },
+  interview: { select: { id: true, expiresAt: true } },
   statusHistories: {
     orderBy: [{ changedAt: 'asc' }, { id: 'asc' }],
     select: {
@@ -114,12 +115,14 @@ export interface ApplyDecisionParams {
   hrId: string;
   decision: 'APPROVE' | 'REJECT';
   note?: string;
+  interviewDeadlineDays?: number;
 }
 
 export interface ApplyDecisionResult {
   id: string;
   status: ApplicationStatus;
   interviewId: string | null;
+  interviewExpiresAt: Date | null;
   hrDecisionById: string;
   hrDecisionAt: Date;
   hrNote: string | null;
@@ -265,8 +268,11 @@ export class ApplicationsRepository {
     hrId,
     decision,
     note,
+    interviewDeadlineDays,
   }: ApplyDecisionParams): Promise<ApplyDecisionResult | null> {
     const decidedAt = new Date();
+    const deadlineDays = interviewDeadlineDays ?? envConfig.INTERVIEW_INVITE_TTL_DAYS;
+    const expiresAt = new Date(decidedAt.getTime() + deadlineDays * 24 * 60 * 60 * 1000);
     const hrNote = note ?? null;
 
     try {
@@ -290,8 +296,8 @@ export class ApplicationsRepository {
             { actorId: hrId, reason: hrNote, tx },
           );
           const interview = await tx.interview.create({
-            data: { applicationId },
-            select: { id: true },
+            data: { applicationId, expiresAt },
+            select: { id: true, expiresAt: true },
           });
           const invited = await this.applicationStateService.transition(
             applicationId,
@@ -307,6 +313,7 @@ export class ApplicationsRepository {
             hrDecisionAt: decidedAt,
             hrNote,
             events: [shortlisted.event, invited.event],
+            interviewExpiresAt: interview.expiresAt,
           };
         }
 
@@ -324,6 +331,7 @@ export class ApplicationsRepository {
           hrDecisionAt: decidedAt,
           hrNote,
           events: [rejected.event],
+          interviewExpiresAt: null,
         };
       });
     } catch (error) {

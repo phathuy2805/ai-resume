@@ -28,3 +28,4 @@ packages/ai/fixtures/audio
 # Markdown files
 *.md
 !packages/ai/eval/results.md
+!docs/interview-events.md
