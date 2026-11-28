@@ -5,22 +5,25 @@ import { defineConfig, loadEnv } from 'vite';
 
 const webRoot = fileURLToPath(new URL('.', import.meta.url));
 
-export default defineConfig(({ mode }) => ({
-  root: webRoot,
-  envDir: webRoot,
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(webRoot, './src'),
-    },
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: loadEnv(mode, webRoot, '').API_PROXY_TARGET || 'http://localhost:3000',
-        changeOrigin: true,
+export default defineConfig(({ mode }) => {
+  const apiTarget = loadEnv(mode, webRoot, '').API_PROXY_TARGET || 'http://localhost:3000';
+  return {
+    root: webRoot,
+    envDir: webRoot,
+    plugins: [react()],
+    resolve: {
+      alias: {
+        '@': path.resolve(webRoot, './src'),
       },
-      '/socket.io': { target: 'http://localhost:3000', ws: true, changeOrigin: true },
     },
-  },
-}));
+    server: {
+      proxy: {
+        '/api': {
+          target: apiTarget,
+          changeOrigin: true,
+        },
+        '/socket.io': { target: apiTarget, ws: true, changeOrigin: true },
+      },
+    },
+  };
+});

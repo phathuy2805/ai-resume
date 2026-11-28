@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import {
   CalendarDays,
   CircleCheck,
+  Clock3,
   FileText,
   Hourglass,
   Inbox,
@@ -70,8 +71,57 @@ const toneStyle: Record<
 };
 
 function statusMessage(app: Application): { icon: typeof Info; text: string; action?: ReactNode } {
-  const interviewTarget = `/candidate/interviews/${app.interviewId || app.id}`;
+  const interviewId = app.interview?.id ?? app.interviewId;
+  const interviewTarget = interviewId ? `/candidate/interviews/${interviewId}` : null;
   const feedbackTarget = `/candidate/applications/${app.id}/feedback`;
+  const interviewPhase = app.interview?.phase;
+  const inviteExpiresAt = app.interview?.inviteExpiresAt ?? app.interviewExpiresAt;
+  const isInviteExpired =
+    app.status === 'INTERVIEW_INVITED' &&
+    inviteExpiresAt != null &&
+    Date.parse(inviteExpiresAt) <= Date.now();
+
+  if (interviewPhase === 'SUBMITTED') {
+    const hasFinalResult = app.status === 'PASSED' || app.status === 'FAILED';
+    return {
+      icon: hasFinalResult ? CircleCheck : Hourglass,
+      text: hasFinalResult
+        ? app.status === 'PASSED'
+          ? 'Bạn đã hoàn thành phỏng vấn và đạt yêu cầu tuyển dụng.'
+          : 'Bạn đã hoàn thành phỏng vấn. Hãy xem phản hồi về kết quả.'
+        : 'Đã hoàn thành phỏng vấn, đang chờ kết quả.',
+      action: interviewTarget ? (
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to={interviewTarget}
+            className={buttonVariants({
+              variant: 'outline',
+              size: 'sm',
+              className: 'h-9 shrink-0',
+            })}
+          >
+            Xem lại câu trả lời
+          </Link>
+          {hasFinalResult && (
+            <Link
+              to={feedbackTarget}
+              className={buttonVariants({
+                variant: 'outline',
+                size: 'sm',
+                className: 'h-9 shrink-0',
+              })}
+            >
+              Xem phản hồi
+            </Link>
+          )}
+        </div>
+      ) : undefined,
+    };
+  }
+
+  if (interviewPhase === 'EXPIRED' || isInviteExpired) {
+    return { icon: Clock3, text: 'Đã quá hạn phỏng vấn.' };
+  }
 
   switch (app.status) {
     case 'SUBMITTED':
@@ -96,21 +146,32 @@ function statusMessage(app: Application): { icon: typeof Info; text: string; act
       return {
         icon: Sparkles,
         text: 'Chúc mừng! Bạn đã được mời tham gia vòng phỏng vấn.',
-        action: (
-          <Link
-            to={interviewTarget}
-            className={buttonVariants({ size: 'sm', className: 'h-9 shrink-0 gap-1.5' })}
-          >
-            <Play className="h-4 w-4 fill-current" />
-            Vào phỏng vấn
-          </Link>
-        ),
+        action: interviewTarget ? (
+          <div className="flex flex-col items-end gap-1">
+            <Link
+              to={interviewTarget}
+              className={buttonVariants({ size: 'sm', className: 'h-9 shrink-0 gap-1.5' })}
+            >
+              <Play className="h-4 w-4 fill-current" />
+              Vào phỏng vấn
+            </Link>
+            {inviteExpiresAt && (
+              <span className="text-[11px] text-muted-foreground">
+                Hạn tham gia:{' '}
+                {new Date(inviteExpiresAt).toLocaleString('vi-VN', {
+                  dateStyle: 'short',
+                  timeStyle: 'short',
+                })}
+              </span>
+            )}
+          </div>
+        ) : undefined,
       };
     case 'INTERVIEWING':
       return {
         icon: Sparkles,
         text: 'Bạn đang có phiên phỏng vấn chưa hoàn thành.',
-        action: (
+        action: interviewTarget ? (
           <Link
             to={interviewTarget}
             className={buttonVariants({ size: 'sm', className: 'h-9 shrink-0 gap-1.5' })}
@@ -118,7 +179,7 @@ function statusMessage(app: Application): { icon: typeof Info; text: string; act
             <Play className="h-4 w-4 fill-current" />
             Tiếp tục phỏng vấn
           </Link>
-        ),
+        ) : undefined,
       };
     case 'EVALUATED':
       return {

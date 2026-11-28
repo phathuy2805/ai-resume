@@ -21,6 +21,12 @@ export interface Application {
   cvUrl?: string;
   aiRecommendation?: 'PASS' | 'CONSIDER' | 'REJECT' | null;
   interviewId?: string | null;
+  interviewExpiresAt?: string | null;
+  interview?: {
+    id: string;
+    phase: 'NOT_STARTED' | 'IN_PROGRESS' | 'SUBMITTED' | 'EXPIRED';
+    inviteExpiresAt: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }

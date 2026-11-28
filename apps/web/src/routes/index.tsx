@@ -6,7 +6,7 @@ import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import CandidateApplicationsPage from '@/pages/candidate/CandidateApplicationsPage';
 import CandidateFeedbackPlaceholderPage from '@/pages/candidate/CandidateFeedbackPlaceholderPage';
-import CandidateInterviewPlaceholderPage from '@/pages/candidate/CandidateInterviewPlaceholderPage';
+import InterviewRoomPage from '@/pages/candidate/InterviewRoomPage';
 import CandidateJobsPage from '@/pages/candidate/CandidateJobsPage';
 import CandidateJobDetailPage from '@/pages/candidate/CandidateJobDetailPage';
 import NotFoundPage from '@/pages/NotFoundPage';
@@ -65,7 +65,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'applications', element: <CandidateApplicationsPage /> },
           { path: 'applications/:id/feedback', element: <CandidateFeedbackPlaceholderPage /> },
-          { path: 'interviews/:id', element: <CandidateInterviewPlaceholderPage /> },
+          { path: 'interviews/:interviewId', element: <InterviewRoomPage /> },
         ],
       },
     ],
