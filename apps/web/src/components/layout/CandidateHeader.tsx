@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 const links = [
   { to: '/candidate/jobs', label: 'Việc làm' },
   { to: '/candidate/applications', label: 'Hồ sơ của tôi' },
+  { to: '/company', label: 'Về công ty' },
 ];
 
 export default function CandidateHeader() {

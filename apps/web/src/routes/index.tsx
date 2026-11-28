@@ -10,6 +10,7 @@ import CandidateFeedbackPlaceholderPage from '@/pages/candidate/CandidateFeedbac
 import CandidateInterviewPlaceholderPage from '@/pages/candidate/CandidateInterviewPlaceholderPage';
 import CandidateJobsPage from '@/pages/candidate/CandidateJobsPage';
 import CandidateJobDetailPage from '@/pages/candidate/CandidateJobDetailPage';
+import CompanyPage from '@/pages/CompanyPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import HRApplicationDetailPage from '@/pages/hr/HRApplicationDetailPage';
 import HRCandidatesPage from '@/pages/hr/HRCandidatesPage';
@@ -73,6 +74,12 @@ export const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  {
+    // Trang giới thiệu công ty, công khai, dùng chung layout với trang ứng viên.
+    path: 'company',
+    element: <CandidateLayout />,
+    children: [{ index: true, element: <CompanyPage /> }],
   },
   { path: '*', element: <NotFoundPage /> },
 ]);

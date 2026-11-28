@@ -10,6 +10,8 @@ export function useCompany() {
     queryFn: ({ signal }) => getCompany(signal),
     staleTime: 10 * 60 * 1000,
     retry: 1,
+    // Không bật toast: banner/khối giới thiệu tự ẩn khi lỗi, trang cần dữ liệu tự hiển thị QueryError.
+    meta: { errorMode: 'silent' },
   });
 }
 
