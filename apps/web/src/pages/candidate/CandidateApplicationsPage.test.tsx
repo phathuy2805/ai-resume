@@ -76,10 +76,17 @@ describe('CandidateApplicationsPage', () => {
     );
   });
 
-  it('nút phỏng vấn dùng interviewId, fallback về id hồ sơ khi BE chưa trả (W2-BE-04)', () => {
+  it('chỉ hiển thị nút phỏng vấn khi BE trả interviewId thật', () => {
     mockQuery({
       data: [
-        app('a1', 'INTERVIEW_INVITED', { interviewId: 'iv-1' }),
+        app('a1', 'INTERVIEW_INVITED', {
+          interviewId: 'iv-1',
+          interview: {
+            id: 'iv-1',
+            phase: 'NOT_STARTED',
+            inviteExpiresAt: '2099-12-01T10:00:00Z',
+          },
+        }),
         app('a2', 'INTERVIEWING', { interviewId: null }),
       ],
     });
@@ -87,9 +94,45 @@ describe('CandidateApplicationsPage', () => {
     expect(screen.getByRole('link', { name: /Vào phỏng vấn/ }).getAttribute('href')).toBe(
       '/candidate/interviews/iv-1',
     );
-    expect(screen.getByRole('link', { name: /Tiếp tục phỏng vấn/ }).getAttribute('href')).toBe(
-      '/candidate/interviews/a2',
+    expect(screen.queryByRole('link', { name: /Tiếp tục phỏng vấn/ })).toBeNull();
+    expect(screen.getByText(/Hạn tham gia:/)).toBeDefined();
+  });
+
+  it('trạng thái EXPIRED hiển thị quá hạn và ẩn nút vào phỏng vấn', () => {
+    mockQuery({
+      data: [
+        app('expired', 'INTERVIEW_INVITED', {
+          interview: {
+            id: 'iv-expired',
+            phase: 'EXPIRED',
+            inviteExpiresAt: '2020-01-01T00:00:00Z',
+          },
+        }),
+      ],
+    });
+    renderPage();
+    expect(screen.getByText('Đã quá hạn phỏng vấn.')).toBeDefined();
+    expect(screen.queryByRole('link', { name: /Vào phỏng vấn/ })).toBeNull();
+  });
+
+  it('đã nộp phỏng vấn hiện nút xem lại câu trả lời, không hiện tiếp tục', () => {
+    mockQuery({
+      data: [
+        app('done', 'EVALUATED', {
+          interview: {
+            id: 'iv-done',
+            phase: 'SUBMITTED',
+            inviteExpiresAt: '2026-11-20T00:00:00Z',
+          },
+        }),
+      ],
+    });
+    renderPage();
+    expect(screen.getByText('Đã hoàn thành phỏng vấn, đang chờ kết quả.')).toBeDefined();
+    expect(screen.getByRole('link', { name: /Xem lại câu trả lời/ }).getAttribute('href')).toBe(
+      '/candidate/interviews/iv-done',
     );
+    expect(screen.queryByRole('link', { name: /Tiếp tục phỏng vấn/ })).toBeNull();
   });
 
   it('PASSED/FAILED có nút "Xem phản hồi" dẫn tới trang feedback', () => {

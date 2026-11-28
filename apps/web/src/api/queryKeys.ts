@@ -24,5 +24,8 @@ export const queryKeys = {
     detail: (id: string) => ['application', id] as const,
   },
   // Namespace only; no interview endpoint has been assumed or implemented.
-  interviews: { all: ['interviews'] as const },
+  interviews: {
+    all: ['interviews'] as const,
+    transcript: (id: string) => ['interviews', id, 'transcript'] as const,
+  },
 };
