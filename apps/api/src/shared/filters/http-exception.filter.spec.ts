@@ -55,4 +55,15 @@ describe('HttpExceptionFilter', () => {
     expect(body).toMatchObject({ message: 'Internal server error' });
     expect(body).not.toHaveProperty('code');
   });
+
+  it('bỏ qua context WebSocket (ws) không gọi switchToHttp', () => {
+    const switchToHttp = vi.fn();
+    const host = {
+      getType: () => 'ws',
+      switchToHttp,
+    } as unknown as ArgumentsHost;
+
+    new HttpExceptionFilter().catch(new Error('ws error'), host);
+    expect(switchToHttp).not.toHaveBeenCalled();
+  });
 });
