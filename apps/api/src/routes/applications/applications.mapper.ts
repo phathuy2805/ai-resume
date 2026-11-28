@@ -4,6 +4,10 @@ import {
   ApplicationStatus,
 } from '../../shared/constants/application-status.enum.js';
 import type { ApplicationModel } from '../../shared/models/application.model.js';
+import {
+  computeInterviewPhase,
+  computeInviteExpiresAt,
+} from '../interviews/interview-phase.util.js';
 import type {
   ApplicationSummary,
   ApplyDecisionResult,
@@ -23,7 +27,13 @@ import type {
 // ==================== Candidate Mappers ====================
 
 type CandidateApplicationRow = Omit<MyApplicationRow, 'interview'> & {
-  interview?: { id: string; expiresAt?: Date | null } | null;
+  interview?: {
+    id: string;
+    createdAt?: Date;
+    startedAt?: Date | null;
+    completedAt?: Date | null;
+    expiresAt?: Date | null;
+  } | null;
 };
 
 /**
@@ -45,10 +55,31 @@ export function toApplicationDto(app: ApplicationSummary): ApplicationModel {
 }
 
 export function toMyApplicationDto(app: CandidateApplicationRow): MyApplicationResType {
+  const status = app.status as ApplicationStatus;
+  let interview: MyApplicationResType['interview'] = null;
+  let interviewExpiresAt: string | null = null;
+
+  if (app.interview) {
+    const timing = {
+      createdAt: app.interview.createdAt ?? app.updatedAt,
+      startedAt: app.interview.startedAt ?? null,
+      completedAt: app.interview.completedAt ?? null,
+      expiresAt: app.interview.expiresAt ?? null,
+    };
+    const inviteExpiresAt = computeInviteExpiresAt(timing).toISOString();
+    interviewExpiresAt = inviteExpiresAt;
+    interview = {
+      id: app.interview.id,
+      phase: computeInterviewPhase(timing, status),
+      inviteExpiresAt,
+    };
+  }
+
   return {
     ...toApplicationDto(app),
     interviewId: app.interview?.id ?? null,
-    interviewExpiresAt: app.interview?.expiresAt?.toISOString() ?? null,
+    interviewExpiresAt,
+    interview,
   };
 }
 

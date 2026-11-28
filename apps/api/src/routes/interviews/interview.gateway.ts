@@ -12,6 +12,7 @@ import type { Namespace } from 'socket.io';
 import type { z } from 'zod';
 import { Role } from '../../generated/prisma/client.js';
 import envConfig from '../../shared/config/env.config.js';
+import { Public } from '../../shared/decorators/public.decorator.js';
 import { TokenService } from '../../shared/services/token.service.js';
 import {
   INTERVIEW_AUTH_ERRORS,
@@ -33,6 +34,7 @@ import type {
   InterviewSocket,
 } from './interviews.type.js';
 
+@Public()
 @WebSocketGateway({
   namespace: INTERVIEW_NAMESPACE,
   cors: {
@@ -125,6 +127,10 @@ export class InterviewGateway implements OnGatewayInit, OnGatewayConnection, OnG
           client.emit(INTERVIEW_EVENTS.PREPARING, preparing);
         },
       );
+
+      if (result.kind === 'IGNORED') {
+        return;
+      }
 
       client.emit(INTERVIEW_EVENTS.QUESTION, result.firstQuestion);
     } catch (error) {
