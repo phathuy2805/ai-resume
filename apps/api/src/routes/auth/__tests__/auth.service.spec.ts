@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { hash } from 'bcryptjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Role } from '../../../shared/constants/auth.constant.js';
@@ -13,6 +13,7 @@ import type { TokenService } from '../../../shared/services/token.service.js';
 import { hashToken } from '../../../shared/utils/crypto.util.js';
 import { AuthErrorCode } from '../auth.error.js';
 import type { AuthRepository } from '../auth.repository.js';
+import { RegisterBodySchema } from '../auth.schema.js';
 import { AuthService } from '../auth.service.js';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111';
@@ -111,6 +112,95 @@ describe('AuthService (Account Management)', () => {
       tokenService as unknown as TokenService,
       storage as unknown as StorageService,
       mailService as unknown as MailService,
+    );
+  });
+
+  describe('register (candidate-only self-registration)', () => {
+    it('RegisterBodySchema accepts omitted role and defaults to CANDIDATE', () => {
+      const parsed = RegisterBodySchema.safeParse({
+        email: 'candidate@hireflow.vn',
+        fullName: 'Ứng Viên A',
+        password: 'Password123!',
+      });
+
+      expect(parsed.success).toBe(true);
+      if (parsed.success) {
+        expect(parsed.data.role).toBe(Role.CANDIDATE);
+      }
+    });
+
+    it('RegisterBodySchema accepts explicit CANDIDATE role', () => {
+      const parsed = RegisterBodySchema.safeParse({
+        email: 'candidate@hireflow.vn',
+        fullName: 'Ứng Viên A',
+        password: 'Password123!',
+        role: Role.CANDIDATE,
+      });
+
+      expect(parsed.success).toBe(true);
+      if (parsed.success) {
+        expect(parsed.data.role).toBe(Role.CANDIDATE);
+      }
+    });
+
+    it.each([Role.HR, Role.ADMIN])(
+      'RegisterBodySchema rejects %s self-registration with Vietnamese error message',
+      (blockedRole) => {
+        const parsed = RegisterBodySchema.safeParse({
+          email: 'hr@hireflow.vn',
+          fullName: 'Nhà Tuyển Dụng',
+          password: 'Password123!',
+          role: blockedRole,
+        });
+
+        expect(parsed.success).toBe(false);
+        if (!parsed.success) {
+          expect(parsed.error.issues[0]?.path).toEqual(['role']);
+          expect(parsed.error.issues[0]?.message).toContain('CANDIDATE');
+        }
+      },
+    );
+
+    it('creates a CANDIDATE user when role is omitted or CANDIDATE', async () => {
+      sharedUserRepo.createUser.mockResolvedValueOnce(
+        makeSafeUser({ email: 'candidate@hireflow.vn', role: Role.CANDIDATE }),
+      );
+
+      const res = await service.register({
+        email: 'candidate@hireflow.vn',
+        fullName: 'Ứng Viên A',
+        password: 'Password123!',
+      });
+
+      expect(sharedUserRepo.createUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'candidate@hireflow.vn',
+          fullName: 'Ứng Viên A',
+          role: Role.CANDIDATE,
+        }),
+      );
+      expect(res.user.role).toBe(Role.CANDIDATE);
+      expect(res.refreshToken).toBe('refresh-jwt-new');
+    });
+
+    it.each([Role.HR, Role.ADMIN])(
+      'throws ForbiddenException and never creates user when called directly with role %s',
+      async (blockedRole) => {
+        const err = await service
+          .register({
+            email: 'hr@hireflow.vn',
+            fullName: 'Nhà Tuyển Dụng',
+            password: 'Password123!',
+            role: blockedRole,
+          })
+          .catch((e) => e);
+
+        expect(err).toBeInstanceOf(ForbiddenException);
+        expect((err as ForbiddenException).getResponse()).toMatchObject({
+          code: AuthErrorCode.SELF_REGISTER_CANDIDATE_ONLY,
+        });
+        expect(sharedUserRepo.createUser).not.toHaveBeenCalled();
+      },
     );
   });
 

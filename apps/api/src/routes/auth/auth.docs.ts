@@ -27,16 +27,18 @@ export const ApiAuthController = () => applyDecorators(ApiTags('Auth'));
 export const ApiRegisterDoc = () =>
   applyDecorators(
     ApiOperation({
-      summary: 'Đăng ký tài khoản mới (HR hoặc CANDIDATE)',
+      summary: 'Đăng ký tài khoản ứng viên mới (CANDIDATE)',
       description:
-        'Tạo tài khoản mới, đồng thời cấp httpOnly cookie `refresh_token` để client có thể gọi `/api/auth/refresh` lấy `accessToken` ngay.',
+        'Chỉ cho phép tự đăng ký tài khoản ứng viên (`CANDIDATE`); không cho phép tự đăng ký tài khoản `HR`/`ADMIN`. Đồng thời cấp httpOnly cookie `refresh_token` để client có thể gọi `/api/auth/refresh` lấy `accessToken` ngay.',
     }),
     ZodResponse({
       status: HttpStatus.CREATED,
-      description: 'Đăng ký thành công',
+      description: 'Đăng ký tài khoản ứng viên thành công',
       type: RegisterResDto,
     }) as MethodDecorator,
-    ApiBadRequestResponse({ description: 'Dữ liệu đầu vào không hợp lệ' }),
+    ApiBadRequestResponse({
+      description: 'Dữ liệu đầu vào không hợp lệ hoặc cố tự đăng ký vai trò khác CANDIDATE',
+    }),
     ApiConflictResponse({ description: 'Email đã được sử dụng' }),
   );
 

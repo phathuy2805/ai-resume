@@ -1,12 +1,14 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   PayloadTooLargeException,
   UnauthorizedException,
 } from '@nestjs/common';
 
 export enum AuthErrorCode {
   EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS',
+  SELF_REGISTER_CANDIDATE_ONLY = 'SELF_REGISTER_CANDIDATE_ONLY',
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
   INVALID_CURRENT_PASSWORD = 'INVALID_CURRENT_PASSWORD',
   SAME_AS_CURRENT_PASSWORD = 'SAME_AS_CURRENT_PASSWORD',
@@ -21,6 +23,12 @@ export const EmailAlreadyExistsException = new ConflictException({
   code: AuthErrorCode.EMAIL_ALREADY_EXISTS,
   message: 'Email đã được sử dụng',
   errors: ['email: Email đã được sử dụng'],
+});
+
+export const SelfRegisterCandidateOnlyException = new ForbiddenException({
+  code: AuthErrorCode.SELF_REGISTER_CANDIDATE_ONLY,
+  message: 'Chỉ cho phép tự đăng ký tài khoản ứng viên (CANDIDATE)',
+  errors: ['role: Chỉ cho phép tự đăng ký tài khoản ứng viên (CANDIDATE)'],
 });
 
 export const InvalidCredentialsException = new UnauthorizedException(

@@ -6,7 +6,7 @@ import {
   PASSWORD_RESET_OTP_LENGTH,
   PASSWORD_RESET_OTP_MAX_ATTEMPTS,
   PASSWORD_RESET_OTP_TTL_MINUTES,
-  type Role,
+  Role,
 } from '../../shared/constants/auth.constant.js';
 import { AVATAR_URL_EXPIRES_SEC } from '../../shared/constants/storage.constant.js';
 import { isUniqueConstraintPrismaError } from '../../shared/helper.js';
@@ -35,6 +35,7 @@ import {
   RefreshTokenNotFoundException,
   RefreshTokenRevokedException,
   SameAsCurrentPasswordException,
+  SelfRegisterCandidateOnlyException,
   UserNotFoundException,
 } from './auth.error.js';
 import { AuthRepository } from './auth.repository.js';
@@ -71,14 +72,21 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  async register(body: RegisterBodyType, context: SessionContext = {}): Promise<RegisterResult> {
+  async register(
+    body: Omit<RegisterBodyType, 'role'> & { role?: Role },
+    context: SessionContext = {},
+  ): Promise<RegisterResult> {
+    if (body.role !== undefined && body.role !== Role.CANDIDATE) {
+      throw SelfRegisterCandidateOnlyException;
+    }
+
     try {
       const passwordHash = await hash(body.password, BCRYPT_SALT_ROUNDS);
       const user = await this.sharedUserRepo.createUser({
         email: body.email,
         passwordHash,
         fullName: body.fullName,
-        role: body.role,
+        role: Role.CANDIDATE,
       });
 
       const { refreshToken } = await this.generateTokens(user, context);
