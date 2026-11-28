@@ -6,6 +6,7 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { ApplicationsModule } from './routes/applications/applications.module.js';
 import { AuthModule } from './routes/auth/auth.module.js';
 import { DraftsModule } from './routes/drafts/drafts.module.js';
+import { InterviewEvaluationModule } from './routes/interview-evaluation/interview-evaluation.module.js';
 import { InterviewsModule } from './routes/interviews/interviews.module.js';
 import { JobsModule } from './routes/jobs/jobs.module.js';
 import { validateEnv } from './shared/config/env.config.js';
@@ -28,6 +29,7 @@ import { SharedModule } from './shared/shared.module.js';
     JobsModule,
     ApplicationsModule,
     InterviewsModule,
+    InterviewEvaluationModule,
     DraftsModule,
   ],
   providers: [
